@@ -1,4 +1,4 @@
-# HW-Aware-GPT-Bench
+# HW-GPT-Bench
 
 
 ![image info](figures/overview.png)
