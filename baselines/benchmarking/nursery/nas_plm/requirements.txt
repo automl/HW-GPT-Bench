@@ -1,0 +1,13 @@
+tqdm
+scipy
+numpy
+botorch==0.7.2
+protobuf==3.20.*
+pandas
+datasets
+scikit-learn
+evaluate
+transformers[torch]
+sortedcontainers
+botorch==0.7.2
+autograd>=1.3
