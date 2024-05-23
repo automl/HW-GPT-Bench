@@ -1,3 +1,5 @@
+
+
 import logging
 from argparse import ArgumentParser
 from pathlib import Path
@@ -10,7 +12,7 @@ from syne_tune.optimizer.baselines import (
     NSGA2,
     MORandomScalarizationBayesOpt,
     MOASHA,
-    EHVI,
+    EHVI
 )
 from syne_tune import Tuner, StoppingCriterion
 from syne_tune.config_space import randint, uniform, loguniform, choice
@@ -21,7 +23,6 @@ from syne_tune.optimizer.schedulers.multiobjective.linear_scalarizer import (
 import os
 import json
 import pickle
-
 # Configuration space (or search space)
 
 
@@ -42,7 +43,8 @@ if __name__ == "__main__":
             "LSBO",
             "RSBO",
             "MOASHA",
-            "EHVI",
+            "EHVI"
+
         ),
         default="RS",
     )
@@ -82,17 +84,16 @@ if __name__ == "__main__":
         default="a6000",
     )
     args, _ = parser.parse_known_args()
-    config_space = {
-        "max_num_layers": args.max_num_layers,
-        "device_latency": args.device_latency,
-        "device_energy": args.device_energy,
-        "num_layers": choice([10, 11, 12]),
-        "embed_dim": choice([768, 384, 192]),
-        "bias": choice([True, False]),
-    }
+    config_space = {"max_num_layers": args.max_num_layers,
+    "device_latency": args.device_latency,
+    "device_energy": args.device_energy,
+    "num_layers": choice([10,11,12]),
+    "embed_dim": choice([768,384,192]),
+    "bias": choice([True,False]),}
     for i in range(args.max_num_layers):
-        config_space[f"mlp_ratio_{i}"] = choice([2, 3, 4])
-        config_space[f"num_heads_{i}"] = choice([4, 8, 12])
+        config_space[f"mlp_ratio_{i}"] = choice([2,3,4])
+        config_space[f"num_heads_{i}"] = choice([4,8,12])
+
 
     # Here, we specify the training script we want to tune
     # - `mode` and `metric` must match what is reported in the training script
@@ -102,7 +103,7 @@ if __name__ == "__main__":
     entry_point = Path(__file__).parent / train_file
     max_resource_level = 1  # Maximum number of training epochs
     mode = "min"
-    metrics = ["perplexity", "energy", "latency"]
+    metrics = ["perplexity","energy","latency"]
     resource_attr = "epoch"
     max_resource_attr = "epochs"
 
@@ -130,12 +131,15 @@ if __name__ == "__main__":
     )
     method_kwargs_multi = dict(
         metric=metrics,
-        mode=["min", "min", "min"],
+        mode=["min","min","min"],
         random_seed=args.random_seed,
         max_resource_attr=max_resource_attr,
         search_options={"num_init_random": 8},
     )
-    method_kwargs_moasha = dict(metrics=metrics, mode=["min", "min", "min"])
+    method_kwargs_moasha = dict(
+        metrics=metrics,
+        mode=["min","min","min"]
+    )
     sch_type = "promotion" if args.method.endswith("PROM") else "stopping"
     if args.method == "RS":
         scheduler = RandomSearch(config_space, **method_kwargs_single)
@@ -150,20 +154,11 @@ if __name__ == "__main__":
     elif args.method == "NSGA2":
         scheduler = NSGA2(config_space, **method_kwargs_multi)
     elif args.method == "LSBO":
-        scheduler = LinearScalarizedScheduler(
-            config_space, searcher="bayesopt", **method_kwargs_multi
-        )
+        scheduler = LinearScalarizedScheduler(config_space, searcher="bayesopt", **method_kwargs_multi)
     elif args.method == "RSBO":
         scheduler = MORandomScalarizationBayesOpt(config_space, **method_kwargs_multi)
     elif args.method == "MOASHA":
-        scheduler = MOASHA(
-            config_space,
-            time_attr="st_worker_time",
-            grace_period=1,
-            max_t=5,
-            reduction_factor=3,
-            **method_kwargs_moasha,
-        )
+        scheduler = MOASHA(config_space, time_attr = "st_worker_time", grace_period = 1, max_t = 5, reduction_factor = 3, **method_kwargs_moasha)
     elif args.method == "EHVI":
         scheduler = EHVI(config_space, **method_kwargs_multi)
     else:
@@ -188,7 +183,6 @@ if __name__ == "__main__":
 
     tuner.run()
     from syne_tune.experiments import load_experiment
-
     print(tuner.name)
     df = load_experiment(tuner.name).results
     configs = []
@@ -205,7 +199,7 @@ if __name__ == "__main__":
         latency.append(trial_df["latency"].values)
         config = {}
         for hyper in config_space.keys():
-            c = trial_df.iloc[0]["config_" + hyper]
+            c = trial_df.iloc[0]["config_"+hyper]
             config[hyper] = c
         configs.append(config)
         print(configs)
@@ -214,20 +208,10 @@ if __name__ == "__main__":
         "runtime_traj": runtime_traj,
         "perplexity": perplexity,
         "energy": energy,
-        "latency": latency,
+        "latency": latency
     }
-
+        
     os.makedirs("results", exist_ok=True)
-    save_path = (
-        f"results/"
-        + args.experiment_tag
-        + "_"
-        + args.method
-        + "_"
-        + args.device_latency
-        + "_"
-        + args.device_energy
-        + ".pickle"
-    )
+    save_path = f"results/"+args.experiment_tag+"_"+args.method+"_"+args.device_latency+"_"+args.device_energy+".pickle"
     with open(save_path, "wb") as f:
         pickle.dump(results, f)

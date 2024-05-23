@@ -1,4 +1,2 @@
-# HW-GPT-Bench
-
-
-![image info](figures/overview.png)
+# HW-Aware-LLM-Bench
+Repository for Hardware Aware LLM Benchmark

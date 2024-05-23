@@ -120,11 +120,9 @@ class SupervisedDataset(Dataset):
             PROMPT_DICT["prompt_no_input"],
         )
         sources = [
-            (
-                prompt_input.format_map(example)
-                if example.get("input", "") != ""
-                else prompt_no_input.format_map(example)
-            )
+            prompt_input.format_map(example)
+            if example.get("input", "") != ""
+            else prompt_no_input.format_map(example)
             for example in list_data_dict
         ]
         targets = [

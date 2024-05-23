@@ -11,9 +11,8 @@ from baselines.benchmarking.training_scripts.mlp_on_fashion_mnist.mlp_on_fashion
 from syne_tune import Reporter
 import time
 
-
 def objective(config):  # [1]
-    # Download
+    # Download 
     start = time.time()
     data_train = download_data(config)
     # Report results to Syne Tune
@@ -53,3 +52,4 @@ if __name__ == "__main__":
     args, _ = parser.parse_known_args()
     # Evaluate objective and report results to Syne Tune
     objective(config=vars(args))
+

@@ -1,4 +1,4 @@
-import os
+import os 
 import pickle
 from predictors.hwmetric.conformal.surrogate.quantile_regression_model import (
     QuantileRegressorPredictions,
@@ -8,79 +8,74 @@ from predictors.hwmetric.conformal.surrogate.symmetric_conformalized_quantile_re
     SymmetricConformalizedGradientBoostingQuantileRegressor,
 )
 import numpy as np
-
-
 def get_arch_feature_map_s(arch):
     arch_embed_choices = [768, 384, 192]
-    layer_choices = [10, 11, 12]
-    mlp_ratio_choices = [2, 3, 4]
-    head_choices = [4, 8, 12]
+    layer_choices = [10,11,12]
+    mlp_ratio_choices = [2,3,4]
+    head_choices = [4,8,12]
     bias_choices = [True, False]
-    # arch_feature_map
+    # arch_feature_map 
     arch_feature_map = []
     arch_feature_map.append(arch["sample_embed_dim"])
     arch_feature_map.append(arch["sample_n_layer"])
-    arch_feature_map.extend(arch["sample_mlp_ratio"][0 : arch["sample_n_layer"]])
-    for i in range(max(layer_choices) - arch["sample_n_layer"]):
+    arch_feature_map.extend(arch["sample_mlp_ratio"][0:arch["sample_n_layer"]])
+    for i in range(max(layer_choices)-arch["sample_n_layer"]):
         arch_feature_map.append(0)
-    arch_feature_map.extend(arch["sample_n_head"][0 : arch["sample_n_layer"]])
-    for i in range(max(layer_choices) - arch["sample_n_layer"]):
+    arch_feature_map.extend(arch["sample_n_head"][0:arch["sample_n_layer"]])
+    for i in range(max(layer_choices)-arch["sample_n_layer"]):
         arch_feature_map.append(0)
     if arch["sample_bias"]:
         arch_feature_map.append(1)
     else:
         arch_feature_map.append(0)
-    # print(len(arch_feature_map))
+    #print(len(arch_feature_map))
     return arch_feature_map
-
 
 def get_arch_feature_map_m(arch):
     arch_embed_choices = [1024, 512, 256]
-    layer_choices = [22, 23, 24]
-    mlp_ratio_choices = [2, 3, 4]
-    head_choices = [8, 12, 16]
+    layer_choices = [22,23,24]
+    mlp_ratio_choices = [2,3,4]
+    head_choices = [8,12,16]
     bias_choices = [True, False]
-    # arch_feature_map
+    # arch_feature_map 
     arch_feature_map = []
     arch_feature_map.append(arch["sample_embed_dim"])
     arch_feature_map.append(arch["sample_n_layer"])
-    arch_feature_map.extend(arch["sample_mlp_ratio"][0 : arch["sample_n_layer"]])
-    for i in range(max(layer_choices) - arch["sample_n_layer"]):
+    arch_feature_map.extend(arch["sample_mlp_ratio"][0:arch["sample_n_layer"]])
+    for i in range(max(layer_choices)-arch["sample_n_layer"]):
         arch_feature_map.append(0)
-    arch_feature_map.extend(arch["sample_n_head"][0 : arch["sample_n_layer"]])
-    for i in range(max(layer_choices) - arch["sample_n_layer"]):
+    arch_feature_map.extend(arch["sample_n_head"][0:arch["sample_n_layer"]])
+    for i in range(max(layer_choices)-arch["sample_n_layer"]):
         arch_feature_map.append(0)
     if arch["sample_bias"]:
         arch_feature_map.append(1)
     else:
         arch_feature_map.append(0)
-    # print(len(arch_feature_map))
+    #print(len(arch_feature_map))
     return arch_feature_map
-
 
 def get_arch_feature_map_l(arch):
-    arch_embed_choices = [320, 640, 1280]
-    layer_choices = [34, 35, 36]
-    mlp_ratio_choices = [2, 3, 4]
-    head_choices = [8, 16, 20]
+    arch_embed_choices = [320,640,1280]
+    layer_choices = [34,35,36]
+    mlp_ratio_choices = [2,3,4]
+    head_choices = [8,16,20]
     bias_choices = [True, False]
-    # arch_feature_map
+    # arch_feature_map 
     arch_feature_map = []
     arch_feature_map.append(arch["sample_embed_dim"])
     arch_feature_map.append(arch["sample_n_layer"])
-    arch_feature_map.extend(arch["sample_mlp_ratio"][0 : arch["sample_n_layer"]])
-    for i in range(max(layer_choices) - arch["sample_n_layer"]):
+    arch_feature_map.extend(arch["sample_mlp_ratio"][0:arch["sample_n_layer"]])
+    for i in range(max(layer_choices)-arch["sample_n_layer"]):
         arch_feature_map.append(0)
-    arch_feature_map.extend(arch["sample_n_head"][0 : arch["sample_n_layer"]])
-    for i in range(max(layer_choices) - arch["sample_n_layer"]):
+    arch_feature_map.extend(arch["sample_n_head"][0:arch["sample_n_layer"]])
+    for i in range(max(layer_choices)-arch["sample_n_layer"]):
         arch_feature_map.append(0)
     if arch["sample_bias"]:
         arch_feature_map.append(1)
     else:
         arch_feature_map.append(0)
-    # print(len(arch_feature_map))
+    #print(len(arch_feature_map))
     return arch_feature_map
-
 
 def filter_archs(arch_list, observations):
     archs_unique = []
@@ -91,9 +86,8 @@ def filter_archs(arch_list, observations):
                 break
     return archs_unique
 
-
-"""devices = ["P100","a6000", "rtx2080", "rtx3080", "v100", "a100", "a40", "h100"] # "cpu_mlgpu", "cpu_alldlc", "cpu_p100", "cpu_p100", "cpu_a6000", "cpu_meta"]
-suffix = ["_m", "_l"]
+'''devices = ["P100","a6000", "rtx2080", "rtx3080", "v100", "a100", "a40", "h100"] # "cpu_mlgpu", "cpu_alldlc", "cpu_p100", "cpu_p100", "cpu_a6000", "cpu_meta"]
+suffix = [""]
 for device in devices:
  for s in suffix:
   cat_list = []
@@ -134,10 +128,12 @@ for device in devices:
      arch_features_mean = np.mean(arch_features, axis=0)
      arch_features_std = np.std(arch_features, axis=0)
      arch_features = (arch_features - arch_features_mean) / arch_features_std
+     print(arch_features)
+     break
      predictor.fit(arch_features, latencies)
      with open("hwmetric_predictor_ckpts/conformal_quantile_regression_energy_" + device + s + ".pkl","wb") as f:
             pickle.dump(predictor, f)
      predictor_gb = GradientBoostingQuantileRegressor(quantiles = 31)
      predictor_gb.fit(arch_features, latencies)
      with open("hwmetric_predictor_ckpts/quantile_regression_energy_" + device + s + ".pkl","wb") as f:
-        pickle.dump(predictor_gb, f)"""
+        pickle.dump(predictor_gb, f)'''
