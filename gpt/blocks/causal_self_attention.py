@@ -14,30 +14,42 @@ class CausalSelfAttention(nn.Module):
         # key, query, value projections for all heads, but in a batch
         self.attn = SuperLinear(config.n_embd, shape)
         # output projection
-        self.proj = SuperLinear(config.head_size*config.n_head, config.n_embd)
+        self.proj = SuperLinear(config.head_size * config.n_head, config.n_embd)
         # disabled by default
         self.kv_cache: Optional[KVCache] = None
         self.rotary_embedding = rotary_emb
         self.config = config
-        self.sample_embed_dim = None # type: Optional[int]
-        self.sample_n_head = None # type: Optional[int]
-        self.sample_head_size = None # type: Optional[int]
-        self.sample_qkv_shape = None # type: Optional[int]
+        self.sample_embed_dim = None  # type: Optional[int]
+        self.sample_n_head = None  # type: Optional[int]
+        self.sample_head_size = None  # type: Optional[int]
+        self.sample_qkv_shape = None  # type: Optional[int]
         self.device = config.device
 
-    def set_sample_config(self, sample_embed_dim:int, sample_n_head:int, sample_bias_flag:bool) -> None:
+    def set_sample_config(
+        self, sample_embed_dim: int, sample_n_head: int, sample_bias_flag: bool
+    ) -> None:
         self.sample_embed_dim = sample_embed_dim
         self.sample_n_head = sample_n_head
-        self.sample_head_size = self.config.head_size 
+        self.sample_head_size = self.config.head_size
         if self.config.n_query_groups == 1:
             self.sample_n_query_groups = 1
         else:
-            self.sample_n_query_groups = self.sample_n_head // (self.config.n_head//self.config.n_query_groups)
-        self.sample_qkv_shape = (self.sample_n_head + 2 * self.sample_n_query_groups) * self.sample_head_size
-        
-        #print(self.sample_qkv_shape)
-        self.attn.set_sample_config(sample_embed_dim, self.sample_qkv_shape, sample_bias_flag)
-        self.proj.set_sample_config(self.sample_head_size*self.sample_n_head, sample_embed_dim, sample_bias_flag)
+            self.sample_n_query_groups = self.sample_n_head // (
+                self.config.n_head // self.config.n_query_groups
+            )
+        self.sample_qkv_shape = (
+            self.sample_n_head + 2 * self.sample_n_query_groups
+        ) * self.sample_head_size
+
+        # print(self.sample_qkv_shape)
+        self.attn.set_sample_config(
+            sample_embed_dim, self.sample_qkv_shape, sample_bias_flag
+        )
+        self.proj.set_sample_config(
+            self.sample_head_size * self.sample_n_head,
+            sample_embed_dim,
+            sample_bias_flag,
+        )
         self.rotary_embedding.set_sample_config(sample_embed_dim, sample_n_head)
         self.cos, self.sin = self.reset_parameters(device=self.device)
 
@@ -52,16 +64,20 @@ class CausalSelfAttention(nn.Module):
         mask: Optional[torch.Tensor] = None,
         input_pos: Optional[torch.Tensor] = None,
     ) -> torch.Tensor:
-        B, T, C = x.size()  # batch size, sequence length, embedding dimensionality (n_embd)
+        B, T, C = (
+            x.size()
+        )  # batch size, sequence length, embedding dimensionality (n_embd)
 
         qkv = self.attn(x)
         cos = self.cos[:T]
         sin = self.sin[:T]
         # assemble into a number of query groups to support MHA, MQA and GQA together (see `config.n_query_groups`)
-        #print(qkv.shape)
+        # print(qkv.shape)
         q_per_kv = self.sample_n_head // self.sample_n_query_groups
         total_qkv = q_per_kv + 2  # each group has 1+ queries, 1 key, and 1 value
-        qkv = qkv.view(B, T, self.sample_n_query_groups, total_qkv, self.sample_head_size)
+        qkv = qkv.view(
+            B, T, self.sample_n_query_groups, total_qkv, self.sample_head_size
+        )
         qkv = qkv.permute(0, 2, 3, 1, 4)  # (B, n_query_groups, total_qkv, T, hs)
 
         # split batched computation into three
@@ -70,20 +86,26 @@ class CausalSelfAttention(nn.Module):
         # maybe repeat k and v if for the non multi-head attention cases
         # training: flash attention requires it
         # inference: multi-query would require a full kv cache so avoid it to limit its memory usage
-        if self.sample_n_query_groups != self.sample_n_head and (input_pos is None or self.config.n_query_groups != 1):
-            k = k.expand(B, self.sample_n_query_groups, q_per_kv, T, self.sample_head_size)
-            v = v.expand(B, self.sample_n_query_groups, q_per_kv, T, self.sample_head_size)
+        if self.sample_n_query_groups != self.sample_n_head and (
+            input_pos is None or self.config.n_query_groups != 1
+        ):
+            k = k.expand(
+                B, self.sample_n_query_groups, q_per_kv, T, self.sample_head_size
+            )
+            v = v.expand(
+                B, self.sample_n_query_groups, q_per_kv, T, self.sample_head_size
+            )
 
         q = q.reshape(B, -1, T, self.sample_head_size)  # (B, nh_q, T, hs)
         k = k.reshape(B, -1, T, self.sample_head_size)  # (B, nh_k, T, hs)
         v = v.reshape(B, -1, T, self.sample_head_size)  # (B, nh_v, T, hs)
-        #print(q[0,0,0,:])
+        # print(q[0,0,0,:])
 
         rope_elem = int(self.sample_head_size * self.config.rotary_percentage)
-        q_roped = self.rotary_embedding.apply_rope(q[..., : rope_elem], cos, sin)
-        k_roped = self.rotary_embedding.apply_rope(k[..., : rope_elem], cos, sin)
-        q = torch.cat((q_roped, q[..., rope_elem :]), dim=-1)
-        k = torch.cat((k_roped, k[..., rope_elem :]), dim=-1)
+        q_roped = self.rotary_embedding.apply_rope(q[..., :rope_elem], cos, sin)
+        k_roped = self.rotary_embedding.apply_rope(k[..., :rope_elem], cos, sin)
+        q = torch.cat((q_roped, q[..., rope_elem:]), dim=-1)
+        k = torch.cat((k_roped, k[..., rope_elem:]), dim=-1)
 
         if input_pos is not None:
             if not isinstance(self.kv_cache, KVCache):
@@ -92,20 +114,26 @@ class CausalSelfAttention(nn.Module):
 
         y = self.scaled_dot_product_attention(q, k, v, mask)
 
-        y = y.reshape(B, T, self.sample_head_size*self.sample_n_head)  # re-assemble all head outputs side by side
-        #print(y)
+        y = y.reshape(
+            B, T, self.sample_head_size * self.sample_n_head
+        )  # re-assemble all head outputs side by side
+        # print(y)
         # output projection
-        #print(self.proj(y))
+        # print(self.proj(y))
         return self.proj(y)
 
     def scaled_dot_product_attention(
-        self, q: torch.Tensor, k: torch.Tensor, v: torch.Tensor, mask: Optional[torch.Tensor] = None
+        self,
+        q: torch.Tensor,
+        k: torch.Tensor,
+        v: torch.Tensor,
+        mask: Optional[torch.Tensor] = None,
     ) -> torch.Tensor:
         scale = 1.0 / math.sqrt(self.sample_head_size)
         y = torch.nn.functional.scaled_dot_product_attention(
             q, k, v, attn_mask=mask, dropout_p=0.0, scale=scale, is_causal=mask is None
         )
-        #print(y)
+        # print(y)
         return y.transpose(1, 2)
 
     def build_kv_cache(
@@ -116,16 +144,18 @@ class CausalSelfAttention(nn.Module):
         device: Optional[torch.device] = None,
         dtype: Optional[torch.dtype] = None,
     ) -> "KVCache":
-        self.sample_head_size = self.config.n_embd//self.config.n_head
+        self.sample_head_size = self.config.n_embd // self.config.n_head
 
         heads = 1 if self.config.n_query_groups == 1 else self.config.n_head
         v_shape = (batch_size, heads, max_seq_length, self.sample_head_size)
         if rope_cache_length is None:
             if self.config.rotary_percentage != 1.0:
-                raise TypeError("Please pass the `rope_cache_length=gpt.cos.size(-1)` value")
+                raise TypeError(
+                    "Please pass the `rope_cache_length=gpt.cos.size(-1)` value"
+                )
             k_shape = v_shape
         else:
-            self.sample_head_size = self.config.n_embd//self.config.n_head
+            self.sample_head_size = self.config.n_embd // self.config.n_head
             print(rope_cache_length)
             print(self.sample_head_size)
             print(self.config.rope_n_elem)

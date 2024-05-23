@@ -24,7 +24,16 @@ def test_lora_layer_replacement():
     from gpt.lora import GPT, Config, LoRALinear
     from gpt.lora import CausalSelfAttention as LoRACausalSelfAttention
 
-    config = Config(n_layer=2, n_head=4, n_embd=8, block_size=8, vocab_size=8, r=8, alpha=8, dropout=0.1)
+    config = Config(
+        n_layer=2,
+        n_head=4,
+        n_embd=8,
+        block_size=8,
+        vocab_size=8,
+        r=8,
+        alpha=8,
+        dropout=0.1,
+    )
     model = GPT(config)
 
     assert isinstance(model.transformer.h[0].attn, LoRACausalSelfAttention)
@@ -197,7 +206,9 @@ def test_lora_script(tmp_path, fake_checkpoint_dir, monkeypatch):
 
     from gpt.config import name_to_config
 
-    model_config = dict(block_size=128, n_layer=2, n_embd=8, n_head=4, padded_vocab_size=8)
+    model_config = dict(
+        block_size=128, n_layer=2, n_embd=8, n_head=4, padded_vocab_size=8
+    )
     monkeypatch.setitem(name_to_config, "tmp", model_config)
     monkeypatch.setattr(module, "load_checkpoint", Mock())
 
@@ -208,7 +219,12 @@ def test_lora_script(tmp_path, fake_checkpoint_dir, monkeypatch):
 
     stdout = StringIO()
     with redirect_stdout(stdout):
-        module.setup(data_dir=tmp_path, checkpoint_dir=fake_checkpoint_dir, out_dir=tmp_path, precision="32-true")
+        module.setup(
+            data_dir=tmp_path,
+            checkpoint_dir=fake_checkpoint_dir,
+            out_dir=tmp_path,
+            precision="32-true",
+        )
 
     assert {p.name for p in tmp_path.glob("*.pth")} == {
         "iter-000002-ckpt.pth",
@@ -244,10 +260,22 @@ def test_lora_init_when_linear_overridden():
     ("apply_to", "target_layer_names", "mlp_class_name"),
     (
         ("to_projection", "transformer.h.0.attn.proj", "GptNeoxMLP"),
-        ("to_mlp", {"transformer.h.0.mlp.fc", "transformer.h.0.mlp.proj"}, "GptNeoxMLP"),
+        (
+            "to_mlp",
+            {"transformer.h.0.mlp.fc", "transformer.h.0.mlp.proj"},
+            "GptNeoxMLP",
+        ),
         ("to_head", "lm_head", "GptNeoxMLP"),
         ("to_projection", "transformer.h.0.attn.proj", "LLaMAMLP"),
-        ("to_mlp", {"transformer.h.0.mlp.fc_1", "transformer.h.0.mlp.fc_2", "transformer.h.0.mlp.proj"}, "LLaMAMLP"),
+        (
+            "to_mlp",
+            {
+                "transformer.h.0.mlp.fc_1",
+                "transformer.h.0.mlp.fc_2",
+                "transformer.h.0.mlp.proj",
+            },
+            "LLaMAMLP",
+        ),
         ("to_head", "lm_head", "LLaMAMLP"),
     ),
 )
@@ -286,11 +314,23 @@ def test_lora_linear_utilization(apply_to, target_layer_names, mlp_class_name):
 
 
 @torch.inference_mode()
-@pytest.mark.parametrize("apply_to", (None, "to_query", "to_key", "to_value", "to_projection", "to_mlp", "to_head"))
+@pytest.mark.parametrize(
+    "apply_to",
+    (None, "to_query", "to_key", "to_value", "to_projection", "to_mlp", "to_head"),
+)
 def test_lora_gpt_apply_lora_forward_no_exception(apply_to):
     from gpt.lora import GPT, Config
 
-    config = Config(n_layer=1, n_head=4, n_embd=8, block_size=1, vocab_size=1, r=2, alpha=8, dropout=0.1)
+    config = Config(
+        n_layer=1,
+        n_head=4,
+        n_embd=8,
+        block_size=1,
+        vocab_size=1,
+        r=2,
+        alpha=8,
+        dropout=0.1,
+    )
     if apply_to:
         setattr(config, apply_to, True)
     input_ids = torch.tensor([[1]])
@@ -348,7 +388,9 @@ def test_lora_qkv_linear_compare_conv1d(n_head, enable_lora):
     from gpt.lora import LoRAQKVLinear
 
     C = 12
-    layer = LoRAQKVLinear(C, 3 * C, n_head=n_head, n_query_groups=n_head, r=2, enable_lora=enable_lora)
+    layer = LoRAQKVLinear(
+        C, 3 * C, n_head=n_head, n_query_groups=n_head, r=2, enable_lora=enable_lora
+    )
     x = torch.randn((1, 1, C))
     a = F.linear(x, layer.lora_A).transpose(-2, -1)  # after_A
     b = layer.lora_B.data.unsqueeze(-1)
@@ -384,7 +426,9 @@ def test_lora_linear_weights_merged_status(rank, expected_merged):
 def test_lora_qkv_linear_weights_merged_status(rank, enable_lora, expected_merged):
     from gpt.lora import LoRAQKVLinear
 
-    layer = LoRAQKVLinear(10, 3 * 10, n_head=2, n_query_groups=2, r=rank, enable_lora=enable_lora)
+    layer = LoRAQKVLinear(
+        10, 3 * 10, n_head=2, n_query_groups=2, r=rank, enable_lora=enable_lora
+    )
     assert not layer.merged
     layer.merge()
     assert layer.merged == expected_merged
@@ -394,7 +438,10 @@ def test_lora_qkv_linear_weights_merged_status(rank, enable_lora, expected_merge
 # platform dependent cuda issue: libbitsandbytes_cpu.so: undefined symbol: cquantize_blockwise_fp16_nf4
 @pytest.mark.xfail(raises=AttributeError, strict=False)
 def test_lora_merge_with_bitsandbytes():
-    from lightning.fabric.plugins.precision.bitsandbytes import _BITSANDBYTES_AVAILABLE, BitsandbytesPrecision
+    from lightning.fabric.plugins.precision.bitsandbytes import (
+        _BITSANDBYTES_AVAILABLE,
+        BitsandbytesPrecision,
+    )
 
     if not _BITSANDBYTES_AVAILABLE:
         pytest.skip("BNB not available")
@@ -415,7 +462,12 @@ def test_lora_merge_with_bitsandbytes():
         to_value=True,
         to_projection=True,
     )
-    fabric = Fabric(devices=1, plugins=BitsandbytesPrecision("nf4", dtype=torch.bfloat16, ignore_modules={"lm_head"}))
+    fabric = Fabric(
+        devices=1,
+        plugins=BitsandbytesPrecision(
+            "nf4", dtype=torch.bfloat16, ignore_modules={"lm_head"}
+        ),
+    )
     model = GPT(config)
     mark_only_lora_as_trainable(model)
 
@@ -455,7 +507,10 @@ def test_lora_merge_with_bitsandbytes():
     delta_w = attn_proj.get_lora_AB()
     # dequantize initial weight and sum with delta_w
     initial_weight_data = (
-        bnb.functional.dequantize_4bit(initial_weight.data, initial_weight_kwargs["quant_state"]) + delta_w
+        bnb.functional.dequantize_4bit(
+            initial_weight.data, initial_weight_kwargs["quant_state"]
+        )
+        + delta_w
     )
     # quantize again
     initial_weight_data = bnb.nn.Params4bit(
@@ -467,7 +522,16 @@ def test_lora_merge_with_bitsandbytes():
 def test_lora_gpt_init_weights():
     from gpt.lora import GPT, Config
 
-    config = Config(n_layer=1, n_head=6, n_embd=12, block_size=1, vocab_size=1, r=2, alpha=8, to_head=True)
+    config = Config(
+        n_layer=1,
+        n_head=6,
+        n_embd=12,
+        block_size=1,
+        vocab_size=1,
+        r=2,
+        alpha=8,
+        to_head=True,
+    )
     model = GPT(config)
     param = model.lm_head.lora_B.data
 
@@ -488,7 +552,15 @@ def test_base_model_can_be_lora_loaded(name):
     base_model = BaseGPT.from_name(name, **kwargs)
     base_model_state_dict = base_model.state_dict()
     lora_model = LoRAGPT.from_name(
-        name, **kwargs, r=1, to_query=True, to_key=True, to_value=True, to_projection=True, to_mlp=True, to_head=True
+        name,
+        **kwargs,
+        r=1,
+        to_query=True,
+        to_key=True,
+        to_value=True,
+        to_projection=True,
+        to_mlp=True,
+        to_head=True,
     )
     keys = lora_model.load_state_dict(base_model_state_dict, strict=False)
     assert not keys.unexpected_keys
@@ -514,7 +586,9 @@ def test_lora_compile():
         to_mlp=True,
         to_head=True,
     )
-    x = torch.randint(model.config.vocab_size, size=(2, model.config.block_size), dtype=torch.int64)
+    x = torch.randint(
+        model.config.vocab_size, size=(2, model.config.block_size), dtype=torch.int64
+    )
 
     from torch._dynamo.backends import debugging
 
@@ -574,7 +648,11 @@ def test_against_hf_mixtral():
     ours_model.load_state_dict(state_dict)
 
     # test end to end
-    x = torch.tensor([[9856, 23, 491, 1536, 304], [23, 345, 65, 123, 321]], dtype=torch.int32, device=device)
+    x = torch.tensor(
+        [[9856, 23, 491, 1536, 304], [23, 345, 65, 123, 321]],
+        dtype=torch.int32,
+        device=device,
+    )
     assert x.size(1) == T
     ours_y = ours_model(x)
     theirs_y = theirs_model(x)["logits"].to(dtype)  # HF converts logits to float
@@ -585,7 +663,10 @@ def test_against_hf_mixtral():
 # platform dependent cuda issue: libbitsandbytes_cpu.so: undefined symbol: cquantize_blockwise_fp16_nf4
 @pytest.mark.xfail(raises=AttributeError, strict=False)
 def test_lora_bitsandbytes(monkeypatch, tmp_path, fake_checkpoint_dir):
-    from lightning.fabric.plugins.precision.bitsandbytes import _BITSANDBYTES_AVAILABLE, BitsandbytesPrecision
+    from lightning.fabric.plugins.precision.bitsandbytes import (
+        _BITSANDBYTES_AVAILABLE,
+        BitsandbytesPrecision,
+    )
 
     if not _BITSANDBYTES_AVAILABLE:
         pytest.skip("BNB not available")

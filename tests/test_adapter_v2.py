@@ -89,7 +89,14 @@ def test_adapter_v2_script(tmp_path, fake_checkpoint_dir, monkeypatch):
 
     from gpt.config import name_to_config
 
-    model_config = dict(block_size=128, n_layer=2, n_embd=8, n_head=4, padded_vocab_size=8, adapter_start_layer=0)
+    model_config = dict(
+        block_size=128,
+        n_layer=2,
+        n_embd=8,
+        n_head=4,
+        padded_vocab_size=8,
+        adapter_start_layer=0,
+    )
     monkeypatch.setitem(name_to_config, "tmp", model_config)
 
     monkeypatch.setattr(module, "load_checkpoint", Mock())
@@ -101,7 +108,12 @@ def test_adapter_v2_script(tmp_path, fake_checkpoint_dir, monkeypatch):
 
     stdout = StringIO()
     with redirect_stdout(stdout):
-        module.setup(data_dir=tmp_path, checkpoint_dir=fake_checkpoint_dir, out_dir=tmp_path, precision="32-true")
+        module.setup(
+            data_dir=tmp_path,
+            checkpoint_dir=fake_checkpoint_dir,
+            out_dir=tmp_path,
+            precision="32-true",
+        )
 
     assert {p.name for p in tmp_path.glob("*.pth")} == {
         "iter-000002-ckpt.pth",
@@ -120,10 +132,20 @@ def test_adapter_v2_script(tmp_path, fake_checkpoint_dir, monkeypatch):
 def test_adapter_v2_gpt_init_weights():
     from gpt.adapter_v2 import GPT, Config
 
-    config = Config(n_layer=1, n_head=6, n_embd=12, block_size=1, vocab_size=1, adapter_start_layer=0)
+    config = Config(
+        n_layer=1,
+        n_head=6,
+        n_embd=12,
+        block_size=1,
+        vocab_size=1,
+        adapter_start_layer=0,
+    )
     model = GPT(config)
 
-    for param in (model.transformer.h[0].attn.gating_factor, model.lm_head.adapter_bias):
+    for param in (
+        model.transformer.h[0].attn.gating_factor,
+        model.lm_head.adapter_bias,
+    ):
         assert (param == 0).all()
         torch.nn.init.constant_(param, 1.23)
         assert (param != 0).any()
@@ -153,7 +175,9 @@ def test_adapter_v2_compile():
     from gpt.adapter_v2 import GPT
 
     model = GPT.from_name("pythia-14m", n_layer=3)
-    x = torch.randint(model.config.vocab_size, size=(2, model.config.block_size), dtype=torch.int64)
+    x = torch.randint(
+        model.config.vocab_size, size=(2, model.config.block_size), dtype=torch.int64
+    )
 
     from torch._dynamo.backends import debugging
 
@@ -214,7 +238,11 @@ def test_against_hf_mixtral():
     ours_model.load_state_dict(state_dict, strict=False)
 
     # test end to end
-    x = torch.tensor([[9856, 23, 491, 1536, 304], [23, 345, 65, 123, 321]], dtype=torch.int32, device=device)
+    x = torch.tensor(
+        [[9856, 23, 491, 1536, 304], [23, 345, 65, 123, 321]],
+        dtype=torch.int32,
+        device=device,
+    )
     assert x.size(1) == T
     ours_y = ours_model(x)
     theirs_y = theirs_model(x)["logits"].to(dtype)  # HF converts logits to float
@@ -225,7 +253,10 @@ def test_against_hf_mixtral():
 # platform dependent cuda issue: libbitsandbytes_cpu.so: undefined symbol: cquantize_blockwise_fp16_nf4
 @pytest.mark.xfail(raises=AttributeError, strict=False)
 def test_adapter_v2_bitsandbytes(monkeypatch, tmp_path, fake_checkpoint_dir):
-    from lightning.fabric.plugins.precision.bitsandbytes import _BITSANDBYTES_AVAILABLE, BitsandbytesPrecision
+    from lightning.fabric.plugins.precision.bitsandbytes import (
+        _BITSANDBYTES_AVAILABLE,
+        BitsandbytesPrecision,
+    )
 
     if not _BITSANDBYTES_AVAILABLE:
         pytest.skip("BNB not available")
@@ -241,7 +272,13 @@ def test_adapter_v2_bitsandbytes(monkeypatch, tmp_path, fake_checkpoint_dir):
     from gpt.config import name_to_config
 
     model_config = dict(
-        block_size=128, n_layer=2, n_embd=8, n_head=4, padded_vocab_size=8, adapter_start_layer=0, bias=True
+        block_size=128,
+        n_layer=2,
+        n_embd=8,
+        n_head=4,
+        padded_vocab_size=8,
+        adapter_start_layer=0,
+        bias=True,
     )
     monkeypatch.setitem(name_to_config, "tmp", model_config)
 
@@ -326,7 +363,9 @@ def test_adapter_v2_bitsandbytes(monkeypatch, tmp_path, fake_checkpoint_dir):
         },
     }
 
-    assert {p.name for p in tmp_path.glob("*.pth")} == {"lit_model_adapter_finetuned.pth"}
+    assert {p.name for p in tmp_path.glob("*.pth")} == {
+        "lit_model_adapter_finetuned.pth"
+    }
     state_dict = torch.load(tmp_path / "lit_model_adapter_finetuned.pth")
     assert len(state_dict) == 1
     dtype_to_name = {"torch.float16": set()}

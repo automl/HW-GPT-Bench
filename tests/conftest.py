@@ -58,17 +58,29 @@ def restore_default_dtype():
 
 def RunIf(**kwargs):
     reasons, marker_kwargs = _runif_reasons(**kwargs)
-    return pytest.mark.skipif(condition=len(reasons) > 0, reason=f"Requires: [{' + '.join(reasons)}]", **marker_kwargs)
+    return pytest.mark.skipif(
+        condition=len(reasons) > 0,
+        reason=f"Requires: [{' + '.join(reasons)}]",
+        **marker_kwargs,
+    )
 
 
 # https://github.com/Lightning-AI/lightning/blob/6e517bd55b50166138ce6ab915abd4547702994b/tests/tests_fabric/conftest.py#L140
-def pytest_collection_modifyitems(items: List[pytest.Function], config: pytest.Config) -> None:
+def pytest_collection_modifyitems(
+    items: List[pytest.Function], config: pytest.Config
+) -> None:
     initial_size = len(items)
     conditions = []
     filtered, skipped = 0, 0
 
-    options = {"standalone": "PL_RUN_STANDALONE_TESTS", "min_cuda_gpus": "PL_RUN_CUDA_TESTS"}
-    if os.getenv(options["standalone"], "0") == "1" and os.getenv(options["min_cuda_gpus"], "0") == "1":
+    options = {
+        "standalone": "PL_RUN_STANDALONE_TESTS",
+        "min_cuda_gpus": "PL_RUN_CUDA_TESTS",
+    }
+    if (
+        os.getenv(options["standalone"], "0") == "1"
+        and os.getenv(options["min_cuda_gpus"], "0") == "1"
+    ):
         # special case: we don't have a CPU job for standalone tests, so we shouldn't run only cuda tests.
         # by deleting the key, we avoid filtering out the CPU tests
         del options["min_cuda_gpus"]
@@ -77,15 +89,20 @@ def pytest_collection_modifyitems(items: List[pytest.Function], config: pytest.C
         # this will compute the intersection of all tests selected per environment variable
         if os.getenv(env_var, "0") == "1":
             conditions.append(env_var)
-            for i, test in reversed(list(enumerate(items))):  # loop in reverse, since we are going to pop items
-                already_skipped = any(marker.name == "skip" for marker in test.own_markers)
+            for i, test in reversed(
+                list(enumerate(items))
+            ):  # loop in reverse, since we are going to pop items
+                already_skipped = any(
+                    marker.name == "skip" for marker in test.own_markers
+                )
                 if already_skipped:
                     # the test was going to be skipped anyway, filter it out
                     items.pop(i)
                     skipped += 1
                     continue
                 has_runif_with_kwarg = any(
-                    marker.name == "skipif" and marker.kwargs.get(kwarg) for marker in test.own_markers
+                    marker.name == "skipif" and marker.kwargs.get(kwarg)
+                    for marker in test.own_markers
                 )
                 if not has_runif_with_kwarg:
                     # the test has `@RunIf(kwarg=True)`, filter it out

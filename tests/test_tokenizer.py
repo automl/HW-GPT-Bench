@@ -15,7 +15,11 @@ sys.path.append(str(wd))
 import gpt.config as config_module
 
 
-@pytest.mark.parametrize("config", config_module.configs, ids=[c["hf_config"]["name"] for c in config_module.configs])
+@pytest.mark.parametrize(
+    "config",
+    config_module.configs,
+    ids=[c["hf_config"]["name"] for c in config_module.configs],
+)
 def test_tokenizer_against_hf(config):
     from gpt.tokenizer import Tokenizer
 
@@ -27,13 +31,22 @@ def test_tokenizer_against_hf(config):
     cache_dir = Path("/tmp/tokenizer_test_cache")
 
     # create a checkpoint directory that points to the HF files
-    checkpoint_dir = cache_dir / "litgpt" / config.hf_config["org"] / config.hf_config["name"]
+    checkpoint_dir = (
+        cache_dir / "litgpt" / config.hf_config["org"] / config.hf_config["name"]
+    )
     if not checkpoint_dir.exists():
         file_to_cache = {}
-        for file in ("tokenizer.json", "generation_config.json", "tokenizer.model", "tokenizer_config.json"):
+        for file in (
+            "tokenizer.json",
+            "generation_config.json",
+            "tokenizer.model",
+            "tokenizer_config.json",
+        ):
             try:
                 # download the HF tokenizer config
-                hf_file = cached_file(repo_id, file, cache_dir=cache_dir / "hf", token=access_token)
+                hf_file = cached_file(
+                    repo_id, file, cache_dir=cache_dir / "hf", token=access_token
+                )
             except OSError as e:
                 if "gated repo" in str(e):
                     pytest.xfail("Invalid token" if access_token else "Gated repo")
@@ -86,5 +99,7 @@ def test_tokenizer_against_hf(config):
 def test_tokenizer_input_validation():
     from gpt.tokenizer import Tokenizer
 
-    with pytest.raises(NotADirectoryError, match="The checkpoint directory does not exist"):
+    with pytest.raises(
+        NotADirectoryError, match="The checkpoint directory does not exist"
+    ):
         Tokenizer("cocofruit")

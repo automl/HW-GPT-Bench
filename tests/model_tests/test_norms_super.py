@@ -17,7 +17,7 @@ for emb in sample_embed_dim:
     x = torch.ones(1, 10, emb)
     y = rmsnorm_super(x)
     print(torch.sum(y).item())
-    assert torch.allclose(torch.sum(y), torch.tensor(emb).float()*10, atol=1e-1)
+    assert torch.allclose(torch.sum(y), torch.tensor(emb).float() * 10, atol=1e-1)
     y = layernorm_super(x)
     print(torch.sum(y).item())
-    assert torch.sum(y) == emb*10
+    assert torch.sum(y) == emb * 10

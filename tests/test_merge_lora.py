@@ -20,7 +20,15 @@ def test_merge_lora(tmp_path, fake_checkpoint_dir):
     state_dict = base_model.state_dict()
     assert len(state_dict) == 40
     torch.save(state_dict, fake_checkpoint_dir / "lit_model.pth")
-    lora_model = LoRAGPT.from_name("pythia-14m", **config, r=8, alpha=16, dropout=0.05, to_query=True, to_value=True)
+    lora_model = LoRAGPT.from_name(
+        "pythia-14m",
+        **config,
+        r=8,
+        alpha=16,
+        dropout=0.05,
+        to_query=True,
+        to_value=True
+    )
     state_dict = {k: v for k, v in lora_model.state_dict().items() if lora_filter(k, v)}
     assert len(state_dict) == 6
     lora_path = tmp_path / "lora"

@@ -36,17 +36,21 @@ def copy_weights_falcon(
     }
     # the original model definition is different for each size
     if "7b" in model_name:
-        weight_map.update({
-            "transformer.h.{}.norm_1.bias": "transformer.h.{}.input_layernorm.bias",
-            "transformer.h.{}.norm_1.weight": "transformer.h.{}.input_layernorm.weight",
-        })
+        weight_map.update(
+            {
+                "transformer.h.{}.norm_1.bias": "transformer.h.{}.input_layernorm.bias",
+                "transformer.h.{}.norm_1.weight": "transformer.h.{}.input_layernorm.weight",
+            }
+        )
     elif "40b" in model_name or "180B" in model_name:
-        weight_map.update({
-            "transformer.h.{}.norm_1.bias": "transformer.h.{}.ln_attn.bias",
-            "transformer.h.{}.norm_1.weight": "transformer.h.{}.ln_attn.weight",
-            "transformer.h.{}.norm_2.bias": "transformer.h.{}.ln_mlp.bias",
-            "transformer.h.{}.norm_2.weight": "transformer.h.{}.ln_mlp.weight",
-        })
+        weight_map.update(
+            {
+                "transformer.h.{}.norm_1.bias": "transformer.h.{}.ln_attn.bias",
+                "transformer.h.{}.norm_1.weight": "transformer.h.{}.ln_attn.weight",
+                "transformer.h.{}.norm_2.bias": "transformer.h.{}.ln_mlp.bias",
+                "transformer.h.{}.norm_2.weight": "transformer.h.{}.ln_mlp.weight",
+            }
+        )
     else:
         raise NotImplementedError
 
@@ -116,18 +120,22 @@ def copy_weights_llama(
         "lm_head.weight": "lm_head.weight",
     }
     if config._mlp_class == "LLaMAMoE":
-        weight_map.update({
-            "transformer.h.{}.mlp.gate.weight": "model.layers.{l}.block_sparse_moe.gate.weight",
-            "transformer.h.{}.mlp.experts.{}.fc_1.weight": "model.layers.{l}.block_sparse_moe.experts.{e}.w1.weight",
-            "transformer.h.{}.mlp.experts.{}.fc_2.weight": "model.layers.{l}.block_sparse_moe.experts.{e}.w3.weight",
-            "transformer.h.{}.mlp.experts.{}.proj.weight": "model.layers.{l}.block_sparse_moe.experts.{e}.w2.weight",
-        })
+        weight_map.update(
+            {
+                "transformer.h.{}.mlp.gate.weight": "model.layers.{l}.block_sparse_moe.gate.weight",
+                "transformer.h.{}.mlp.experts.{}.fc_1.weight": "model.layers.{l}.block_sparse_moe.experts.{e}.w1.weight",
+                "transformer.h.{}.mlp.experts.{}.fc_2.weight": "model.layers.{l}.block_sparse_moe.experts.{e}.w3.weight",
+                "transformer.h.{}.mlp.experts.{}.proj.weight": "model.layers.{l}.block_sparse_moe.experts.{e}.w2.weight",
+            }
+        )
     elif config._mlp_class == "LLaMAMLP":
-        weight_map.update({
-            "transformer.h.{}.mlp.fc_1.weight": "model.layers.{l}.mlp.gate_proj.weight",
-            "transformer.h.{}.mlp.fc_2.weight": "model.layers.{l}.mlp.up_proj.weight",
-            "transformer.h.{}.mlp.proj.weight": "model.layers.{l}.mlp.down_proj.weight",
-        })
+        weight_map.update(
+            {
+                "transformer.h.{}.mlp.fc_1.weight": "model.layers.{l}.mlp.gate_proj.weight",
+                "transformer.h.{}.mlp.fc_2.weight": "model.layers.{l}.mlp.up_proj.weight",
+                "transformer.h.{}.mlp.proj.weight": "model.layers.{l}.mlp.down_proj.weight",
+            }
+        )
     else:
         raise NotImplementedError
 
@@ -215,7 +223,9 @@ def qkv_split(
     ks = []
     vs = []
     for chunk in torch.chunk(param, config.n_query_groups):
-        split = torch.split(chunk, [config.head_size * q_per_kv, config.head_size, config.head_size])
+        split = torch.split(
+            chunk, [config.head_size * q_per_kv, config.head_size, config.head_size]
+        )
         qs.append(split[0])
         ks.append(split[1])
         vs.append(split[2])
@@ -227,13 +237,17 @@ def qkv_split(
 
 def check_conversion_supported(lit_weights: Dict[str, torch.Tensor]) -> None:
     if any("lora" in wn for wn in lit_weights):
-        raise ValueError("Checkpoints with LoRA weights cannot be converted. Call `scripts/merge_lora.py` first.")
+        raise ValueError(
+            "Checkpoints with LoRA weights cannot be converted. Call `scripts/merge_lora.py` first."
+        )
     if any("adapter" in wn or "gating_factor" in wn for wn in lit_weights):
         raise NotImplementedError("Converting adapter models is supported.")
 
 
 @torch.inference_mode()
-def convert_lit_checkpoint(checkpoint_path: Path, output_path: Path, config_path: Path) -> None:
+def convert_lit_checkpoint(
+    checkpoint_path: Path, output_path: Path, config_path: Path
+) -> None:
     config = Config.from_json(config_path)
 
     if "falcon" in config.name:

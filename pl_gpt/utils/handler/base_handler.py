@@ -1,16 +1,15 @@
-
 import os
 from datetime import datetime
 import pathlib
 
 
-class Handler():
+class Handler:
 
     def __init__(self):
         pass
 
     def time_stamp(self) -> str:
-        return datetime.utcnow().strftime('%Y-%m-%d_%H:%M:%S.%f')[:-4]
+        return datetime.utcnow().strftime("%Y-%m-%d_%H:%M:%S.%f")[:-4]
 
     def save_mkdir(self, dir):
         while not os.path.isdir(dir):
@@ -23,15 +22,23 @@ class Handler():
 
         dir = pathlib.Path(dir)
         counter = 0
-        split_file_name = file_name.split('.')
+        split_file_name = file_name.split(".")
         if suffix:
-            counting_file_name = '.'.join(split_file_name[:-1]) + f"-{counter}." + split_file_name[-1]
+            counting_file_name = (
+                ".".join(split_file_name[:-1]) + f"-{counter}." + split_file_name[-1]
+            )
         else:
             counting_file_name = file_name + f"-{counter}"
 
-        while os.path.isfile(dir / counting_file_name) or os.path.isdir(dir / counting_file_name):
+        while os.path.isfile(dir / counting_file_name) or os.path.isdir(
+            dir / counting_file_name
+        ):
             if suffix:
-                counting_file_name = '.'.join(split_file_name[:-1]) + f"-{counter}." + split_file_name[-1]
+                counting_file_name = (
+                    ".".join(split_file_name[:-1])
+                    + f"-{counter}."
+                    + split_file_name[-1]
+                )
             else:
                 counting_file_name = file_name + f"-{counter}"
             counter += 1
@@ -42,15 +49,23 @@ class Handler():
 
         dir = pathlib.Path(dir)
         counter = 0
-        split_file_name = file_name.split('.')
+        split_file_name = file_name.split(".")
         if suffix:
-            counting_file_name = '.'.join(split_file_name[:-1]) + f"-{counter}." + split_file_name[-1]
+            counting_file_name = (
+                ".".join(split_file_name[:-1]) + f"-{counter}." + split_file_name[-1]
+            )
         else:
             counting_file_name = file_name + f"-{counter}"
 
-        while os.path.isfile(dir / counting_file_name) or os.path.isdir(dir / counting_file_name):
+        while os.path.isfile(dir / counting_file_name) or os.path.isdir(
+            dir / counting_file_name
+        ):
             if suffix:
-                counting_file_name = '.'.join(split_file_name[:-1]) + f"-{counter}." + split_file_name[-1]
+                counting_file_name = (
+                    ".".join(split_file_name[:-1])
+                    + f"-{counter}."
+                    + split_file_name[-1]
+                )
             else:
                 counting_file_name = file_name + f"-{counter}"
             counter += 1
@@ -59,8 +74,11 @@ class Handler():
             return counting_file_name
         else:
             if suffix:
-                counting_file_name = '.'.join(split_file_name[:-1]) + f"-{counter - 2}." + split_file_name[-1]
+                counting_file_name = (
+                    ".".join(split_file_name[:-1])
+                    + f"-{counter - 2}."
+                    + split_file_name[-1]
+                )
             else:
                 counting_file_name = file_name + f"-{counter -2 }"
             return counting_file_name
-

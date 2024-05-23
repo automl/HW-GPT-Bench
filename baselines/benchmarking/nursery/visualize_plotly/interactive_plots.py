@@ -43,7 +43,6 @@ def plot_tuner_results(
     dimensions_max_cardinality: int = 50,
     save_figure: bool = False,
 ) -> Optional[pd.DataFrame]:
-
     """
     This assumes the SageMaker output path of your hpo estimator is of the format:
     output_path = f's3://{bucket}/syne-tune/{hpo_experiment_name}'

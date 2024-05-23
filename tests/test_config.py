@@ -79,7 +79,9 @@ def test_hf_config_from_json(tmp_path):
     assert new_config.hf_config["org"] == "new-org"
 
 
-@pytest.mark.parametrize("config", config_module.configs, ids=[c["name"] for c in config_module.configs])
+@pytest.mark.parametrize(
+    "config", config_module.configs, ids=[c["name"] for c in config_module.configs]
+)
 def test_short_and_hf_names_are_equal_unless_on_purpose(config):
     from gpt import Config
 
@@ -101,7 +103,9 @@ def test_from_checkpoint(tmp_path):
     from gpt import Config
 
     # 1. Neither `lit_config.py` nor matching config exists.
-    with pytest.raises(FileNotFoundError, match="neither 'lit_config.json' nor matching config exists"):
+    with pytest.raises(
+        FileNotFoundError, match="neither 'lit_config.json' nor matching config exists"
+    ):
         Config.from_checkpoint(tmp_path / "non_existing_checkpoint")
 
     # 2. If `lit_config.py` doesn't exists, but there is a matching config in `gpt/config.py`.

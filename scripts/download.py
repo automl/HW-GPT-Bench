@@ -26,7 +26,10 @@ def download_from_hub(
     if repo_id is None:
         from gpt.config import configs
 
-        options = [f"{config['hf_config']['org']}/{config['hf_config']['name']}" for config in configs]
+        options = [
+            f"{config['hf_config']['org']}/{config['hf_config']['name']}"
+            for config in configs
+        ]
         print("Please specify --repo_id <repo_id>. Available values:")
         print("\n".join(options))
         return
@@ -50,7 +53,9 @@ def download_from_hub(
             # covers `.bin` files and `.bin.index.json`
             download_files.append("*.bin*")
     elif from_safetensors:
-        raise ValueError("`--from_safetensors=True` won't have an effect with `--tokenizer_only=True`")
+        raise ValueError(
+            "`--from_safetensors=True` won't have an effect with `--tokenizer_only=True`"
+        )
 
     import huggingface_hub._snapshot_download as download
     import huggingface_hub.constants as constants
@@ -85,7 +90,9 @@ def download_from_hub(
             try:
                 result = safetensors_load(safetensor_path)
             except SafetensorError as e:
-                raise RuntimeError(f"{safetensor_path} is likely corrupted. Please try to re-download it.") from e
+                raise RuntimeError(
+                    f"{safetensor_path} is likely corrupted. Please try to re-download it."
+                ) from e
             print(f"{safetensor_path} --> {bin_path}")
             torch.save(result, bin_path)
             os.remove(safetensor_path)

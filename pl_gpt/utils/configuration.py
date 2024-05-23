@@ -1,4 +1,3 @@
-
 import os
 import re
 import yaml
@@ -9,6 +8,8 @@ import importlib
 import inspect
 from collections.abc import MutableMapping
 import torch
+
+
 class SimpleNestedNamespace(Dict):
     def __init__(self, *args, **kwargs):
 
@@ -35,6 +36,7 @@ class SimpleNestedNamespace(Dict):
     def mlp_class(self):
         # `self._mlp_class` cannot be the type to keep the config json serializable
         from gpt_base.model import GptNeoxMLP, LLaMAMLP
+
         if self._mlp_class == "GptNeoMLP":
             return GptNeoxMLP
         else:
@@ -51,6 +53,7 @@ class SimpleNestedNamespace(Dict):
             return partial(RMSNorm, add_unit_offset="Gemma" in self.name)
         return getattr(torch.nn, self._norm_class)
 
+
 class Config(SimpleNestedNamespace):
 
     def __init__(self, config_file=None, config_dict=None):
@@ -59,7 +62,7 @@ class Config(SimpleNestedNamespace):
             raise UserWarning("ConfigHandler: config_file and config_dict is None")
 
         elif config_file is not None and config_dict is None:
-            with open(config_file, 'r') as f:
+            with open(config_file, "r") as f:
                 config_dict = yaml.load(f, Loader=yaml.Loader)
 
         def convert_exponential_string(s):
@@ -69,7 +72,7 @@ class Config(SimpleNestedNamespace):
             if match:
                 mantissa = float(match.group(1))
                 exponent = int(match.group(2))
-                result = mantissa * (10 ** exponent)
+                result = mantissa * (10**exponent)
                 if result.is_integer():
                     return int(result)
                 else:
@@ -77,20 +80,26 @@ class Config(SimpleNestedNamespace):
             else:
                 return s
 
-
         def get_attr_by_link(obj, links):
             attr = obj[links[0]]
             if isinstance(attr, Dict) and len(links) > 1:
                 return get_attr_by_link(attr, links[1:])
             return attr
+
         def replace_linker(dictionary):
             for k, v in dictionary.items():
                 if isinstance(v, str):
                     dictionary[k] = convert_exponential_string(v)
                 if isinstance(v, Dict):
                     replace_linker(v)
-                if isinstance(v, str) and len(v) > 3 and v[0] == '$' and v[1] == '{' and v[-1] == '}':
-                    links = v[2:-1].split('.')
+                if (
+                    isinstance(v, str)
+                    and len(v) > 3
+                    and v[0] == "$"
+                    and v[1] == "{"
+                    and v[-1] == "}"
+                ):
+                    links = v[2:-1].split(".")
                     dictionary[k] = get_attr_by_link(config_dict, links)
 
         replace_linker(config_dict)
@@ -110,21 +119,24 @@ class Config(SimpleNestedNamespace):
     def save_config(self, directory, file_name="config.yml"):
         dir = pathlib.Path(directory)
         dir.mkdir(parents=True, exist_ok=True)
-        with open(dir / file_name, 'w+') as f:
+        with open(dir / file_name, "w+") as f:
             config_dict = self.get_dict()
-            yaml.dump(config_dict, f, default_flow_style=False, encoding='utf-8')
+            yaml.dump(config_dict, f, default_flow_style=False, encoding="utf-8")
         return dir / file_name
 
 
-
-
-if __name__=='__main__':
-    config = Config(config_file=os.path.join("/p/scratch/ccstdl/sukthanker1/HW-Aware-LLM-Bench/config/juwels_default.yaml"))
+if __name__ == "__main__":
+    config = Config(
+        config_file=os.path.join(
+            "/p/scratch/ccstdl/sukthanker1/HW-Aware-LLM-Bench/config/juwels_default.yaml"
+        )
+    )
 
     print(type(config.deepspeed.allgather_bucket_size))
     print(config)
     from gpt.model import GPT
     from gpt.utils import *
+
     sample_embed_dim = config.model.embed_choices
     sample_n_head = config.model.head_choices
     sample_mlp_ratio = config.model.mlp_ratio_choices
@@ -140,27 +152,41 @@ if __name__=='__main__':
     config.model.block_size = block_size
     config.model.padded_vocab_size = vocab_size
     config.model.n_layer = n_layer
-    config.model.head_size = n_embd//n_head
+    config.model.head_size = n_embd // n_head
     config.model.n_query_groups = n_head
-    gpt = GPT(config.model).cuda()#.half()
+    gpt = GPT(config.model).cuda()  # .half()
     choices_dict = {}
-    choices_dict['n_layer_choices'] = sample_layer
-    choices_dict['n_head_choices'] = sample_n_head
-    choices_dict['embed_dim_choices'] = sample_embed_dim
-    choices_dict['mlp_ratio_choices'] = sample_mlp_ratio
-    choices_dict['bias_choices'] = sample_bias
+    choices_dict["n_layer_choices"] = sample_layer
+    choices_dict["n_head_choices"] = sample_n_head
+    choices_dict["embed_dim_choices"] = sample_embed_dim
+    choices_dict["mlp_ratio_choices"] = sample_mlp_ratio
+    choices_dict["bias_choices"] = sample_bias
 
     for i in range(10):
-       sampled_config = sample_config(choices_dict, layer_sampling_scheme="normal")
-       gpt.set_sample_config(sampled_config["sample_embed_dim"], sampled_config["sample_mlp_ratio"]*sampled_config["sample_embed_dim"], sampled_config["sample_n_head"], sampled_config["sample_n_layer"], sampled_config["sample_bias"], sampled_config["sample_layer_indices"])
-       x = torch.randint(0, vocab_size, (2, block_size)).cuda()#.half()
-       print(x.shape)
-       y = gpt(x)
-       print(y.shape)
+        sampled_config = sample_config(choices_dict, layer_sampling_scheme="normal")
+        gpt.set_sample_config(
+            sampled_config["sample_embed_dim"],
+            sampled_config["sample_mlp_ratio"] * sampled_config["sample_embed_dim"],
+            sampled_config["sample_n_head"],
+            sampled_config["sample_n_layer"],
+            sampled_config["sample_bias"],
+            sampled_config["sample_layer_indices"],
+        )
+        x = torch.randint(0, vocab_size, (2, block_size)).cuda()  # .half()
+        print(x.shape)
+        y = gpt(x)
+        print(y.shape)
 
-       sampled_config = sample_config(choices_dict, layer_sampling_scheme="strided")
-       gpt.set_sample_config(sampled_config["sample_embed_dim"], sampled_config["sample_mlp_ratio"]*sampled_config["sample_embed_dim"], sampled_config["sample_n_head"], sampled_config["sample_n_layer"], sampled_config["sample_bias"], sampled_config["sample_layer_indices"])
-       x = torch.randint(0, vocab_size, (2, block_size)).cuda()#.half()
-       print(x.shape)
-       y = gpt(x)
-       print(y.shape)
+        sampled_config = sample_config(choices_dict, layer_sampling_scheme="strided")
+        gpt.set_sample_config(
+            sampled_config["sample_embed_dim"],
+            sampled_config["sample_mlp_ratio"] * sampled_config["sample_embed_dim"],
+            sampled_config["sample_n_head"],
+            sampled_config["sample_n_layer"],
+            sampled_config["sample_bias"],
+            sampled_config["sample_layer_indices"],
+        )
+        x = torch.randint(0, vocab_size, (2, block_size)).cuda()  # .half()
+        print(x.shape)
+        y = gpt(x)
+        print(y.shape)

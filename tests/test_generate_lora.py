@@ -44,18 +44,37 @@ def test_main(fake_checkpoint_dir, monkeypatch, tensor_like):
         generate.main(temperature=2.0, top_k=2, checkpoint_dir=fake_checkpoint_dir)
 
     assert len(tokenizer_mock.return_value.decode.mock_calls) == num_samples
-    assert torch.allclose(tokenizer_mock.return_value.decode.call_args[0][0], generate_mock.return_value)
-    assert generate_mock.mock_calls == [call(ANY, tensor_like, 101, temperature=2.0, top_k=2, eos_id=ANY)] * num_samples
+    assert torch.allclose(
+        tokenizer_mock.return_value.decode.call_args[0][0], generate_mock.return_value
+    )
+    assert (
+        generate_mock.mock_calls
+        == [call(ANY, tensor_like, 101, temperature=2.0, top_k=2, eos_id=ANY)]
+        * num_samples
+    )
     # only the generated result is printed to stdout
     assert out.getvalue() == "foo bar baz\n" * num_samples
 
-    assert "'padded_vocab_size': 512, 'n_layer': 2, 'n_head': 4, 'n_embd': 8" in err.getvalue()
+    assert (
+        "'padded_vocab_size': 512, 'n_layer': 2, 'n_head': 4, 'n_embd': 8"
+        in err.getvalue()
+    )
 
 
 def test_lora_variables_exist():
     import generate.lora as generate
 
-    for lora_argument in ("r", "alpha", "dropout", "query", "key", "value", "projection", "mlp", "head"):
+    for lora_argument in (
+        "r",
+        "alpha",
+        "dropout",
+        "query",
+        "key",
+        "value",
+        "projection",
+        "mlp",
+        "head",
+    ):
         assert getattr(generate, f"lora_{lora_argument}", None) is not None
 
 
@@ -63,7 +82,9 @@ def test_lora_is_enabled():
     import generate.lora as generate
 
     lora_arguments = ("query", "key", "value", "projection", "mlp", "head")
-    assert any(getattr(generate, f"lora_{lora_argument}") for lora_argument in lora_arguments)
+    assert any(
+        getattr(generate, f"lora_{lora_argument}") for lora_argument in lora_arguments
+    )
 
 
 def test_cli():

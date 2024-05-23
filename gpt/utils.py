@@ -7,7 +7,17 @@ import pickle
 import sys
 from io import BytesIO
 from pathlib import Path
-from typing import TYPE_CHECKING, Any, Dict, Iterable, List, Mapping, Optional, TypeVar, Union
+from typing import (
+    TYPE_CHECKING,
+    Any,
+    Dict,
+    Iterable,
+    List,
+    Mapping,
+    Optional,
+    TypeVar,
+    Union,
+)
 
 import lightning as L
 import torch
@@ -19,6 +29,7 @@ from lightning.fabric.utilities.load import _lazy_load as lazy_load
 from torch.serialization import normalize_storage_type
 from typing_extensions import Self
 import numpy as np
+
 if TYPE_CHECKING:
     from gpt.model import GPT
 
@@ -46,9 +57,10 @@ def check_valid_checkpoint_dir(checkpoint_dir: Path) -> None:
     files = {
         "lit_model.pth": (checkpoint_dir / "lit_model.pth").is_file(),
         "lit_config.json": (checkpoint_dir / "lit_config.json").is_file(),
-        "tokenizer.json OR tokenizer.model": (checkpoint_dir / "tokenizer.json").is_file() or (
-            checkpoint_dir / "tokenizer.model"
-        ).is_file(),
+        "tokenizer.json OR tokenizer.model": (
+            checkpoint_dir / "tokenizer.json"
+        ).is_file()
+        or (checkpoint_dir / "tokenizer.model").is_file(),
         "tokenizer_config.json": (checkpoint_dir / "tokenizer_config.json").is_file(),
     }
     if checkpoint_dir.is_dir():
@@ -62,7 +74,9 @@ def check_valid_checkpoint_dir(checkpoint_dir: Path) -> None:
     # list locally available checkpoints
     available = list(Path("checkpoints").glob("*/*"))
     if available:
-        options = "\n --checkpoint_dir ".join([""] + [repr(str(p.resolve())) for p in available])
+        options = "\n --checkpoint_dir ".join(
+            [""] + [repr(str(p.resolve())) for p in available]
+        )
         extra = f"\nYou have downloaded locally:{options}\n"
     else:
         extra = ""
@@ -98,7 +112,13 @@ class SavingProxyForStorage:
         storage_key = saver._write_storage_and_return_key(storage)
         location = torch.serialization.location_tag(storage)
 
-        self.storage_info = ("storage", storage_type, storage_key, location, storage_numel)
+        self.storage_info = (
+            "storage",
+            storage_type,
+            storage_key,
+            location,
+            storage_numel,
+        )
 
     def __reduce_ex__(self, protocol_version):
         assert False, "this should be handled with out of band"
@@ -111,18 +131,28 @@ class SavingProxyForTensor:
         if reduce_args[0] == torch._utils._rebuild_tensor_v2:
             # for Tensors with Python attributes
             (a0, a1, (storage, *a2_other), *other_reduce_args) = reduce_args
-            assert isinstance(storage, torch.storage.TypedStorage), "Please check for updates"
-            storage_proxy = SavingProxyForStorage(storage, saver, protocol_version=protocol_version)
+            assert isinstance(
+                storage, torch.storage.TypedStorage
+            ), "Please check for updates"
+            storage_proxy = SavingProxyForStorage(
+                storage, saver, protocol_version=protocol_version
+            )
             self.reduce_args = (a0, a1, (storage_proxy, *a2_other), *other_reduce_args)
         else:
             (storage, *other_reduce_args) = reduce_args
-            assert isinstance(storage, torch.storage.TypedStorage), "Please check for updates"
-            storage_proxy = SavingProxyForStorage(storage, saver, protocol_version=protocol_version)
+            assert isinstance(
+                storage, torch.storage.TypedStorage
+            ), "Please check for updates"
+            storage_proxy = SavingProxyForStorage(
+                storage, saver, protocol_version=protocol_version
+            )
             self.reduce_args = (storage_proxy, *other_reduce_args)
 
     def __reduce_ex__(self, protocol_version):
         if protocol_version != self.protocol_version:
-            raise RuntimeError(f"Unexpected protocol version: expected {self.protocol_version}, got {protocol_version}")
+            raise RuntimeError(
+                f"Unexpected protocol version: expected {self.protocol_version}, got {protocol_version}"
+            )
         return self.reduce_ret_fn, self.reduce_args
 
 
@@ -245,13 +275,22 @@ def chunked_cross_entropy(
             logits = torch.cat(logits, dim=1)
             logits = logits.reshape(-1, logits.size(-1))
             targets = targets.reshape(-1)
-            return torch.nn.functional.cross_entropy(logits, targets, ignore_index=ignore_index)
+            return torch.nn.functional.cross_entropy(
+                logits, targets, ignore_index=ignore_index
+            )
 
         # chunk cross entropy
-        logit_chunks = [logit_chunk.reshape(-1, logit_chunk.size(-1)) for logit_chunk in logits]
-        target_chunks = [target_chunk.reshape(-1) for target_chunk in targets.split(logits[0].size(1), dim=1)]
+        logit_chunks = [
+            logit_chunk.reshape(-1, logit_chunk.size(-1)) for logit_chunk in logits
+        ]
+        target_chunks = [
+            target_chunk.reshape(-1)
+            for target_chunk in targets.split(logits[0].size(1), dim=1)
+        ]
         loss_chunks = [
-            torch.nn.functional.cross_entropy(logit_chunk, target_chunk, ignore_index=ignore_index, reduction="none")
+            torch.nn.functional.cross_entropy(
+                logit_chunk, target_chunk, ignore_index=ignore_index, reduction="none"
+            )
             for logit_chunk, target_chunk in zip(logit_chunks, target_chunks)
         ]
         non_masked_elems = (targets != ignore_index).sum()
@@ -261,13 +300,17 @@ def chunked_cross_entropy(
     logits = logits.reshape(-1, logits.size(-1))
     targets = targets.reshape(-1)
     if chunk_size == 0:
-        return torch.nn.functional.cross_entropy(logits, targets, ignore_index=ignore_index)
+        return torch.nn.functional.cross_entropy(
+            logits, targets, ignore_index=ignore_index
+        )
 
     # lm_head wasn't chunked, chunk cross entropy
     logit_chunks = logits.split(chunk_size)
     target_chunks = targets.split(chunk_size)
     loss_chunks = [
-        torch.nn.functional.cross_entropy(logit_chunk, target_chunk, ignore_index=ignore_index, reduction="none")
+        torch.nn.functional.cross_entropy(
+            logit_chunk, target_chunk, ignore_index=ignore_index, reduction="none"
+        )
         for logit_chunk, target_chunk in zip(logit_chunks, target_chunks)
     ]
     non_masked_elems = (targets != ignore_index).sum()
@@ -294,12 +337,16 @@ def get_default_supported_precision(training: bool) -> str:
     """
     from lightning.fabric.accelerators import MPSAccelerator
 
-    if MPSAccelerator.is_available() or (torch.cuda.is_available() and not torch.cuda.is_bf16_supported()):
+    if MPSAccelerator.is_available() or (
+        torch.cuda.is_available() and not torch.cuda.is_bf16_supported()
+    ):
         return "16-mixed" if training else "16-true"
     return "bf16-mixed" if training else "bf16-true"
 
 
-def load_checkpoint(fabric: L.Fabric, model: nn.Module, checkpoint_path: Path, strict: bool = True) -> None:
+def load_checkpoint(
+    fabric: L.Fabric, model: nn.Module, checkpoint_path: Path, strict: bool = True
+) -> None:
     if isinstance(fabric.strategy, FSDPStrategy):
         fabric.load_raw(checkpoint_path, model, strict=strict)
     else:
@@ -308,8 +355,12 @@ def load_checkpoint(fabric: L.Fabric, model: nn.Module, checkpoint_path: Path, s
         model.load_state_dict(state_dict, strict=strict)
 
 
-def flops_per_param(max_seq_length: int, n_layer: int, n_embd: int, n_params: int) -> int:
-    flops_per_token = 2 * n_params  # each parameter is used for a MAC (2 FLOPS) per network operation
+def flops_per_param(
+    max_seq_length: int, n_layer: int, n_embd: int, n_params: int
+) -> int:
+    flops_per_token = (
+        2 * n_params
+    )  # each parameter is used for a MAC (2 FLOPS) per network operation
     # this assumes that all samples have a fixed length equal to the block size
     # which is most likely false during finetuning
     flops_per_seq = flops_per_token * max_seq_length
@@ -330,12 +381,17 @@ def estimate_flops(model: "GPT", training: bool) -> int:
     # For a proper estimate, this needs a more fine-grained calculation as in Appendix A of the paper.
     n_trainable_params = num_parameters(model, requires_grad=True)
     trainable_flops = flops_per_param(
-        model.max_seq_length, model.config.n_layer, model.config.n_embd, n_trainable_params
+        model.max_seq_length,
+        model.config.n_layer,
+        model.config.n_embd,
+        n_trainable_params,
     )
     # forward + backward + gradients (assumes no gradient accumulation)
     ops_per_step = 3 if training else 1
     n_frozen_params = num_parameters(model, requires_grad=False)
-    frozen_flops = flops_per_param(model.max_seq_length, model.config.n_layer, model.config.n_embd, n_frozen_params)
+    frozen_flops = flops_per_param(
+        model.max_seq_length, model.config.n_layer, model.config.n_embd, n_frozen_params
+    )
     # forward + backward
     frozen_ops_per_step = 2 if training else 1
     return ops_per_step * trainable_flops + frozen_ops_per_step * frozen_flops
@@ -372,7 +428,9 @@ class CycleIterator:
         return self
 
 
-def sample_config(choices_dict: dict, layer_sampling_scheme: str = "normal", seed:int = 0) -> dict:
+def sample_config(
+    choices_dict: dict, layer_sampling_scheme: str = "normal", seed: int = 0
+) -> dict:
     """Sample a configuration from a dictionary of choices.
 
     Args:
@@ -384,46 +442,61 @@ def sample_config(choices_dict: dict, layer_sampling_scheme: str = "normal", see
     sampled_dict = {}
     r = random.Random(seed)
     # sample embed dim -> held constant throughout transformer
-    sampled_dict['sample_embed_dim'] = r.choice(choices_dict['embed_dim_choices'])
-    # sample number of layers 
-    sampled_dict['sample_n_layer'] =  r.choice(choices_dict['n_layer_choices'])
-    # sample layer indices 
-    max_layer = max(choices_dict['n_layer_choices'])
-    sampled_dict['sample_layer_indices'] = []
+    sampled_dict["sample_embed_dim"] = r.choice(choices_dict["embed_dim_choices"])
+    # sample number of layers
+    sampled_dict["sample_n_layer"] = r.choice(choices_dict["n_layer_choices"])
+    # sample layer indices
+    max_layer = max(choices_dict["n_layer_choices"])
+    sampled_dict["sample_layer_indices"] = []
     if layer_sampling_scheme == "normal":
-        sampled_dict['sample_layer_indices'] = list(range(sampled_dict['sample_n_layer']))
+        sampled_dict["sample_layer_indices"] = list(
+            range(sampled_dict["sample_n_layer"])
+        )
     elif layer_sampling_scheme == "strided":
-     if sampled_dict["sample_n_layer"] == max_layer:
-        sampled_dict['sample_layer_indices'] = list(range(sampled_dict['sample_n_layer']))
-     elif sampled_dict["sample_n_layer"] == max_layer - 1:
-        sampled_dict['sample_layer_indices'] = list(range(sampled_dict['sample_n_layer']))
-        sampled_dict['sample_layer_indices'][-1] = max_layer - 1
-     else:
-        increment_floor = max_layer // sampled_dict['sample_n_layer']
-        increment_ceil = int(np.ceil(max_layer / sampled_dict['sample_n_layer']))
-        sampled_dict['sample_layer_indices'] = [0 for _ in range(sampled_dict['sample_n_layer'])]
-        counter_layer = 0
-        for i in range(sampled_dict['sample_n_layer']):
-            if counter_layer < (max_layer//2):
-               sampled_dict['sample_layer_indices'][i] = counter_layer
-               counter_layer += increment_ceil
-            else:
-               sampled_dict['sample_layer_indices'][i] = counter_layer
-               counter_layer += increment_floor
+        if sampled_dict["sample_n_layer"] == max_layer:
+            sampled_dict["sample_layer_indices"] = list(
+                range(sampled_dict["sample_n_layer"])
+            )
+        elif sampled_dict["sample_n_layer"] == max_layer - 1:
+            sampled_dict["sample_layer_indices"] = list(
+                range(sampled_dict["sample_n_layer"])
+            )
+            sampled_dict["sample_layer_indices"][-1] = max_layer - 1
+        else:
+            increment_floor = max_layer // sampled_dict["sample_n_layer"]
+            increment_ceil = int(np.ceil(max_layer / sampled_dict["sample_n_layer"]))
+            sampled_dict["sample_layer_indices"] = [
+                0 for _ in range(sampled_dict["sample_n_layer"])
+            ]
+            counter_layer = 0
+            for i in range(sampled_dict["sample_n_layer"]):
+                if counter_layer < (max_layer // 2):
+                    sampled_dict["sample_layer_indices"][i] = counter_layer
+                    counter_layer += increment_ceil
+                else:
+                    sampled_dict["sample_layer_indices"][i] = counter_layer
+                    counter_layer += increment_floor
 
-        sampled_dict['sample_layer_indices'][0] = 0
-        sampled_dict['sample_layer_indices'][-1] = max_layer - 1
+            sampled_dict["sample_layer_indices"][0] = 0
+            sampled_dict["sample_layer_indices"][-1] = max_layer - 1
 
     # sample number of heads
-    sampled_dict['sample_n_head'] = [r.choice(choices_dict['n_head_choices']) for _ in range(max_layer)]
+    sampled_dict["sample_n_head"] = [
+        r.choice(choices_dict["n_head_choices"]) for _ in range(max_layer)
+    ]
     # sample mlp ratio
-    sampled_dict['sample_mlp_ratio'] = [r.choice(choices_dict['mlp_ratio_choices']) for _ in range(max_layer)]
+    sampled_dict["sample_mlp_ratio"] = [
+        r.choice(choices_dict["mlp_ratio_choices"]) for _ in range(max_layer)
+    ]
     # sample bias
-    sampled_dict['sample_bias'] = r.choice(choices_dict['bias_choices'])
+    sampled_dict["sample_bias"] = r.choice(choices_dict["bias_choices"])
 
     return sampled_dict
 
-def sample_config_max(choices_dict: dict, layer_sampling_scheme: str = "normal") -> dict:
+
+def sample_config_max(
+    choices_dict: dict, layer_sampling_scheme: str = "normal"
+) -> dict:
     """Sample a configuration from a dictionary of choices.
 
     Args:
@@ -434,30 +507,31 @@ def sample_config_max(choices_dict: dict, layer_sampling_scheme: str = "normal")
     """
     sampled_dict = {}
     # sample embed dim -> held constant throughout transformer
-    sampled_dict['sample_embed_dim'] = max(choices_dict['embed_dim_choices'])
-    # sample number of layers 
-    sampled_dict['sample_n_layer'] =  max(choices_dict['n_layer_choices'])
-    # sample layer indices 
-    max_layer = max(choices_dict['n_layer_choices'])
-    sampled_dict['sample_layer_indices'] = []
-    sampled_dict['sample_layer_indices'] = list(range(sampled_dict['sample_n_layer']))
-
-    
-
-
+    sampled_dict["sample_embed_dim"] = max(choices_dict["embed_dim_choices"])
+    # sample number of layers
+    sampled_dict["sample_n_layer"] = max(choices_dict["n_layer_choices"])
+    # sample layer indices
+    max_layer = max(choices_dict["n_layer_choices"])
+    sampled_dict["sample_layer_indices"] = []
+    sampled_dict["sample_layer_indices"] = list(range(sampled_dict["sample_n_layer"]))
 
     # sample number of heads
-    sampled_dict['sample_n_head'] = [max(choices_dict['n_head_choices']) for _ in range(max_layer)]
+    sampled_dict["sample_n_head"] = [
+        max(choices_dict["n_head_choices"]) for _ in range(max_layer)
+    ]
     # sample mlp ratio
-    sampled_dict['sample_mlp_ratio'] = [max(choices_dict['mlp_ratio_choices']) for _ in range(max_layer)]
+    sampled_dict["sample_mlp_ratio"] = [
+        max(choices_dict["mlp_ratio_choices"]) for _ in range(max_layer)
+    ]
     # sample bias
-    sampled_dict['sample_bias'] = True
+    sampled_dict["sample_bias"] = True
 
     return sampled_dict
 
 
-
-def sample_config_min(choices_dict: dict, layer_sampling_scheme: str = "normal") -> dict:
+def sample_config_min(
+    choices_dict: dict, layer_sampling_scheme: str = "normal"
+) -> dict:
     """Sample a configuration from a dictionary of choices.
 
     Args:
@@ -468,28 +542,31 @@ def sample_config_min(choices_dict: dict, layer_sampling_scheme: str = "normal")
     """
     sampled_dict = {}
     # sample embed dim -> held constant throughout transformer
-    sampled_dict['sample_embed_dim'] = min(choices_dict['embed_dim_choices'])
-    # sample number of layers 
-    sampled_dict['sample_n_layer'] =  min(choices_dict['n_layer_choices'])
-    # sample layer indices 
-    max_layer = min(choices_dict['n_layer_choices'])
-    sampled_dict['sample_layer_indices'] = []
-    sampled_dict['sample_layer_indices'] = list(range(sampled_dict['sample_n_layer']))
-
-    
-
-
+    sampled_dict["sample_embed_dim"] = min(choices_dict["embed_dim_choices"])
+    # sample number of layers
+    sampled_dict["sample_n_layer"] = min(choices_dict["n_layer_choices"])
+    # sample layer indices
+    max_layer = min(choices_dict["n_layer_choices"])
+    sampled_dict["sample_layer_indices"] = []
+    sampled_dict["sample_layer_indices"] = list(range(sampled_dict["sample_n_layer"]))
 
     # sample number of heads
-    sampled_dict['sample_n_head'] = [min(choices_dict['n_head_choices']) for _ in range(max_layer)]
+    sampled_dict["sample_n_head"] = [
+        min(choices_dict["n_head_choices"]) for _ in range(max_layer)
+    ]
     # sample mlp ratio
-    sampled_dict['sample_mlp_ratio'] = [min(choices_dict['mlp_ratio_choices']) for _ in range(max_layer)]
+    sampled_dict["sample_mlp_ratio"] = [
+        min(choices_dict["mlp_ratio_choices"]) for _ in range(max_layer)
+    ]
     # sample bias
-    sampled_dict['sample_bias'] = True
+    sampled_dict["sample_bias"] = True
 
     return sampled_dict
 
-def sample_config_mid(choices_dict: dict, layer_sampling_scheme: str = "normal") -> dict:
+
+def sample_config_mid(
+    choices_dict: dict, layer_sampling_scheme: str = "normal"
+) -> dict:
     """Sample a configuration from a dictionary of choices.
 
     Args:
@@ -500,24 +577,23 @@ def sample_config_mid(choices_dict: dict, layer_sampling_scheme: str = "normal")
     """
     sampled_dict = {}
     # sample embed dim -> held constant throughout transformer
-    sampled_dict['sample_embed_dim'] = choices_dict['embed_dim_choices'][1]
-    # sample number of layers 
-    sampled_dict['sample_n_layer'] =  choices_dict['n_layer_choices'][1]
-    # sample layer indices 
-    max_layer = choices_dict['n_layer_choices'][1]
-    sampled_dict['sample_layer_indices'] = []
-    sampled_dict['sample_layer_indices'] = list(range(sampled_dict['sample_n_layer']))
-
-    
-
-
+    sampled_dict["sample_embed_dim"] = choices_dict["embed_dim_choices"][1]
+    # sample number of layers
+    sampled_dict["sample_n_layer"] = choices_dict["n_layer_choices"][1]
+    # sample layer indices
+    max_layer = choices_dict["n_layer_choices"][1]
+    sampled_dict["sample_layer_indices"] = []
+    sampled_dict["sample_layer_indices"] = list(range(sampled_dict["sample_n_layer"]))
 
     # sample number of heads
-    sampled_dict['sample_n_head'] = [choices_dict['n_head_choices'][1] for _ in range(max_layer)]
+    sampled_dict["sample_n_head"] = [
+        choices_dict["n_head_choices"][1] for _ in range(max_layer)
+    ]
     # sample mlp ratio
-    sampled_dict['sample_mlp_ratio'] = [choices_dict['mlp_ratio_choices'][1] for _ in range(max_layer)]
+    sampled_dict["sample_mlp_ratio"] = [
+        choices_dict["mlp_ratio_choices"][1] for _ in range(max_layer)
+    ]
     # sample bias
-    sampled_dict['sample_bias'] = True
+    sampled_dict["sample_bias"] = True
 
     return sampled_dict
-

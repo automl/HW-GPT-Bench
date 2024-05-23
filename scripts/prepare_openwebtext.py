@@ -42,7 +42,9 @@ def prepare(
     dataset = load_dataset("openwebtext", num_proc=num_proc_load_dataset)
 
     # owt by default only contains the 'train' split, so create a test split
-    split_dataset = dataset["train"].train_test_split(test_size=test_size, seed=seed, shuffle=True)
+    split_dataset = dataset["train"].train_test_split(
+        test_size=test_size, seed=seed, shuffle=True
+    )
     split_dataset["val"] = split_dataset.pop("test")  # rename the test split to val
 
     def process(example):
@@ -55,7 +57,12 @@ def prepare(
         return {"ids": ids, "len": len(ids)}
 
     # tokenize the dataset
-    tokenized = split_dataset.map(process, remove_columns=["text"], desc="tokenizing the splits", num_proc=num_proc)
+    tokenized = split_dataset.map(
+        process,
+        remove_columns=["text"],
+        desc="tokenizing the splits",
+        num_proc=num_proc,
+    )
 
     # concatenate all the ids in each dataset into one large file we can use for training
     for split, dset in tokenized.items():
@@ -68,7 +75,9 @@ def prepare(
         idx = 0
         for batch_idx in tqdm(range(total_batches), desc=f"writing {filename}"):
             # Batch together samples for faster write
-            batch = dset.shard(num_shards=total_batches, index=batch_idx, contiguous=True).with_format("numpy")
+            batch = dset.shard(
+                num_shards=total_batches, index=batch_idx, contiguous=True
+            ).with_format("numpy")
             arr_batch = np.concatenate(batch["ids"])
             # Write into mmap
             arr[idx : idx + len(arr_batch)] = arr_batch

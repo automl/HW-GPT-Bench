@@ -14,7 +14,11 @@ wd = Path(__file__).parent.parent.resolve()
 sys.path.append(str(wd))
 
 from gpt.lora import GPT, Config, lora_filter, merge_lora_weights
-from gpt.utils import check_valid_checkpoint_dir, get_default_supported_precision, lazy_load
+from gpt.utils import (
+    check_valid_checkpoint_dir,
+    get_default_supported_precision,
+    lazy_load,
+)
 
 lora_r = 8
 lora_alpha = 16
@@ -76,7 +80,11 @@ def merge_lora(
     save_path = out_dir / "lit_model.pth"
     fabric.print(f"Saving weights to {str(save_path)!r}")
     # remove lora parameters and the lora linear substring
-    state_dict = {k.replace("linear.", ""): v for k, v in model.state_dict().items() if not lora_filter(k, v)}
+    state_dict = {
+        k.replace("linear.", ""): v
+        for k, v in model.state_dict().items()
+        if not lora_filter(k, v)
+    }
     torch.save(state_dict, save_path)
 
 

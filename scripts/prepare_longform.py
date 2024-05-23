@@ -42,9 +42,13 @@ def prepare(
     # val_file_name = "val.json"
     test_file_name = "test.json"
 
-    train_file_url = "https://raw.githubusercontent.com/akoksal/LongForm/main/dataset/train.json"
+    train_file_url = (
+        "https://raw.githubusercontent.com/akoksal/LongForm/main/dataset/train.json"
+    )
     # val_file_url = "https://raw.githubusercontent.com/akoksal/LongForm/main/dataset/val.json"
-    test_file_url = "https://raw.githubusercontent.com/akoksal/LongForm/main/dataset/test.json"
+    test_file_url = (
+        "https://raw.githubusercontent.com/akoksal/LongForm/main/dataset/test.json"
+    )
 
     train_file_path = destination_path / train_file_name
     print("Loading train data file...")
@@ -91,7 +95,13 @@ def prepare(
     torch.save(test_data, destination_path / "test.pt")
 
 
-def prepare_sample(example: dict, tokenizer: Tokenizer, max_length: int, mask_inputs: bool, ignore_index: int) -> dict:
+def prepare_sample(
+    example: dict,
+    tokenizer: Tokenizer,
+    max_length: int,
+    mask_inputs: bool,
+    ignore_index: int,
+) -> dict:
     """Processes a single sample.
 
     Each sample in the dataset consists of:
@@ -111,7 +121,9 @@ def prepare_sample(example: dict, tokenizer: Tokenizer, max_length: int, mask_in
     full_prompt = generate_prompt(example)
     full_prompt_and_response = full_prompt + example["output"]
     encoded_full_prompt = tokenizer.encode(full_prompt, max_length=max_length)
-    encoded_full_prompt_and_response = tokenizer.encode(full_prompt_and_response, eos=True, max_length=max_length)
+    encoded_full_prompt_and_response = tokenizer.encode(
+        full_prompt_and_response, eos=True, max_length=max_length
+    )
 
     # The labels are the full prompt with response, but with the prompt masked out
     labels = encoded_full_prompt_and_response.clone()

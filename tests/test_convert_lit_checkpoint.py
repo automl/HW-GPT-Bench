@@ -17,7 +17,14 @@ def test_convert_lit_checkpoint(tmp_path):
     from gpt import GPT, Config
     from scripts.convert_lit_checkpoint import convert_lit_checkpoint
 
-    ours_config = Config.from_name("Llama-2-7b-hf", block_size=8, n_layer=2, n_embd=32, n_head=2, padding_multiple=128)
+    ours_config = Config.from_name(
+        "Llama-2-7b-hf",
+        block_size=8,
+        n_layer=2,
+        n_embd=32,
+        n_head=2,
+        padding_multiple=128,
+    )
     ours_model = GPT(ours_config)
     checkpoint_path = tmp_path / "foo.ckpt"
     config_path = tmp_path / "foo.json"
@@ -44,7 +51,9 @@ def test_against_falcon_40b():
     from gpt import GPT, Config
     from scripts.convert_lit_checkpoint import copy_weights_falcon as copy_to_theirs
 
-    ours_config = Config.from_name("falcon-40b", n_layer=2, n_head=8, n_query_groups=4, n_embd=32)
+    ours_config = Config.from_name(
+        "falcon-40b", n_layer=2, n_head=8, n_query_groups=4, n_embd=32
+    )
     theirs_config = FalconConfig(
         vocab_size=ours_config.padded_vocab_size,
         hidden_size=ours_config.n_embd,
@@ -107,7 +116,12 @@ def test_against_original_gpt_neox():
     assert all("inv_freq" in k for k in keys.missing_keys)
 
     # test end to end
-    x = torch.randint(0, ours_config.padded_vocab_size, size=(2, ours_config.block_size), dtype=torch.int64)
+    x = torch.randint(
+        0,
+        ours_config.padded_vocab_size,
+        size=(2, ours_config.block_size),
+        dtype=torch.int64,
+    )
     ours_y = ours_model(x)
     theirs_y = theirs_model(x)["logits"]
     torch.testing.assert_close(ours_y, theirs_y)
@@ -115,7 +129,12 @@ def test_against_original_gpt_neox():
 
 @torch.inference_mode()
 @pytest.mark.parametrize(
-    "ours_kwargs", [{"name": "Llama-2-7b-hf"}, {"name": "CodeLlama-7b-hf"}, {"name": "Llama-2-70b-chat-hf"}]
+    "ours_kwargs",
+    [
+        {"name": "Llama-2-7b-hf"},
+        {"name": "CodeLlama-7b-hf"},
+        {"name": "Llama-2-70b-chat-hf"},
+    ],
 )
 def test_against_hf_llama2(ours_kwargs):
     from transformers.models.llama.configuration_llama import LlamaConfig
@@ -125,7 +144,12 @@ def test_against_hf_llama2(ours_kwargs):
     from scripts.convert_lit_checkpoint import copy_weights_llama
 
     ours_config = Config.from_name(
-        padded_vocab_size=10000, n_layer=2, n_head=8, n_embd=32, intermediate_size=86, **ours_kwargs
+        padded_vocab_size=10000,
+        n_layer=2,
+        n_head=8,
+        n_embd=32,
+        intermediate_size=86,
+        **ours_kwargs
     )
     T = 5
     theirs_config = LlamaConfig(
@@ -195,7 +219,9 @@ def test_against_mixtral():
     theirs_model.load_state_dict(theirs_state_dict)
 
     # test end to end
-    x = torch.tensor([[9856, 23, 491, 1536, 304], [23, 345, 65, 123, 321]], dtype=torch.int32)
+    x = torch.tensor(
+        [[9856, 23, 491, 1536, 304], [23, 345, 65, 123, 321]], dtype=torch.int32
+    )
     ours_y = ours_model(x)
     theirs_y = theirs_model(x)["logits"]
     torch.testing.assert_close(ours_y, theirs_y)
@@ -209,7 +235,9 @@ def test_against_original_open_llama_3b():
     from gpt import GPT, Config
     from scripts.convert_lit_checkpoint import copy_weights_llama
 
-    ours_config = Config.from_name("open_llama_3b", n_layer=2, n_head=8, n_embd=32, intermediate_size=86)
+    ours_config = Config.from_name(
+        "open_llama_3b", n_layer=2, n_head=8, n_embd=32, intermediate_size=86
+    )
     T = 5
     theirs_config = LlamaConfig(
         hidden_size=ours_config.n_embd,
@@ -254,7 +282,12 @@ def test_against_hf_phi_1_5():
     from tests.reference_models.original_phi_1_5 import PhiForCausalLM
 
     ours_config = Config.from_name(
-        "phi-1_5", padded_vocab_size=10000, n_layer=2, n_head=4, n_embd=256, rotary_percentage=0.5
+        "phi-1_5",
+        padded_vocab_size=10000,
+        n_layer=2,
+        n_head=4,
+        n_embd=256,
+        rotary_percentage=0.5,
     )
     T = 5
     theirs_config = PhiConfig(
@@ -304,7 +337,12 @@ def test_against_hf_phi_2():
     from tests.reference_models.original_phi_2 import PhiForCausalLM
 
     ours_config = Config.from_name(
-        "phi-2", padded_vocab_size=10000, n_layer=2, n_head=4, n_embd=256, rotary_percentage=0.5
+        "phi-2",
+        padded_vocab_size=10000,
+        n_layer=2,
+        n_head=4,
+        n_embd=256,
+        rotary_percentage=0.5,
     )
     T = 5
     theirs_config = PhiConfig(
@@ -343,7 +381,9 @@ def test_against_original_stablelm_zephyr_3b():
     from scripts.convert_lit_checkpoint import copy_weights_llama
 
     T = 5
-    ours_config = Config.from_name("stablelm-zephyr-3b", n_layer=2, n_head=16, n_embd=32, intermediate_size=86)
+    ours_config = Config.from_name(
+        "stablelm-zephyr-3b", n_layer=2, n_head=16, n_embd=32, intermediate_size=86
+    )
     theirs_config = AutoConfig.from_pretrained(
         "stabilityai/stablelm-zephyr-3b",
         trust_remote_code=True,
@@ -360,7 +400,9 @@ def test_against_original_stablelm_zephyr_3b():
     ours_state_dict = ours_model.state_dict()
     theirs_state_dict = {}
     copy_weights_llama(ours_config, theirs_state_dict, ours_state_dict)
-    theirs_model = AutoModelForCausalLM.from_config(theirs_config, trust_remote_code=True)
+    theirs_model = AutoModelForCausalLM.from_config(
+        theirs_config, trust_remote_code=True
+    )
     theirs_model.load_state_dict(theirs_state_dict)
 
     # test end to end
@@ -397,48 +439,79 @@ def test_qkv_split():
 
     # MHA
     config = Config(n_embd=4, n_head=4)
-    qkv = torch.tensor([
-        [0, 1, 2, 3],
-        [4, 5, 6, 7],
-        [8, 9, 10, 11],
-        [12, 13, 14, 15],
-        [16, 17, 18, 19],
-        [20, 21, 22, 23],
-        [24, 25, 26, 27],
-        [28, 29, 30, 31],
-        [32, 33, 34, 35],
-        [36, 37, 38, 39],
-        [40, 41, 42, 43],
-        [44, 45, 46, 47],
-    ])
+    qkv = torch.tensor(
+        [
+            [0, 1, 2, 3],
+            [4, 5, 6, 7],
+            [8, 9, 10, 11],
+            [12, 13, 14, 15],
+            [16, 17, 18, 19],
+            [20, 21, 22, 23],
+            [24, 25, 26, 27],
+            [28, 29, 30, 31],
+            [32, 33, 34, 35],
+            [36, 37, 38, 39],
+            [40, 41, 42, 43],
+            [44, 45, 46, 47],
+        ]
+    )
     q, k, v = qkv_split(qkv, config)
-    torch.testing.assert_close(q, torch.tensor([[0, 1, 2, 3], [12, 13, 14, 15], [24, 25, 26, 27], [36, 37, 38, 39]]))
-    torch.testing.assert_close(k, torch.tensor([[4, 5, 6, 7], [16, 17, 18, 19], [28, 29, 30, 31], [40, 41, 42, 43]]))
-    torch.testing.assert_close(v, torch.tensor([[8, 9, 10, 11], [20, 21, 22, 23], [32, 33, 34, 35], [44, 45, 46, 47]]))
+    torch.testing.assert_close(
+        q,
+        torch.tensor(
+            [[0, 1, 2, 3], [12, 13, 14, 15], [24, 25, 26, 27], [36, 37, 38, 39]]
+        ),
+    )
+    torch.testing.assert_close(
+        k,
+        torch.tensor(
+            [[4, 5, 6, 7], [16, 17, 18, 19], [28, 29, 30, 31], [40, 41, 42, 43]]
+        ),
+    )
+    torch.testing.assert_close(
+        v,
+        torch.tensor(
+            [[8, 9, 10, 11], [20, 21, 22, 23], [32, 33, 34, 35], [44, 45, 46, 47]]
+        ),
+    )
 
     # GQA
     config = Config(n_embd=4, n_head=4, n_query_groups=2)
-    qkv = torch.tensor([
-        [0, 1, 2, 3],
-        [4, 5, 6, 7],
-        [8, 9, 10, 11],
-        [12, 13, 14, 15],
-        [16, 17, 18, 19],
-        [20, 21, 22, 23],
-        [24, 25, 26, 27],
-        [28, 29, 30, 31],
-    ])
+    qkv = torch.tensor(
+        [
+            [0, 1, 2, 3],
+            [4, 5, 6, 7],
+            [8, 9, 10, 11],
+            [12, 13, 14, 15],
+            [16, 17, 18, 19],
+            [20, 21, 22, 23],
+            [24, 25, 26, 27],
+            [28, 29, 30, 31],
+        ]
+    )
     q, k, v = qkv_split(qkv, config)
-    torch.testing.assert_close(q, torch.tensor([[0, 1, 2, 3], [4, 5, 6, 7], [16, 17, 18, 19], [20, 21, 22, 23]]))
+    torch.testing.assert_close(
+        q,
+        torch.tensor([[0, 1, 2, 3], [4, 5, 6, 7], [16, 17, 18, 19], [20, 21, 22, 23]]),
+    )
     torch.testing.assert_close(k, torch.tensor([[8, 9, 10, 11], [24, 25, 26, 27]]))
     torch.testing.assert_close(v, torch.tensor([[12, 13, 14, 15], [28, 29, 30, 31]]))
 
     # MQA
     config = Config(n_embd=4, n_head=4, n_query_groups=1)
     qkv = torch.tensor(
-        [[0, 1, 2, 3], [4, 5, 6, 7], [8, 9, 10, 11], [12, 13, 14, 15], [16, 17, 18, 19], [20, 21, 22, 23]]
+        [
+            [0, 1, 2, 3],
+            [4, 5, 6, 7],
+            [8, 9, 10, 11],
+            [12, 13, 14, 15],
+            [16, 17, 18, 19],
+            [20, 21, 22, 23],
+        ]
     )
     q, k, v = qkv_split(qkv, config)
-    torch.testing.assert_close(q, torch.tensor([[0, 1, 2, 3], [4, 5, 6, 7], [8, 9, 10, 11], [12, 13, 14, 15]]))
+    torch.testing.assert_close(
+        q, torch.tensor([[0, 1, 2, 3], [4, 5, 6, 7], [8, 9, 10, 11], [12, 13, 14, 15]])
+    )
     torch.testing.assert_close(k, torch.tensor([[16, 17, 18, 19]]))
     torch.testing.assert_close(v, torch.tensor([[20, 21, 22, 23]]))

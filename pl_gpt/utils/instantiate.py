@@ -1,17 +1,17 @@
-
 from typing import Dict, List
 import importlib
 import inspect
-from pl_gpt.utils.configuration import Config , SimpleNestedNamespace
+from pl_gpt.utils.configuration import Config, SimpleNestedNamespace
 
 
-def get_class(target:str):
-    target_class = target.split('.')
-    module_name = '.'.join(target_class[:-1])
+def get_class(target: str):
+    target_class = target.split(".")
+    module_name = ".".join(target_class[:-1])
     class_name = target_class[-1]
     module = importlib.import_module(module_name)
     instance = getattr(module, class_name)
     return instance
+
 
 def instantiate(config, *args, instance=None, **kwargs):
     """
@@ -29,20 +29,22 @@ def instantiate(config, *args, instance=None, **kwargs):
     elif isinstance(config, List):
         config_dict = {}
         for sub_conf in config:
-            if isinstance(sub_conf, Config) or isinstance(sub_conf, SimpleNestedNamespace):
+            if isinstance(sub_conf, Config) or isinstance(
+                sub_conf, SimpleNestedNamespace
+            ):
                 config_dict.update(sub_conf.__dict__)
             elif isinstance(sub_conf, Dict):
                 config_dict.update(sub_conf)
     else:
-        raise UserWarning(f"cinit: Unknown config type. config must be Dict, AttributeDict or ConfigHandler but is {type(config)}")
+        raise UserWarning(
+            f"cinit: Unknown config type. config must be Dict, AttributeDict or ConfigHandler but is {type(config)}"
+        )
 
-
-    if instance is None and '_target_' not in config_dict:
+    if instance is None and "_target_" not in config_dict:
         raise UserWarning(f"instantiate: keys missing instance or _target_")
     if instance is None:
-        instance = get_class(config_dict['_target_'].__str__())
-        del config_dict['_target_']
-
+        instance = get_class(config_dict["_target_"].__str__())
+        del config_dict["_target_"]
 
     if isinstance(instance, type):
         instance_args = inspect.signature(instance.__init__)

@@ -31,7 +31,9 @@ def test_full_script(tmp_path, fake_checkpoint_dir, monkeypatch):
 
     from gpt.config import name_to_config
 
-    model_config = dict(block_size=128, n_layer=2, n_embd=8, n_head=4, padded_vocab_size=8)
+    model_config = dict(
+        block_size=128, n_layer=2, n_embd=8, n_head=4, padded_vocab_size=8
+    )
     monkeypatch.setitem(name_to_config, "tmp", model_config)
     monkeypatch.setattr(module, "load_checkpoint", Mock())
 
@@ -42,7 +44,12 @@ def test_full_script(tmp_path, fake_checkpoint_dir, monkeypatch):
 
     stdout = StringIO()
     with redirect_stdout(stdout):
-        module.setup(data_dir=tmp_path, checkpoint_dir=fake_checkpoint_dir, out_dir=tmp_path, precision="32-true")
+        module.setup(
+            data_dir=tmp_path,
+            checkpoint_dir=fake_checkpoint_dir,
+            out_dir=tmp_path,
+            precision="32-true",
+        )
 
     assert {p.name for p in tmp_path.glob("*.pth")} == {
         "step-000002.pth",
@@ -84,7 +91,9 @@ def test_pretrain_tiny_llama(tmp_path, monkeypatch):
 
     from gpt.config import name_to_config
 
-    model_config = dict(block_size=2, n_layer=2, n_embd=8, n_head=4, padded_vocab_size=8)
+    model_config = dict(
+        block_size=2, n_layer=2, n_embd=8, n_head=4, padded_vocab_size=8
+    )
     monkeypatch.setitem(name_to_config, "tmp", model_config)
 
     dataset = torch.tensor([[0, 1, 2], [3, 4, 5], [0, 1, 2]])

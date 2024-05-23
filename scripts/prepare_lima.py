@@ -67,7 +67,9 @@ def prepare(
 
     # Partition the dataset into train and test
     train_set, test_set = random_split(
-        train_data, [1.0 - test_split_fraction, test_split_fraction], generator=torch.Generator().manual_seed(seed)
+        train_data,
+        [1.0 - test_split_fraction, test_split_fraction],
+        generator=torch.Generator().manual_seed(seed),
     )
     train_set, test_set = list(train_set), list(test_set)
 
@@ -101,22 +103,34 @@ def prepare(
     torch.save(test_set, destination_path / "test.pt")
 
 
-def format_dataset(dataset_partition: dict, include_multi_turn_conversations: bool) -> List[dict]:
+def format_dataset(
+    dataset_partition: dict, include_multi_turn_conversations: bool
+) -> List[dict]:
     formatted_ds = []
 
     for entry in dataset_partition:
         convo = entry["conversations"]
         if include_multi_turn_conversations:
             for i in range(0, len(convo) - 1, 2):
-                formatted_ds.append({"instruction": convo[i], "input": "", "output": convo[i + 1]})
+                formatted_ds.append(
+                    {"instruction": convo[i], "input": "", "output": convo[i + 1]}
+                )
 
         else:
-            formatted_ds.append({"instruction": convo[0], "input": "", "output": convo[1]})
+            formatted_ds.append(
+                {"instruction": convo[0], "input": "", "output": convo[1]}
+            )
 
     return formatted_ds
 
 
-def prepare_sample(example: dict, tokenizer: Tokenizer, max_length: int, mask_inputs: bool, ignore_index: int) -> dict:
+def prepare_sample(
+    example: dict,
+    tokenizer: Tokenizer,
+    max_length: int,
+    mask_inputs: bool,
+    ignore_index: int,
+) -> dict:
     """Processes a single sample.
 
     Each sample in the dataset consists of:
@@ -136,7 +150,9 @@ def prepare_sample(example: dict, tokenizer: Tokenizer, max_length: int, mask_in
     full_prompt = generate_prompt(example)
     full_prompt_and_response = full_prompt + example["output"]
     encoded_full_prompt = tokenizer.encode(full_prompt, max_length=max_length)
-    encoded_full_prompt_and_response = tokenizer.encode(full_prompt_and_response, eos=True, max_length=max_length)
+    encoded_full_prompt_and_response = tokenizer.encode(
+        full_prompt_and_response, eos=True, max_length=max_length
+    )
 
     # The labels are the full prompt with response, but with the prompt masked out
     labels = encoded_full_prompt_and_response.clone()

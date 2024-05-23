@@ -21,6 +21,7 @@ from syne_tune.optimizer.schedulers.multiobjective.linear_scalarizer import (
 import os
 import json
 import pickle
+
 # Configuration space (or search space)
 config_space = {
     "n_units_1": randint(4, 1024),
@@ -50,8 +51,7 @@ if __name__ == "__main__":
             "LSBO",
             "RSBO",
             "MOASHA",
-            "EHVI"
-
+            "EHVI",
         ),
         default="RS",
     )
@@ -85,7 +85,7 @@ if __name__ == "__main__":
     entry_point = Path(__file__).parent / train_file
     max_resource_level = 1  # Maximum number of training epochs
     mode = "max"
-    metrics = ["accuracy","test_time"]
+    metrics = ["accuracy", "test_time"]
     resource_attr = "epoch"
     max_resource_attr = "epochs"
 
@@ -113,15 +113,12 @@ if __name__ == "__main__":
     )
     method_kwargs_multi = dict(
         metric=metrics,
-        mode=["min","min"],
+        mode=["min", "min"],
         random_seed=args.random_seed,
         max_resource_attr=max_resource_attr,
         search_options={"num_init_random": args.n_workers + 2},
     )
-    method_kwargs_moasha = dict(
-        metrics=metrics,
-        mode=["min","min"]
-    )
+    method_kwargs_moasha = dict(metrics=metrics, mode=["min", "min"])
     sch_type = "promotion" if args.method.endswith("PROM") else "stopping"
     if args.method == "RS":
         scheduler = RandomSearch(config_space, **method_kwargs_single)
@@ -136,11 +133,20 @@ if __name__ == "__main__":
     elif args.method == "NSGA2":
         scheduler = NSGA2(config_space, **method_kwargs_multi)
     elif args.method == "LSBO":
-        scheduler = LinearScalarizedScheduler(config_space, searcher="bayesopt", **method_kwargs_multi)
+        scheduler = LinearScalarizedScheduler(
+            config_space, searcher="bayesopt", **method_kwargs_multi
+        )
     elif args.method == "RSBO":
         scheduler = MORandomScalarizationBayesOpt(config_space, **method_kwargs_multi)
     elif args.method == "MOASHA":
-        scheduler = MOASHA(config_space, time_attr = "st_worker_time", grace_period = 1, max_t = 5, reduction_factor = 3, **method_kwargs_moasha)
+        scheduler = MOASHA(
+            config_space,
+            time_attr="st_worker_time",
+            grace_period=1,
+            max_t=5,
+            reduction_factor=3,
+            **method_kwargs_moasha,
+        )
     elif args.method == "EHVI":
         scheduler = EHVI(config_space, **method_kwargs_multi)
     else:
@@ -165,6 +171,7 @@ if __name__ == "__main__":
 
     tuner.run()
     from syne_tune.experiments import load_experiment
+
     print(tuner.name)
     df = load_experiment(tuner.name).results
     configs = []
@@ -179,7 +186,7 @@ if __name__ == "__main__":
         accuracy.append(trial_df["accuracy"].values)
         config = {}
         for hyper in config_space.keys():
-            c = trial_df.iloc[0]["config_"+hyper]
+            c = trial_df.iloc[0]["config_" + hyper]
             config[hyper] = c
         configs.append(config)
         print(configs)
@@ -189,7 +196,7 @@ if __name__ == "__main__":
         "test_time": test_time,
         "accuracy": accuracy,
     }
-        
+
     os.makedirs("results", exist_ok=True)
     with open(f"results/{args.experiment_tag}.pickle", "wb") as f:
         pickle.dump(results, f)

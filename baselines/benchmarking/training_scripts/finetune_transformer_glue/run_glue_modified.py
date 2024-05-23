@@ -185,9 +185,9 @@ class ReportBackMetrics(transformers.trainer_callback.TrainerCallback):
             output = self.trainer.evaluation_loop(
                 self.test_dataloader,
                 "Testing",
-                prediction_loss_only=True
-                if self.trainer.compute_metrics is None
-                else None,
+                prediction_loss_only=(
+                    True if self.trainer.compute_metrics is None else None
+                ),
                 metric_key_prefix="test",
             )
             results.update(output.metrics)
@@ -574,9 +574,11 @@ def main():
     # In distributed training, the .from_pretrained methods guarantee that only one local process can concurrently
     # download model & vocab.
     config = AutoConfig.from_pretrained(
-        model_args.config_name
-        if model_args.config_name
-        else model_args.model_name_or_path,
+        (
+            model_args.config_name
+            if model_args.config_name
+            else model_args.model_name_or_path
+        ),
         num_labels=num_labels,
         finetuning_task=data_args.task_name,
         cache_dir=model_args.cache_dir,
@@ -584,9 +586,11 @@ def main():
         use_auth_token=True if model_args.use_auth_token else None,
     )
     tokenizer = AutoTokenizer.from_pretrained(
-        model_args.tokenizer_name
-        if model_args.tokenizer_name
-        else model_args.model_name_or_path,
+        (
+            model_args.tokenizer_name
+            if model_args.tokenizer_name
+            else model_args.model_name_or_path
+        ),
         cache_dir=model_args.cache_dir,
         use_fast=model_args.use_fast_tokenizer,
         revision=model_args.model_revision,

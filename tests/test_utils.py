@@ -115,22 +115,30 @@ def test_chunked_cross_entropy(ignore_index, B):
     )
 
     ignore_index = ignore_index if ignore_index is not None else -1
-    regular_loss = chunked_cross_entropy(regular_logits, targets, chunk_size=0, ignore_index=ignore_index)
+    regular_loss = chunked_cross_entropy(
+        regular_logits, targets, chunk_size=0, ignore_index=ignore_index
+    )
     assert torch.equal(baseline_loss, regular_loss)
     assert regular_loss.numel() == 1
 
-    chunked_loss = chunked_cross_entropy(regular_logits, targets, chunk_size=10, ignore_index=ignore_index)
+    chunked_loss = chunked_cross_entropy(
+        regular_logits, targets, chunk_size=10, ignore_index=ignore_index
+    )
     torch.testing.assert_close(chunked_loss, regular_loss)
     torch.testing.assert_close(chunked_loss, baseline_loss)
 
     logit_chunk_size = 6
     assert T % logit_chunk_size != 0  # ensure leftover
     chunked_logits = list(regular_logits.split(logit_chunk_size, dim=1))
-    chunked_loss = chunked_cross_entropy(chunked_logits, targets, chunk_size=0, ignore_index=ignore_index)
+    chunked_loss = chunked_cross_entropy(
+        chunked_logits, targets, chunk_size=0, ignore_index=ignore_index
+    )
     torch.testing.assert_close(chunked_loss, regular_loss)
     torch.testing.assert_close(chunked_loss, baseline_loss)
 
-    chunked_loss = chunked_cross_entropy(chunked_logits, targets, chunk_size=10, ignore_index=ignore_index)
+    chunked_loss = chunked_cross_entropy(
+        chunked_logits, targets, chunk_size=10, ignore_index=ignore_index
+    )
     torch.testing.assert_close(chunked_loss, regular_loss)
     torch.testing.assert_close(chunked_loss, baseline_loss)
 
@@ -151,7 +159,9 @@ def test_num_parameters():
 
 
 @RunIf(min_cuda_gpus=1)
-@pytest.mark.parametrize("mode", ["nf4", "nf4-dq", "fp4", "fp4-dq", "int8", "int8-training"])
+@pytest.mark.parametrize(
+    "mode", ["nf4", "nf4-dq", "fp4", "fp4-dq", "int8", "int8-training"]
+)
 @pytest.mark.skip("To be fixed")
 def test_num_parameters_bitsandbytes(mode):
     from lightning.fabric.plugins import BitsandbytesPrecision

@@ -19,13 +19,13 @@ class LanguageModelTrainer(pl.LightningModule):
     """
 
     def __init__(
-            self,
-            cfg_train,
-            cfg_model,
-            py_logger,
-            val_sets_name,
-            ignore_index,
-            arch_sampled,
+        self,
+        cfg_train,
+        cfg_model,
+        py_logger,
+        val_sets_name,
+        ignore_index,
+        arch_sampled,
     ):
         super().__init__()
 
@@ -41,12 +41,16 @@ class LanguageModelTrainer(pl.LightningModule):
         checkpoint_path = cfg_model.checkpoint_path
         state_dict = {}
         if checkpoint_path is not None:
-            state_dict_loaded = torch.load(checkpoint_path, map_location='cpu')['state_dict']
+            state_dict_loaded = torch.load(checkpoint_path, map_location="cpu")[
+                "state_dict"
+            ]
             for k, v in state_dict_loaded.items():
                 state_dict[k.replace("model.", "")] = v
         self.model.load_state_dict(state_dict, strict=True)
-        self.loss_train = torch.nn.CrossEntropyLoss(ignore_index=self.ignore_index, reduction='mean', label_smoothing=0.0)
-        #self.loss_train = FlashCELoss(ignore_index=self.ignore_index, reduction='mean', label_smoothing=0.0,
+        self.loss_train = torch.nn.CrossEntropyLoss(
+            ignore_index=self.ignore_index, reduction="mean", label_smoothing=0.0
+        )
+        # self.loss_train = FlashCELoss(ignore_index=self.ignore_index, reduction='mean', label_smoothing=0.0,
         #                              inplace_backward=True)
 
         self.intern_log = []
@@ -55,50 +59,81 @@ class LanguageModelTrainer(pl.LightningModule):
         self.validation_step_outputs = defaultdict(list)
         # build choices dict
         self.choices_dict = {}
-        self.choices_dict['n_layer_choices'] = cfg_model.layer_choices
-        self.choices_dict['n_head_choices'] = cfg_model.head_choices
-        self.choices_dict['embed_dim_choices'] = cfg_model.embed_choices
-        self.choices_dict['mlp_ratio_choices'] = cfg_model.mlp_ratio_choices
-        self.choices_dict['bias_choices'] = cfg_model.bias_choices
+        self.choices_dict["n_layer_choices"] = cfg_model.layer_choices
+        self.choices_dict["n_head_choices"] = cfg_model.head_choices
+        self.choices_dict["embed_dim_choices"] = cfg_model.embed_choices
+        self.choices_dict["mlp_ratio_choices"] = cfg_model.mlp_ratio_choices
+        self.choices_dict["bias_choices"] = cfg_model.bias_choices
         self.scheme = cfg_model.sampling_scheme
         self.train_strategy = cfg_model.train_strategy
         self.sandwhich_random = cfg_model.sandwhich_random
         self.init_max_min()
         self.arch_sampled = arch_sampled
-        #self.automatic_optimization = False
+        # self.automatic_optimization = False
 
     def init_max_min(self):
-        self.config_max = sample_config_max(self.choices_dict, layer_sampling_scheme=self.scheme)
-        self.config_min = sample_config_min(self.choices_dict, layer_sampling_scheme=self.scheme)
-        self.config_mid =  sample_config_mid(self.choices_dict, layer_sampling_scheme=self.scheme)
-        
+        self.config_max = sample_config_max(
+            self.choices_dict, layer_sampling_scheme=self.scheme
+        )
+        self.config_min = sample_config_min(
+            self.choices_dict, layer_sampling_scheme=self.scheme
+        )
+        self.config_mid = sample_config_mid(
+            self.choices_dict, layer_sampling_scheme=self.scheme
+        )
 
     def get_arch_sampled(self):
-        
+
         return self.arch_sampled
 
-
     def training_step(self, batch, batch_idx, dataloader_idx=0):
-        seed = hash((self.global_step,self.current_epoch,self.local_rank))
+        seed = hash((self.global_step, self.current_epoch, self.local_rank))
 
         sampled_config = self.get_arch_sampled()
-        sample_intermediate_size = [sampled_config["sample_mlp_ratio"][i]*sampled_config["sample_embed_dim"] for i in range(len(sampled_config["sample_mlp_ratio"]))]
-        self.model.set_sample_config(sampled_config["sample_embed_dim"],sample_intermediate_size, sampled_config["sample_n_head"], sampled_config["sample_n_layer"], sampled_config["sample_bias"], sampled_config["sample_layer_indices"])
-        logits = self.model(idx=batch['src_seq'])
-        labels = batch['trg_seq'].view(-1)
-        if self.cfg_model.use_inplace_kd and self.local_rank!=0 and self.global_step>5000:
+        sample_intermediate_size = [
+            sampled_config["sample_mlp_ratio"][i] * sampled_config["sample_embed_dim"]
+            for i in range(len(sampled_config["sample_mlp_ratio"]))
+        ]
+        self.model.set_sample_config(
+            sampled_config["sample_embed_dim"],
+            sample_intermediate_size,
+            sampled_config["sample_n_head"],
+            sampled_config["sample_n_layer"],
+            sampled_config["sample_bias"],
+            sampled_config["sample_layer_indices"],
+        )
+        logits = self.model(idx=batch["src_seq"])
+        labels = batch["trg_seq"].view(-1)
+        if (
+            self.cfg_model.use_inplace_kd
+            and self.local_rank != 0
+            and self.global_step > 5000
+        ):
             with torch.no_grad():
                 sampled_config = self.config_max
-                sample_intermediate_size = [sampled_config["sample_mlp_ratio"][i]*sampled_config["sample_embed_dim"] for i in range(len(sampled_config["sample_mlp_ratio"]))]
-                self.model.set_sample_config(sampled_config["sample_embed_dim"],sample_intermediate_size, sampled_config["sample_n_head"], sampled_config["sample_n_layer"], sampled_config["sample_bias"], sampled_config["sample_layer_indices"])
-                #self.model.set_sample_config(sampled_config["sample_embed_dim"], sampled_config["sample_mlp_ratio"]*sampled_config["sample_embed_dim"], sampled_config["sample_n_head"], sampled_config["sample_n_layer"], sampled_config["sample_bias"], sampled_config["sample_layer_indices"])
-                logits_teacher = self.model(idx=batch['src_seq'])
-                logits_teacher = logits_teacher.detach().view(-1, logits_teacher.size(-1))
+                sample_intermediate_size = [
+                    sampled_config["sample_mlp_ratio"][i]
+                    * sampled_config["sample_embed_dim"]
+                    for i in range(len(sampled_config["sample_mlp_ratio"]))
+                ]
+                self.model.set_sample_config(
+                    sampled_config["sample_embed_dim"],
+                    sample_intermediate_size,
+                    sampled_config["sample_n_head"],
+                    sampled_config["sample_n_layer"],
+                    sampled_config["sample_bias"],
+                    sampled_config["sample_layer_indices"],
+                )
+                # self.model.set_sample_config(sampled_config["sample_embed_dim"], sampled_config["sample_mlp_ratio"]*sampled_config["sample_embed_dim"], sampled_config["sample_n_head"], sampled_config["sample_n_layer"], sampled_config["sample_bias"], sampled_config["sample_layer_indices"])
+                logits_teacher = self.model(idx=batch["src_seq"])
+                logits_teacher = logits_teacher.detach().view(
+                    -1, logits_teacher.size(-1)
+                )
         else:
             logits_teacher = labels
         loss = self.loss_train(logits.view(-1, logits.size(-1)), logits_teacher)
-        #loss = loss#/n
-        loss_value = loss.detach()#*n
+        # loss = loss#/n
+        loss_value = loss.detach()  # *n
         self.log(
             f"train/loss",
             loss_value,
@@ -112,39 +147,60 @@ class LanguageModelTrainer(pl.LightningModule):
 
     def validation_step(self, batch, batch_idx, dataloader_idx=0):
 
-
         sampled_config = self.arch_sampled
-        sample_intermediate_size = [sampled_config["sample_mlp_ratio"][i]*sampled_config["sample_embed_dim"] for i in range(len(sampled_config["sample_mlp_ratio"]))]
-        self.model.set_sample_config(sampled_config["sample_embed_dim"],sample_intermediate_size, sampled_config["sample_n_head"], sampled_config["sample_n_layer"], sampled_config["sample_bias"], sampled_config["sample_layer_indices"])
+        sample_intermediate_size = [
+            sampled_config["sample_mlp_ratio"][i] * sampled_config["sample_embed_dim"]
+            for i in range(len(sampled_config["sample_mlp_ratio"]))
+        ]
+        self.model.set_sample_config(
+            sampled_config["sample_embed_dim"],
+            sample_intermediate_size,
+            sampled_config["sample_n_head"],
+            sampled_config["sample_n_layer"],
+            sampled_config["sample_bias"],
+            sampled_config["sample_layer_indices"],
+        )
         with torch.no_grad():
-            logits = self.model(idx=batch['src_seq']).detach()
+            logits = self.model(idx=batch["src_seq"]).detach()
 
-            loss = self.loss_train(logits.view(-1, logits.size(-1)), batch['trg_seq'].view(-1))
+            loss = self.loss_train(
+                logits.view(-1, logits.size(-1)), batch["trg_seq"].view(-1)
+            )
 
         if dataloader_idx == 0:
-            self.log(f"val/loss", loss, on_step=False, on_epoch=True, prog_bar=True, sync_dist=True)
+            self.log(
+                f"val/loss",
+                loss,
+                on_step=False,
+                on_epoch=True,
+                prog_bar=True,
+                sync_dist=True,
+            )
 
-        return_dict = {"loss": loss,
-                       "batch_size": torch.FloatTensor([batch['trg_len'].shape[0]]),
-                       "batch_length": torch.mean(batch['trg_len'].detach().float()),
-                       "num_loss_tokens": torch.sum(batch['trg_len'])
-                       }
+        return_dict = {
+            "loss": loss,
+            "batch_size": torch.FloatTensor([batch["trg_len"].shape[0]]),
+            "batch_length": torch.mean(batch["trg_len"].detach().float()),
+            "num_loss_tokens": torch.sum(batch["trg_len"]),
+        }
 
-        count = torch.sum(batch['trg_len'], dtype=torch.float)
+        count = torch.sum(batch["trg_len"], dtype=torch.float)
         log_probs = loss * count
         preds = logits.argmax(dim=-1).view(-1)
-        target = batch['trg_seq'].view(-1)
+        target = batch["trg_seq"].view(-1)
         idx = target != self.ignore_index
         accuracy = torch.sum(preds[idx] == target[idx])
 
-        return_dict.update({"accuracy": accuracy, "log_probs": log_probs, "count": count})
+        return_dict.update(
+            {"accuracy": accuracy, "log_probs": log_probs, "count": count}
+        )
 
         self.validation_step_outputs[dataloader_idx].append(return_dict)
 
         return return_dict
 
     def on_validation_epoch_end(self):
-        values = ['log_probs', 'accuracy', 'count']
+        values = ["log_probs", "accuracy", "count"]
 
         assert len(self.val_sets_name) == len(self.validation_step_outputs)
 
@@ -156,33 +212,43 @@ class LanguageModelTrainer(pl.LightningModule):
                 for key in values:
                     summed_values[key] += out_dict[key]
 
-            ppl = torch.exp(summed_values['log_probs'] / summed_values['count'])
-            accuracy = summed_values['accuracy'] / summed_values['count']
+            ppl = torch.exp(summed_values["log_probs"] / summed_values["count"])
+            accuracy = summed_values["accuracy"] / summed_values["count"]
             metrics = {"ppl": ppl, "acc": accuracy}
-            #print(metrics)
+            # print(metrics)
             for name, value in metrics.items():
-                self.log(f"val/{dataset_name}/{name}", value,
-                         on_step=False, on_epoch=True, prog_bar=False, sync_dist=True, )
+                self.log(
+                    f"val/{dataset_name}/{name}",
+                    value,
+                    on_step=False,
+                    on_epoch=True,
+                    prog_bar=False,
+                    sync_dist=True,
+                )
 
         self.current_metrics = self.all_reduce(self.all_gather(metrics))
-        #else:
+        # else:
         #    self.current_metrics = None
         self.validation_step_outputs.clear()
-    
+
     def all_reduce(self, metrics):
         metrics_reduce = {}
         for key, value in metrics.items():
             mean_value = value.mean()
             metrics_reduce[key] = mean_value.item()
-        
-        
+
         return metrics_reduce
 
     def configure_optimizers(self):
 
-        if 'optimizer_param_grouping' in self.cfg_train:  # Set zero weight decay for some params
-            parameters = group_parameters_for_optimizer(self.model, self.cfg_train.optimizer,
-                                                        **self.cfg_train.optimizer_param_grouping)
+        if (
+            "optimizer_param_grouping" in self.cfg_train
+        ):  # Set zero weight decay for some params
+            parameters = group_parameters_for_optimizer(
+                self.model,
+                self.cfg_train.optimizer,
+                **self.cfg_train.optimizer_param_grouping,
+            )
         else:
             parameters = self.model.parameters()
 
@@ -190,29 +256,35 @@ class LanguageModelTrainer(pl.LightningModule):
 
         # Log optimizer info
         for i, g in enumerate(optimizer.param_groups):
-            ntensors = len(g['params'])
-            nparams = sum(p.numel() for p in g['params'])
-            hparams = {k: v for k, v in g.items() if k != 'params'}
-            self.py_logger.info(f'Optimizer group {i}: {ntensors} tensors, {nparams} parameters, {hparams}')
+            ntensors = len(g["params"])
+            nparams = sum(p.numel() for p in g["params"])
+            hparams = {k: v for k, v in g.items() if k != "params"}
+            self.py_logger.info(
+                f"Optimizer group {i}: {ntensors} tensors, {nparams} parameters, {hparams}"
+            )
 
-        if 'scheduler' not in self.cfg_train:
+        if "scheduler" not in self.cfg_train:
             return optimizer
         else:
             lr_lambda = get_learning_rate_schedule(self.cfg_train.scheduler)
 
-            lr_scheduler = torch.optim.lr_scheduler.LambdaLR(optimizer, lr_lambda, last_epoch=-1)
+            lr_scheduler = torch.optim.lr_scheduler.LambdaLR(
+                optimizer, lr_lambda, last_epoch=-1
+            )
 
-            return [optimizer], {'scheduler': lr_scheduler,
-                                 'interval': self.cfg_train.get('scheduler_interval', 'step'),
-                                 'monitor': self.cfg_train.get('scheduler_monitor', 'val/loss')}
+            return [optimizer], {
+                "scheduler": lr_scheduler,
+                "interval": self.cfg_train.get("scheduler_interval", "step"),
+                "monitor": self.cfg_train.get("scheduler_monitor", "val/loss"),
+            }
 
     def optimizer_zero_grad(self, epoch, batch_idx, optimizer):
         # https://pytorch-lightning.readthedocs.io/en/latest/guides/speed.html#set-grads-to-none
         # TD [2022-04-30]: DeepSpeed optimizer uses the kwarg set_grad_to_none instead of set_to_none
-        if 'set_to_none' in inspect.signature(optimizer.zero_grad).parameters:
+        if "set_to_none" in inspect.signature(optimizer.zero_grad).parameters:
             optimizer.zero_grad(set_to_none=True)
         else:
             optimizer.zero_grad()
 
-    #def on_train_epoch_start(self):
+    # def on_train_epoch_start(self):
     #    random.seed(self.current_epoch)

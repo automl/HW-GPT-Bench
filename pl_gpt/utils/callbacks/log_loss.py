@@ -9,7 +9,12 @@ from pytorch_lightning.utilities import rank_zero_only
 
 class LogLoss(Callback):
 
-    def __init__(self, log_every_n_steps: int = 1, log_quantiles:bool=False, dirpath: str = None):
+    def __init__(
+        self,
+        log_every_n_steps: int = 1,
+        log_quantiles: bool = False,
+        dirpath: str = None,
+    ):
         super().__init__()
         self.log_every_n_steps = log_every_n_steps
         self.dirpath = dirpath
@@ -21,8 +26,14 @@ class LogLoss(Callback):
 
             self.loss_list = []
 
-
-    def on_train_batch_end(self, trainer: "pl.Trainer", pl_module: "pl.LightningModule", outputs: Dict, batch, batch_idx):
+    def on_train_batch_end(
+        self,
+        trainer: "pl.Trainer",
+        pl_module: "pl.LightningModule",
+        outputs: Dict,
+        batch,
+        batch_idx,
+    ):
 
         if trainer.global_step % self.log_every_n_steps == 0:
 
@@ -37,8 +48,12 @@ class LogLoss(Callback):
             stats[f"loss_{local_rank}/max"] = unreduced_loss.max().item()
 
             if self.log_quantiles:
-                q = torch.arange(.25, 1, .25).round(decimals=2).to(trainer.model.device)
-                deciles = torch.quantile(unreduced_loss, q, interpolation='linear')
+                q = (
+                    torch.arange(0.25, 1, 0.25)
+                    .round(decimals=2)
+                    .to(trainer.model.device)
+                )
+                deciles = torch.quantile(unreduced_loss, q, interpolation="linear")
                 for q_idx, d_val in enumerate(deciles):
                     stats[f"loss_{local_rank}/quantile-{q[q_idx]}"] = d_val.item()
 
@@ -52,6 +67,9 @@ class LogLoss(Callback):
     def on_validation_start(self, trainer, pl_module):
 
         if self.dirpath is not None and trainer.global_step > 0:
-            torch.save(self.loss_list, self.dirpath / f"loss_rank-{trainer.local_rank}_step-{trainer.global_step}.pt")
+            torch.save(
+                self.loss_list,
+                self.dirpath
+                / f"loss_rank-{trainer.local_rank}_step-{trainer.global_step}.pt",
+            )
             self.loss_list = []
-

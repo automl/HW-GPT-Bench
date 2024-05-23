@@ -42,7 +42,11 @@ filename_sets = {
 
 
 def prepare_sample(
-    source_path: Path, checkpoint_dir: Path, destination_path: Path, chunk_size: int, match: str = ""
+    source_path: Path,
+    checkpoint_dir: Path,
+    destination_path: Path,
+    chunk_size: int,
+    match: str = "",
 ) -> None:
     """Prepare the "Red Pajama" dataset using the original tokenizer."""
     destination_path.mkdir(parents=True, exist_ok=True)
@@ -86,7 +90,11 @@ def prepare_sample(
 
 
 def prepare_full(
-    source_path: Path, checkpoint_dir: Path, destination_path: Path, chunk_size: int, match: str = ""
+    source_path: Path,
+    checkpoint_dir: Path,
+    destination_path: Path,
+    chunk_size: int,
+    match: str = "",
 ) -> None:
     """Prepare the "Red Pajama" dataset using the original tokenizer."""
     import zstandard as zstd
@@ -156,7 +164,8 @@ def prepare(
         source_path=source_path,
         checkpoint_dir=checkpoint_dir,
         destination_path=destination_path,
-        chunk_size=(config.block_size + 1) * 1024,  # block size + 1 for causal, 1024 blocks
+        chunk_size=(config.block_size + 1)
+        * 1024,  # block size + 1 for causal, 1024 blocks
         match=match,
     )
 

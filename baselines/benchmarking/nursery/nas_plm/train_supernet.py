@@ -293,9 +293,11 @@ def main():
                 outputs = model(**batch)
                 loss = outputs.loss
                 y_teacher = outputs.logits.detach()
-                accelerator.backward(
-                    loss
-                ) if nas_args.use_accelerate else loss.backward()
+                (
+                    accelerator.backward(loss)
+                    if nas_args.use_accelerate
+                    else loss.backward()
+                )
 
                 # update smallest sub-network
                 head_mask, ffn_mask = sampler.get_smallest_sub_network()
@@ -317,9 +319,11 @@ def main():
                 #     F.log_softmax(y_teacher, dim=-1),
                 # )
                 loss = distillation_loss(outputs.logits, y_teacher, batch["labels"])
-                accelerator.backward(
-                    loss
-                ) if nas_args.use_accelerate else loss.backward()
+                (
+                    accelerator.backward(loss)
+                    if nas_args.use_accelerate
+                    else loss.backward()
+                )
 
                 # update random sub-network
                 for k in range(nas_args.num_random_sub_nets):
@@ -338,18 +342,22 @@ def main():
                         handle.remove()
 
                     loss = distillation_loss(outputs.logits, y_teacher, batch["labels"])
-                    accelerator.backward(
-                        loss
-                    ) if nas_args.use_accelerate else loss.backward()
+                    (
+                        accelerator.backward(loss)
+                        if nas_args.use_accelerate
+                        else loss.backward()
+                    )
 
             elif nas_args.sampling_strategy == "one_shot_upper":
                 # update largest sub-network (i.e super-network)
                 outputs = model(**batch)
                 loss = outputs.loss
                 y_teacher = outputs.logits.detach()
-                accelerator.backward(
-                    loss
-                ) if nas_args.use_accelerate else loss.backward()
+                (
+                    accelerator.backward(loss)
+                    if nas_args.use_accelerate
+                    else loss.backward()
+                )
 
                 # update random sub-network
                 for k in range(nas_args.num_random_sub_nets):
@@ -368,17 +376,21 @@ def main():
                         handle.remove()
 
                     loss = distillation_loss(outputs.logits, y_teacher, batch["labels"])
-                    accelerator.backward(
-                        loss
-                    ) if nas_args.use_accelerate else loss.backward()
+                    (
+                        accelerator.backward(loss)
+                        if nas_args.use_accelerate
+                        else loss.backward()
+                    )
 
             elif nas_args.sampling_strategy == "sandwich":
                 # update largest sub-network (i.e super-network)
                 outputs = model(**batch)
                 loss = outputs.loss
-                accelerator.backward(
-                    loss
-                ) if nas_args.use_accelerate else loss.backward()
+                (
+                    accelerator.backward(loss)
+                    if nas_args.use_accelerate
+                    else loss.backward()
+                )
 
                 # update smallest sub-network
                 head_mask, ffn_mask = sampler.get_smallest_sub_network()
@@ -396,9 +408,11 @@ def main():
                     handle.remove()
 
                 loss = outputs.loss
-                accelerator.backward(
-                    loss
-                ) if nas_args.use_accelerate else loss.backward()
+                (
+                    accelerator.backward(loss)
+                    if nas_args.use_accelerate
+                    else loss.backward()
+                )
 
                 # update random sub-network
                 for k in range(nas_args.num_random_sub_nets):
@@ -417,9 +431,11 @@ def main():
                         handle.remove()
 
                     loss = outputs.loss
-                    accelerator.backward(
-                        loss
-                    ) if nas_args.use_accelerate else loss.backward()
+                    (
+                        accelerator.backward(loss)
+                        if nas_args.use_accelerate
+                        else loss.backward()
+                    )
 
             elif nas_args.sampling_strategy == "random":
                 for k in range(nas_args.num_random_sub_nets):
@@ -438,9 +454,11 @@ def main():
                         handle.remove()
 
                     loss = outputs.loss
-                    accelerator.backward(
-                        loss
-                    ) if nas_args.use_accelerate else loss.backward()
+                    (
+                        accelerator.backward(loss)
+                        if nas_args.use_accelerate
+                        else loss.backward()
+                    )
 
             elif nas_args.sampling_strategy == "linear_random":
                 if np.random.rand() <= dropout_rate[step]:
@@ -459,16 +477,20 @@ def main():
                         for handle in handles:
                             handle.remove()
                         loss = outputs.loss
-                        accelerator.backward(
-                            loss
-                        ) if nas_args.use_accelerate else loss.backward()
+                        (
+                            accelerator.backward(loss)
+                            if nas_args.use_accelerate
+                            else loss.backward()
+                        )
                 else:
                     outputs = model(**batch)
                     loss = outputs.loss
 
-                    accelerator.backward(
-                        loss
-                    ) if nas_args.use_accelerate else loss.backward()
+                    (
+                        accelerator.backward(loss)
+                        if nas_args.use_accelerate
+                        else loss.backward()
+                    )
 
             elif nas_args.sampling_strategy == "kd":
                 y_teacher = model(**batch)
@@ -490,22 +512,28 @@ def main():
                         loss = distillation_loss(
                             outputs.logits, y_teacher.logits.detach(), batch["labels"]
                         )
-                        accelerator.backward(
-                            loss
-                        ) if nas_args.use_accelerate else loss.backward()
+                        (
+                            accelerator.backward(loss)
+                            if nas_args.use_accelerate
+                            else loss.backward()
+                        )
                 else:
                     loss = y_teacher.loss
 
-                    accelerator.backward(
-                        loss
-                    ) if nas_args.use_accelerate else loss.backward()
+                    (
+                        accelerator.backward(loss)
+                        if nas_args.use_accelerate
+                        else loss.backward()
+                    )
 
             elif nas_args.sampling_strategy == "standard":
                 outputs = model(**batch)
                 loss = outputs.loss
-                accelerator.backward(
-                    loss
-                ) if nas_args.use_accelerate else loss.backward()
+                (
+                    accelerator.backward(loss)
+                    if nas_args.use_accelerate
+                    else loss.backward()
+                )
 
             elif nas_args.sampling_strategy == "fix":
                 configs = [
@@ -530,9 +558,11 @@ def main():
 
                 y_teacher = model(**batch)
                 loss = y_teacher.loss
-                accelerator.backward(
-                    loss
-                ) if nas_args.use_accelerate else loss.backward()
+                (
+                    accelerator.backward(loss)
+                    if nas_args.use_accelerate
+                    else loss.backward()
+                )
                 for k in range(nas_args.num_random_sub_nets):
                     idx = np.random.randint(len(configs))
                     config = configs[idx]
@@ -558,9 +588,11 @@ def main():
                         debug_info[f"nll_{idx}"].append(outputs.loss.item())
                         debug_info[f"loss_largest"].append(y_teacher.loss.item())
 
-                    accelerator.backward(
-                        loss
-                    ) if nas_args.use_accelerate else loss.backward()
+                    (
+                        accelerator.backward(loss)
+                        if nas_args.use_accelerate
+                        else loss.backward()
+                    )
                     for handle in handles:
                         handle.remove()
 

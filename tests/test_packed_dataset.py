@@ -14,12 +14,14 @@ def test_packed_dataset(tmp_path):
 
     vocabulary_path = tmp_path / "tokenizer.json"
     download_if_missing(
-        vocabulary_path, "https://huggingface.co/stabilityai/stablelm-base-alpha-3b/raw/main/tokenizer.json"
+        vocabulary_path,
+        "https://huggingface.co/stabilityai/stablelm-base-alpha-3b/raw/main/tokenizer.json",
     )
 
     tokenizer_path = tmp_path / "tokenizer_config.json"
     download_if_missing(
-        tokenizer_path, "https://huggingface.co/stabilityai/stablelm-base-alpha-3b/raw/main/tokenizer_config.json"
+        tokenizer_path,
+        "https://huggingface.co/stabilityai/stablelm-base-alpha-3b/raw/main/tokenizer_config.json",
     )
 
     from lit_gpt import Tokenizer
@@ -56,7 +58,9 @@ def test_packed_dataset(tmp_path):
 
     import numpy as np
 
-    ex_tokenized = [tokenizer.encode(text).numpy().astype(builder.dtype) for text in texts]
+    ex_tokenized = [
+        tokenizer.encode(text).numpy().astype(builder.dtype) for text in texts
+    ]
     ex_tokenized = np.concatenate(ex_tokenized)
     ex_tokenized = ex_tokenized[: 2 * chunk_size]
 
@@ -69,26 +73,34 @@ def test_packed_dataset(tmp_path):
         assert len(where_eos) == 1
         assert np.array_equal(arr, el)
 
-    dataset = PackedDataset(filenames=filenames, n_chunks=2, block_size=block_size, shuffle=False)
+    dataset = PackedDataset(
+        filenames=filenames, n_chunks=2, block_size=block_size, shuffle=False
+    )
 
     ex_split = np.array_split(ex_tokenized, ex_tokenized.shape[0] // block_size)
 
     for item, el in zip(dataset, ex_split):
         assert np.array_equal(item, el)
 
-    dataset = PackedDataset(filenames=filenames, n_chunks=2, block_size=block_size, seed=12345)
+    dataset = PackedDataset(
+        filenames=filenames, n_chunks=2, block_size=block_size, seed=12345
+    )
 
     for i, item in enumerate(dataset):
         block_idxs = iter(dataset)._block_idxs
         assert np.array_equal(item, ex_split[block_idxs[i]])
 
-    dataset = PackedDataset(filenames=filenames, n_chunks=2, block_size=block_size, seed=12345, wrap=True)
+    dataset = PackedDataset(
+        filenames=filenames, n_chunks=2, block_size=block_size, seed=12345, wrap=True
+    )
 
     for i, item in enumerate(dataset):
         if i > 24:
             break
 
-    dataset = PackedDataset(filenames=filenames, n_chunks=1, block_size=block_size, seed=12345)
+    dataset = PackedDataset(
+        filenames=filenames, n_chunks=1, block_size=block_size, seed=12345
+    )
 
     for i, item in enumerate(dataset):
         block_idxs = iter(dataset)._block_idxs
@@ -97,7 +109,9 @@ def test_packed_dataset(tmp_path):
 
     block_size_ = block_size // 2
     ex_split = np.array_split(ex_tokenized, ex_tokenized.shape[0] // block_size_)
-    dataset = PackedDataset(filenames=filenames, n_chunks=2, block_size=block_size_, seed=12345)
+    dataset = PackedDataset(
+        filenames=filenames, n_chunks=2, block_size=block_size_, seed=12345
+    )
 
     for i, item in enumerate(dataset):
         block_idxs = iter(dataset)._block_idxs
@@ -110,7 +124,9 @@ def test_packed_dataset(tmp_path):
     ex_splits = [np.split(el[: n_splits * block_size_], n_splits) for el in ex_chunks]
     ex_split = sum(ex_splits, [])
 
-    dataset = PackedDataset(filenames=filenames, n_chunks=n_chunks, block_size=block_size_, seed=12345)
+    dataset = PackedDataset(
+        filenames=filenames, n_chunks=n_chunks, block_size=block_size_, seed=12345
+    )
 
     for i, item in enumerate(dataset):
         block_idxs = iter(dataset)._block_idxs
@@ -132,21 +148,27 @@ def test_combined_dataset():
 
     dataset1 = SimpleDataset(0, 10)
     dataset2 = SimpleDataset(10, 20)
-    dataset = CombinedDataset(datasets=[dataset1, dataset2], weights=[1.0, 0.0], seed=12345)
+    dataset = CombinedDataset(
+        datasets=[dataset1, dataset2], weights=[1.0, 0.0], seed=12345
+    )
 
     res = list(dataset)
     assert res == list(range(0, 10))
 
     dataset1 = SimpleDataset(0, 10)
     dataset2 = SimpleDataset(10, 20)
-    dataset = CombinedDataset(datasets=[dataset1, dataset2], weights=[0.0, 1.0], seed=12345)
+    dataset = CombinedDataset(
+        datasets=[dataset1, dataset2], weights=[0.0, 1.0], seed=12345
+    )
 
     res = list(dataset)
     assert res == list(range(10, 20))
 
     dataset1 = SimpleDataset(0, 10)
     dataset2 = SimpleDataset(10, 20)
-    dataset = CombinedDataset(datasets=[dataset1, dataset2], weights=[0.5, 0.5], seed=12345)
+    dataset = CombinedDataset(
+        datasets=[dataset1, dataset2], weights=[0.5, 0.5], seed=12345
+    )
 
     res = list(dataset)
     assert 9 in res or 19 in res
@@ -160,7 +182,9 @@ def test_sharded_packed_dataset(monkeypatch):
     from lit_gpt.packed_dataset import PackedDataset
 
     dataset_iterator_mock = MagicMock()
-    monkeypatch.setattr(lit_gpt.packed_dataset, "PackedDatasetIterator", dataset_iterator_mock)
+    monkeypatch.setattr(
+        lit_gpt.packed_dataset, "PackedDatasetIterator", dataset_iterator_mock
+    )
     filenames = [str(i) for i in range(10)]
 
     # world_size = 1, rank = 0
@@ -168,24 +192,64 @@ def test_sharded_packed_dataset(monkeypatch):
     assert dataset_iterator_mock.call_args[1]["filenames"] == filenames
     dataset_iterator_mock.reset_mock()
     # world_size = 2, rank = 0
-    iter(PackedDataset(filenames=filenames, n_chunks=2, block_size=2, num_processes=2, process_rank=0))
+    iter(
+        PackedDataset(
+            filenames=filenames,
+            n_chunks=2,
+            block_size=2,
+            num_processes=2,
+            process_rank=0,
+        )
+    )
     assert dataset_iterator_mock.call_args[1]["filenames"] == ["0", "2", "4", "6", "8"]
     dataset_iterator_mock.reset_mock()
     # world_size = 2, rank = 1
-    iter(PackedDataset(filenames=filenames, n_chunks=2, block_size=2, num_processes=2, process_rank=1))
+    iter(
+        PackedDataset(
+            filenames=filenames,
+            n_chunks=2,
+            block_size=2,
+            num_processes=2,
+            process_rank=1,
+        )
+    )
     assert dataset_iterator_mock.call_args[1]["filenames"] == ["1", "3", "5", "7", "9"]
     dataset_iterator_mock.reset_mock()
 
     # world_size = 3, rank = 0 (dataset size not cleanly divisible by world size)
-    iter(PackedDataset(filenames=filenames, n_chunks=2, block_size=2, num_processes=3, process_rank=0))
+    iter(
+        PackedDataset(
+            filenames=filenames,
+            n_chunks=2,
+            block_size=2,
+            num_processes=3,
+            process_rank=0,
+        )
+    )
     assert dataset_iterator_mock.call_args[1]["filenames"] == ["0", "3", "6"]
     dataset_iterator_mock.reset_mock()
     # world_size = 3, rank = 1 (dataset size not cleanly divisible by world size)
-    iter(PackedDataset(filenames=filenames, n_chunks=2, block_size=2, num_processes=3, process_rank=1))
+    iter(
+        PackedDataset(
+            filenames=filenames,
+            n_chunks=2,
+            block_size=2,
+            num_processes=3,
+            process_rank=1,
+        )
+    )
     assert dataset_iterator_mock.call_args[1]["filenames"] == ["1", "4", "7"]
     dataset_iterator_mock.reset_mock()
     # world_size = 3, rank = 2 (dataset size not cleanly divisible by world size)
-    iter(PackedDataset(filenames=filenames, n_chunks=2, block_size=2, num_processes=3, process_rank=2))
+    iter(
+        PackedDataset(
+            filenames=filenames,
+            n_chunks=2,
+            block_size=2,
+            num_processes=3,
+            process_rank=2,
+        )
+    )
     assert dataset_iterator_mock.call_args[1]["filenames"] == ["2", "5", "8"]
 
 

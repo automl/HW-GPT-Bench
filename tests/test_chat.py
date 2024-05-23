@@ -40,7 +40,9 @@ def test_generate(monkeypatch, generated, stop_tokens, expected):
         return torch.tensor([out])
 
     monkeypatch.setattr(generate, "multinomial_num_samples_1", multinomial)
-    actual = chat.generate(model, input_idx, max_returned_tokens, stop_tokens=stop_tokens)
+    actual = chat.generate(
+        model, input_idx, max_returned_tokens, stop_tokens=stop_tokens
+    )
     actual = list(actual)
 
     assert len(actual) == len(expected)
@@ -80,14 +82,23 @@ def test_decode(tokenizer_backend):
 
 @patch("chat.base.input")
 @pytest.mark.parametrize("stop_iteration", [KeyboardInterrupt, ""])
-def test_main(mocked_input, stop_iteration, fake_checkpoint_dir, monkeypatch, tensor_like):
+def test_main(
+    mocked_input, stop_iteration, fake_checkpoint_dir, monkeypatch, tensor_like
+):
     import chat.base as chat
 
     # these values will be iteratively provided for each `input()` call
     mocked_input.side_effect = ["Hello", stop_iteration]
 
     config_path = fake_checkpoint_dir / "lit_config.json"
-    config = {"block_size": 128, "vocab_size": 50, "n_layer": 2, "n_head": 4, "n_embd": 8, "rotary_percentage": 1}
+    config = {
+        "block_size": 128,
+        "vocab_size": 50,
+        "n_layer": 2,
+        "n_head": 4,
+        "n_embd": 8,
+        "rotary_percentage": 1,
+    }
     config_path.write_text(json.dumps(config))
 
     load_mock = Mock()
@@ -107,10 +118,22 @@ def test_main(mocked_input, stop_iteration, fake_checkpoint_dir, monkeypatch, te
         chat.main(temperature=2.0, top_k=2, checkpoint_dir=fake_checkpoint_dir)
 
     # decoding is done per each generated item
-    assert len(tokenizer_mock.return_value.decode.mock_calls) == generate_mock.return_value.numel()
-    assert torch.allclose(tokenizer_mock.return_value.decode.call_args[0][0], generate_mock.return_value)
+    assert (
+        len(tokenizer_mock.return_value.decode.mock_calls)
+        == generate_mock.return_value.numel()
+    )
+    assert torch.allclose(
+        tokenizer_mock.return_value.decode.call_args[0][0], generate_mock.return_value
+    )
     assert generate_mock.mock_calls == [
-        call(ANY, tensor_like, 128, temperature=2.0, top_k=2, stop_tokens=([tokenizer_mock.return_value.eos_id],))
+        call(
+            ANY,
+            tensor_like,
+            128,
+            temperature=2.0,
+            top_k=2,
+            stop_tokens=([tokenizer_mock.return_value.eos_id],),
+        )
     ]
     # # only the generated result is printed to stdout
     assert out.getvalue() == ">> Reply: foo bar baz\n"

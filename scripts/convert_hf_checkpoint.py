@@ -82,17 +82,21 @@ def copy_weights_falcon(
     }
     # the original model definition is different for each size
     if "7b" in model_name:
-        weight_map.update({
-            "transformer.h.{}.input_layernorm.bias": "transformer.h.{}.norm_1.bias",
-            "transformer.h.{}.input_layernorm.weight": "transformer.h.{}.norm_1.weight",
-        })
+        weight_map.update(
+            {
+                "transformer.h.{}.input_layernorm.bias": "transformer.h.{}.norm_1.bias",
+                "transformer.h.{}.input_layernorm.weight": "transformer.h.{}.norm_1.weight",
+            }
+        )
     elif "40b" in model_name or "180B" in model_name:
-        weight_map.update({
-            "transformer.h.{}.ln_attn.bias": "transformer.h.{}.norm_1.bias",
-            "transformer.h.{}.ln_attn.weight": "transformer.h.{}.norm_1.weight",
-            "transformer.h.{}.ln_mlp.bias": "transformer.h.{}.norm_2.bias",
-            "transformer.h.{}.ln_mlp.weight": "transformer.h.{}.norm_2.weight",
-        })
+        weight_map.update(
+            {
+                "transformer.h.{}.ln_attn.bias": "transformer.h.{}.norm_1.bias",
+                "transformer.h.{}.ln_attn.weight": "transformer.h.{}.norm_1.weight",
+                "transformer.h.{}.ln_mlp.bias": "transformer.h.{}.norm_2.bias",
+                "transformer.h.{}.ln_mlp.weight": "transformer.h.{}.norm_2.weight",
+            }
+        )
     else:
         raise NotImplementedError
 
@@ -132,18 +136,22 @@ def copy_weights_hf_llama(
         "lm_head.weight": "lm_head.weight",
     }
     if config._mlp_class == "LLaMAMoE":
-        weight_map.update({
-            "model.layers.{}.block_sparse_moe.gate.weight": "transformer.h.{l}.mlp.gate.weight",
-            "model.layers.{}.block_sparse_moe.experts.{}.w1.weight": "transformer.h.{l}.mlp.experts.{e}.fc_1.weight",
-            "model.layers.{}.block_sparse_moe.experts.{}.w3.weight": "transformer.h.{l}.mlp.experts.{e}.fc_2.weight",
-            "model.layers.{}.block_sparse_moe.experts.{}.w2.weight": "transformer.h.{l}.mlp.experts.{e}.proj.weight",
-        })
+        weight_map.update(
+            {
+                "model.layers.{}.block_sparse_moe.gate.weight": "transformer.h.{l}.mlp.gate.weight",
+                "model.layers.{}.block_sparse_moe.experts.{}.w1.weight": "transformer.h.{l}.mlp.experts.{e}.fc_1.weight",
+                "model.layers.{}.block_sparse_moe.experts.{}.w3.weight": "transformer.h.{l}.mlp.experts.{e}.fc_2.weight",
+                "model.layers.{}.block_sparse_moe.experts.{}.w2.weight": "transformer.h.{l}.mlp.experts.{e}.proj.weight",
+            }
+        )
     elif config._mlp_class == "LLaMAMLP":
-        weight_map.update({
-            "model.layers.{}.mlp.gate_proj.weight": "transformer.h.{l}.mlp.fc_1.weight",
-            "model.layers.{}.mlp.up_proj.weight": "transformer.h.{l}.mlp.fc_2.weight",
-            "model.layers.{}.mlp.down_proj.weight": "transformer.h.{l}.mlp.proj.weight",
-        })
+        weight_map.update(
+            {
+                "model.layers.{}.mlp.gate_proj.weight": "transformer.h.{l}.mlp.fc_1.weight",
+                "model.layers.{}.mlp.up_proj.weight": "transformer.h.{l}.mlp.fc_2.weight",
+                "model.layers.{}.mlp.down_proj.weight": "transformer.h.{l}.mlp.proj.weight",
+            }
+        )
     else:
         raise NotImplementedError
 
@@ -196,7 +204,9 @@ def copy_weights_phi(
     saver: Optional[incremental_save] = None,
     dtype: Optional[torch.dtype] = None,
 ) -> None:
-    if any(layer_name.startswith(("layers.", "transformer.")) for layer_name in hf_weights):
+    if any(
+        layer_name.startswith(("layers.", "transformer.")) for layer_name in hf_weights
+    ):
         raise ValueError(
             "You are using an outdated Phi checkpoint. Please reload it as described in 'tutorials/download_phi.md'"
         )
@@ -268,12 +278,20 @@ def layer_template(layer_name: str, idx: int) -> Tuple[str, int]:
     return from_name, number
 
 
-def load_param(param: Union[torch.Tensor, NotYetLoadedTensor], name: str, dtype: Optional[torch.dtype]) -> torch.Tensor:
+def load_param(
+    param: Union[torch.Tensor, NotYetLoadedTensor],
+    name: str,
+    dtype: Optional[torch.dtype],
+) -> torch.Tensor:
     if hasattr(param, "_load_tensor"):
         # support tensors loaded via `lazy_load()`
         print(f"Loading {name!r} into RAM")
         param = param._load_tensor()
-    if dtype is not None and type(dtype) is not NotYetLoadedTensor and dtype != param.dtype:
+    if (
+        dtype is not None
+        and type(dtype) is not NotYetLoadedTensor
+        and dtype != param.dtype
+    ):
         print(f"Converting {name!r} from {param.dtype} to {dtype}")
         param = param.to(dtype)
     return param

@@ -36,7 +36,10 @@ def test_layer_to_device(n_layer, devices, expected):
 
 
 def path_to_device(model):
-    return {k: str(v.device) for k, v in itertools.chain(model.named_parameters(), model.named_buffers())}
+    return {
+        k: str(v.device)
+        for k, v in itertools.chain(model.named_parameters(), model.named_buffers())
+    }
 
 
 def test_replace_device():
@@ -51,10 +54,12 @@ def test_replace_device():
     class MyModel(torch.nn.Module):
         def __init__(self):
             super().__init__()
-            self.modules = torch.nn.ModuleDict({
-                "module1": torch.nn.Linear(1, 1, bias=True, device="meta"),
-                "module2": torch.nn.Linear(1, 1, bias=False, device="cpu"),
-            })
+            self.modules = torch.nn.ModuleDict(
+                {
+                    "module1": torch.nn.Linear(1, 1, bias=True, device="meta"),
+                    "module2": torch.nn.Linear(1, 1, bias=False, device="cpu"),
+                }
+            )
             self.submodule = Submodule()
 
     model = MyModel()
@@ -78,7 +83,9 @@ def test_replace_device():
     model.submodule.bar = model.submodule.bar.to("meta")
     with pytest.raises(
         ValueError,
-        match=escape("multiple devices: {'submodule.foo': device(type='cpu'), 'submodule.bar': device(type='meta')}"),
+        match=escape(
+            "multiple devices: {'submodule.foo': device(type='cpu'), 'submodule.bar': device(type='meta')}"
+        ),
     ):
         replace_device(model, torch.device("cpu"), torch.device("meta"))
 
@@ -145,7 +152,12 @@ def find_forward_hooks(module):
     mapping = defaultdict(list)
     for name, submodule in module.named_modules():
         for hook in submodule._forward_pre_hooks.values():
-            hook_data = ("forward_pre_hook", hook.func.__name__, hook.args, hook.keywords)
+            hook_data = (
+                "forward_pre_hook",
+                hook.func.__name__,
+                hook.args,
+                hook.keywords,
+            )
             mapping[name].append(hook_data)
         for hook in submodule._forward_hooks.values():
             hook_data = ("forward_hook", hook.func.__name__, hook.args, hook.keywords)
@@ -258,11 +270,35 @@ def test_model_forward_hooks():
         "transformer.h.5.attn.kv_cache.v": "cuda:1",
     }
     assert hooks == {
-        "transformer.h.3": [("forward_pre_hook", "move_block_input", (torch.device(type="cuda", index=1),), {})],
-        "transformer.h.4": [("forward_pre_hook", "move_block_input", (torch.device(type="cuda", index=1),), {})],
+        "transformer.h.3": [
+            (
+                "forward_pre_hook",
+                "move_block_input",
+                (torch.device(type="cuda", index=1),),
+                {},
+            )
+        ],
+        "transformer.h.4": [
+            (
+                "forward_pre_hook",
+                "move_block_input",
+                (torch.device(type="cuda", index=1),),
+                {},
+            )
+        ],
         "transformer.h.5": [
-            ("forward_pre_hook", "move_block_input", (torch.device(type="cuda", index=1),), {}),
-            ("forward_hook", "move_block_output", (torch.device(type="cuda", index=0),), {}),
+            (
+                "forward_pre_hook",
+                "move_block_input",
+                (torch.device(type="cuda", index=1),),
+                {},
+            ),
+            (
+                "forward_hook",
+                "move_block_output",
+                (torch.device(type="cuda", index=0),),
+                {},
+            ),
         ],
     }
 
@@ -276,7 +312,9 @@ def test_base_with_sequentially(tmp_path):
     from scripts.download import download_from_hub
 
     # download the tokenizer
-    download_from_hub(repo_id="EleutherAI/pythia-14m", tokenizer_only=True, checkpoint_dir=tmp_path)
+    download_from_hub(
+        repo_id="EleutherAI/pythia-14m", tokenizer_only=True, checkpoint_dir=tmp_path
+    )
     checkpoint_dir = tmp_path / "EleutherAI/pythia-14m"
     # save the config
     config = Config.from_name("pythia-14m")
@@ -292,7 +330,9 @@ def test_base_with_sequentially(tmp_path):
         f"--checkpoint_dir={str(checkpoint_dir)}",
     ]
     env = {"CUDA_VISIBLE_DEVICES": "0,1"}
-    base_stdout = subprocess.check_output([sys.executable, root / "generate/base.py", *args], env=env).decode()
+    base_stdout = subprocess.check_output(
+        [sys.executable, root / "generate/base.py", *args], env=env
+    ).decode()
     sequential_stdout = subprocess.check_output(
         [sys.executable, root / "generate/sequentially.py", *args], env=env
     ).decode()

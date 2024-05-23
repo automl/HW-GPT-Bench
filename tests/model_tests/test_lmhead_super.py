@@ -16,6 +16,6 @@ for emb_in in sample_embed_dim_in:
         y = head_super(x)
         print(torch.sum(y).item())
         if bias:
-            assert torch.sum(y) == emb_in*output_dim + output_dim
+            assert torch.sum(y) == emb_in * output_dim + output_dim
         else:
-            assert torch.sum(y) == emb_in*output_dim
+            assert torch.sum(y) == emb_in * output_dim
