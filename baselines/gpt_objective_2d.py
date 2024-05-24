@@ -7,17 +7,19 @@ from lib.utils import (
     normalize_arch_feature_map,
     get_ppl_predictor_surrogate,
     get_hw_predictor_surrogate,
+    get_max_min_stats,
     predict_hw_surrogate,
     normalize_energy,
+    normalize_latency,
     normalize_ppl,
 )
-import pickle
-import torch
 
 report = Reporter()
 
 
-def objective(max_layers, sampled_config, device, search_space, surrogate_type):
+
+def objective(sampled_config, device, search_space, surrogate_type, objective):
+    max_layers = get_max_min_stats(search_space)["max_layers"]
     arch_feature_map = get_arch_feature_map(sampled_config, search_space)
     arch_feature_map_ppl_predictor = convert_config_to_one_hot(
         sampled_config, search_space=search_space
@@ -29,15 +31,18 @@ def objective(max_layers, sampled_config, device, search_space, surrogate_type):
     ppl_predictor = get_ppl_predictor_surrogate(search_space)
     perplexity = ppl_predictor(arch_feature_map_ppl_predictor.cuda().unsqueeze(0))
     hw_predictor = get_hw_predictor_surrogate(
-        max_layers, search_space, device, surrogate_type
+        max_layers, search_space, device, surrogate_type, objective
     )
-    energy = predict_hw_surrogate(
+    hw_metric = predict_hw_surrogate(
         [arch_feature_map_predictor], hw_predictor, surrogate_type
     )
     ppl = perplexity.item()
     ppl_norm = normalize_ppl(ppl, search_space)
-    energy_norm = normalize_energy(energy, device, search_space)
-    report(perplexity=ppl_norm, energy=energy_norm)
+    if objective=="energy":
+       hw_metric_norm = normalize_energy(hw_metric, device, search_space)
+    elif objective == "latency":
+       hw_metric_norm = normalize_latency(hw_metric, device, search_space)
+    report(perplexity=ppl_norm, hw_metric_norm=hw_metric_norm)
 
 
 if __name__ == "__main__":
@@ -57,6 +62,7 @@ if __name__ == "__main__":
     parser.add_argument("--num_layers", type=int, default=12)
     parser.add_argument("--embed_dim", type=int, default=768)
     parser.add_argument("--bias", type=bool, default=True)
+    parser.add_argument("--objective", type=str, default="energy")
     for i in range(max_layers):
         parser.add_argument(f"--num_heads_{i}", type=int, default=12)
         parser.add_argument(f"--mlp_ratio_{i}", type=int, default=4)
@@ -74,9 +80,9 @@ if __name__ == "__main__":
         sample_config[f"sample_n_head"].append(getattr(args, f"num_heads_{i}"))
         sample_config[f"sample_mlp_ratio"].append(getattr(args, f"mlp_ratio_{i}"))
     objective(
-        max_layers=args.max_layers,
         sampled_config=sample_config,
         search_space=args.search_space,
         surrogate_type=args.surrogate_type,
         device=args.device,
+        objective=args.objective
     )
