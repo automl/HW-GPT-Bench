@@ -35,6 +35,6 @@ module load Python/3.11.3
 source /p/scratch/ccstdl/sukthanker1/gpt/bin/activate
 export PYTHONPATH=.
 
-PYTHON_SCRIPT=train_llm_configurable.py
+PYTHON_SCRIPT=train_gpt.py
 
 srun --cpu_bind=v --accel-bind=gn --threads-per-core=1 python -u $PYTHON_SCRIPT -c configs/config_train/owt_m.yaml $@
