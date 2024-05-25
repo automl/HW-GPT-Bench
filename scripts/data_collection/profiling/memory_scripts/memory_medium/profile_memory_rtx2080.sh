@@ -9,5 +9,4 @@
 #SBATCH --partition=ml_gpu-rtx2080
 #SBATCH --job-name=profile_memory
 
-export PYTHONPATH=.
-python profiler/profile/gpt_mem_profiler_m.py --config config_mem_m/mem_rtx2080.yaml
+python data_collection/gpt_profiler/profile/gpt_mem_profiler.py --config configs/config_mem_medium/mem_rtx2080.yaml --start_index 0 --end_index 10000 --scale m
