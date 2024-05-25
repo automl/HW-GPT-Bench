@@ -216,7 +216,7 @@ if __name__ == "__main__":
     parser.add_argument(
         "--config",
         type=str,
-        default="config/owt_sw_s_eval.yaml",
+        default="configs/config_eval/owt_s_eval.yaml",
         help="path to config file",
     )
     parser.add_argument("--start_index", type=int, default=0, help="start index")
