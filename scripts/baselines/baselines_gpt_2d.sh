@@ -10,4 +10,4 @@ method=$1
 device=$2
 seed=$3
 
-python baselines/run_nas_lm.py --method $method --device $device 
+python baselines/run_nas_gpt_2d.py --method $method --device $device 

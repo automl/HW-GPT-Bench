@@ -35,4 +35,4 @@ module load Python/3.11.3
 source /p/scratch/ccstdl/sukthanker1/gpt/bin/activate
 export PYTHONPATH=.
 PYTHON_SCRIPT=profiler/profile/gpt_perplexity_profiler.py
-srun --cpu_bind=v --accel-bind=gn --threads-per-core=1 python -u $PYTHON_SCRIPT --start_index 2000 --end_index 3000 $@
+srun --cpu_bind=v --accel-bind=gn --threads-per-core=1 python -u $PYTHON_SCRIPT --start_index 0 --end_index 10000 $@
