@@ -3,8 +3,8 @@ resume_training: True
 
 experiment:
   experiments_base_dir: /p/scratch/ccstdl/sukthanker1/HW-Aware-LLM-Bench/experiments
-  project_name: tinystories_random
-  session_name: tinystories_random
+  project_name: owt_small
+  session_name: owt_small
   experiment_name: default_juls # _fused-ff-prob-layer
 
 trainer:
@@ -20,12 +20,12 @@ trainer:
   limit_val_batches: null
   log_every_n_steps: 100
   max_epochs: null
-  max_steps: 200000
+  max_steps: 800000
   num_sanity_val_steps: 2
   accumulate_grad_batches: 1
   precision: 'bf16-mixed'
   reload_dataloaders_every_n_epochs: 1
-  val_check_interval: 100
+  val_check_interval: 1000
   deterministic: False
 
 
@@ -70,7 +70,7 @@ callbacks:
     _target_: pytorch_lightning.callbacks.ModelCheckpoint
     dirpath: ${experiment.experiments_base_dir}
     auto_insert_metric_name: False
-    every_n_train_steps: 10000
+    every_n_train_steps: 5000
     every_n_epochs: null
     save_top_k: 1
     monitor: "step"
@@ -120,7 +120,7 @@ model:
   head_choices: [4,8,12]
   layer_choices: [10,11,12]
   mlp_ratio_choices: [2, 3, 4]
-  bias_choices: [True]
+  bias_choices: [True, False]
   precision: ${trainer.precision}
   block_size: 1024
   vocab_size: 50254
@@ -128,7 +128,7 @@ model:
   scale_embeddings: False
   padded_vocab_size: 50254
   max_len: 1024
-  sampling_scheme: "random"
+  sampling_scheme: "normal"
 
   n_embd: 768 # 256,  # ++ hidden dimension of my_gpt
   n_layer: 12  # ++ number of my_gpt layers
@@ -166,13 +166,15 @@ model:
 
   initializer_range: 0.02
   device: "cuda"
-  train_strategy: "random"
+  train_strategy: "sandwich"
   sandwhich_random: 2
+  use_inplace_kd: False
+  checkpoint_path: "/work/dlclarge2/sukthank-hw-llm-bench/HW-Aware-LLM-Bench/experiments/owt_small/owt_small/default_juls/last.ckpt"
 
 
 
 lm_data:
-  dataset_name: "tinystories" # openwebtext wikitext
+  dataset_name: "openwebtext" # openwebtext wikitext
   num_cpu_worker: 32
   num_gpu_worker: ${trainer.devices}
   max_sample_len: 1024
@@ -180,5 +182,5 @@ lm_data:
   batch_size: 32
   val_ratio: 0.0005
   val_split_seed: 2357
-  data_dir: "/p/scratch/ccstdl/sukthanker1/HW-Aware-LLM-Bench/sukthanker1/datasets/"
-  cache_dir: "/p/scratch/ccstdl/sukthanker1/HW-Aware-LLM-Bench/sukthanker1/datasets/cache/"
+  data_dir: "/p/scratch/ccstdl/sukthanker1/datasets/"
+  cache_dir: "/p/scratch/ccstdl/sukthanker1/datasets/cache/"

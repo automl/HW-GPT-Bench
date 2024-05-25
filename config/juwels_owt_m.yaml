@@ -3,8 +3,8 @@ resume_training: True
 
 experiment:
   experiments_base_dir: /p/scratch/ccstdl/sukthanker1/HW-Aware-LLM-Bench/experiments
-  project_name: owt_small
-  session_name: owt_small
+  project_name: owt_medium
+  session_name: owt_medium
   experiment_name: default_juls # _fused-ff-prob-layer
 
 trainer:
@@ -14,13 +14,13 @@ trainer:
   enable_model_summary: true
   enable_progress_bar: true
   accelerator: 'gpu'
-  devices: 4
+  devices: 4 
   gradient_clip_val: 1.0
   limit_train_batches: null
   limit_val_batches: null
   log_every_n_steps: 100
   max_epochs: null
-  max_steps: 2000000
+  max_steps: 800000
   num_sanity_val_steps: 2
   accumulate_grad_batches: 1
   precision: 'bf16-mixed'
@@ -116,9 +116,9 @@ deepspeed:
 
 
 model:
-  embed_choices: [768, 384, 192]
-  head_choices: [4,8,12]
-  layer_choices: [10,11,12]
+  embed_choices:  [256, 512,1024]
+  head_choices: [8,12,16]
+  layer_choices: [22,23,24]
   mlp_ratio_choices: [2, 3, 4]
   bias_choices: [True, False]
   precision: ${trainer.precision}
@@ -130,15 +130,15 @@ model:
   max_len: 1024
   sampling_scheme: "normal"
 
-  n_embd: 768 # 256,  # ++ hidden dimension of my_gpt
-  n_layer: 12  # ++ number of my_gpt layers
-  n_head: 12  # ++ number of heads per layer
+  n_embd: 1024 # 256,  # ++ hidden dimension of my_gpt
+  n_layer: 24  # ++ number of my_gpt layers
+  n_head: 16  # ++ number of heads per layer
   head_size: 64
 
-  intermediate_size: 3072  # ++ hidden dim * ff_factor = size of feed-forward layer
+  intermediate_size: 4096  # ++ hidden dim * ff_factor = size of feed-forward layer
   bias: True
   lm_head_bias: False
-  n_query_groups: 12
+  n_query_groups: 16
 
   attn_dropout: 0.1
   resi_dropout: 0.1
@@ -169,7 +169,6 @@ model:
   train_strategy: "sandwich"
   sandwhich_random: 2
   use_inplace_kd: False
-  checkpoint_path: "/work/dlclarge2/sukthank-hw-llm-bench/HW-Aware-LLM-Bench/experiments/owt_small/owt_small/default_juls/last.ckpt"
 
 
 
@@ -179,7 +178,7 @@ lm_data:
   num_gpu_worker: ${trainer.devices}
   max_sample_len: 1024
   seed: ${train.seed}
-  batch_size: 32
+  batch_size: 8
   val_ratio: 0.0005
   val_split_seed: 2357
   data_dir: "/p/scratch/ccstdl/sukthanker1/datasets/"

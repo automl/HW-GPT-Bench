@@ -3,8 +3,8 @@ resume_training: True
 
 experiment:
   experiments_base_dir: /p/scratch/ccstdl/sukthanker1/HW-Aware-LLM-Bench/experiments
-  project_name: owt_large_fast
-  session_name: owt_large_fast
+  project_name: owt_large
+  session_name: owt_large
   experiment_name: default_juls # _fused-ff-prob-layer
 
 trainer:
