@@ -1,5 +1,5 @@
 import torch
-from gpt.super_modules.lmhead_super import LMHeadSuper
+from hwgpt.model.gpt.super_modules.lmhead_super import LMHeadSuper
 
 output_dim = 1024
 super_input_dim = 1024

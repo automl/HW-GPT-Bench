@@ -1,5 +1,5 @@
 import torch
-from gpt.super_modules.linear_super import SuperLinear
+from hwgpt.model.gpt.super_modules.linear_super import SuperLinear
 
 super_embed_dim = 1024
 sample_embed_dim_in = [1024, 512]

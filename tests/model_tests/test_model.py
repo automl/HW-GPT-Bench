@@ -1,9 +1,9 @@
-from gpt.model import GPT
-from gpt.config import Config
+from hwgpt.model.gpt.model import GPT
+from hwgpt.model.gpt.config import Config
 import torch
 import torch.nn as nn
 import numpy as np
-from gpt.utils import *
+from hwgpt.model.gpt.utils import *
 
 sample_embed_dim = [512, 256]
 sample_n_head = [2, 4]

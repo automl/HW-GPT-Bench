@@ -1,4 +1,4 @@
-from profiler.utils.latency_profile_utils import (
+from data_collection.gpt_profiler.utils.latency_profile_utils import (
     torch_profiler_conv,
     torch_record_function_conv,
     torch_profiler_llm,
@@ -25,9 +25,9 @@ print("Standard deviation time on cpu {} {}".format(std_cpu, unit_cpu))
 print("Mean time on gpu {} {}".format(mean_gpu, unit_gpu))
 print("Standard deviation time on gpu {} {}".format(std_gpu, unit_gpu))
 
-from gpt.config import Config
-from gpt.model import GPT
-from gpt.utils import *
+from hwgpt.model.gpt.config import Config
+from hwgpt.model.gpt.model import GPT
+from hwgpt.model.gpt.utils import *
 
 sample_embed_dim = [512, 256]
 sample_n_head = [2, 4]

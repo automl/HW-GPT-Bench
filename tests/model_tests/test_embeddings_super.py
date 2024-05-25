@@ -1,6 +1,6 @@
-from gpt.super_modules.rotary_embedding import SuperRotaryEmbedding
-from gpt.super_modules.embedding_super import SuperEmbedding
-from gpt.config import Config
+from hwgpt.model.gpt.super_modules.rotary_embedding import SuperRotaryEmbedding
+from hwgpt.model.gpt.super_modules.embedding_super import SuperEmbedding
+from hwgpt.model.gpt.config import Config
 import torch
 
 

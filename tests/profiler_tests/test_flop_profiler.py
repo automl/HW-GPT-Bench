@@ -1,6 +1,6 @@
 import torch
 import torchvision.models as models
-from profiler.utils.flop_utils import get_flops_macs_params
+from data_collection.gpt_profiler.utils.flop_utils import get_flops_macs_params
 
 """model = models.alexnet()
 batch_size = 1

@@ -1,7 +1,7 @@
 from gpt.blocks.causal_self_attention import CausalSelfAttention
 import torch
-from gpt.config import Config
-from gpt.super_modules.rotary_embedding import SuperRotaryEmbedding
+from hwgpt.model.gpt.config import Config
+from hwgpt.model.gpt.super_modules.rotary_embedding import SuperRotaryEmbedding
 
 sample_embed_dim = [512, 256]
 sample_n_head = [2, 4]

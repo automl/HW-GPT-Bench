@@ -1,6 +1,6 @@
-from gpt.blocks.mlp import GptNeoxMLP, LLaMAMLP
+from hwgpt.model.gpt.blocks.mlp import GptNeoxMLP, LLaMAMLP
 import torch
-from gpt.config import Config
+from hwgpt.model.gpt.config import Config
 
 
 sample_embed_dim = [512, 256]

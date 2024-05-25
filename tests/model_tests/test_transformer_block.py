@@ -1,7 +1,7 @@
-from gpt.blocks.transformer_block import Block
+from hwgpt.model.gpt.blocks.transformer_block import Block
 import torch
-from gpt.config import Config
-from gpt.super_modules.rotary_embedding import SuperRotaryEmbedding
+from hwgpt.model.gpt.config import Config
+from hwgpt.model.gpt.super_modules.rotary_embedding import SuperRotaryEmbedding
 
 sample_embed_dim = [512, 256]
 sample_mlp_ratio = [4, 2]
