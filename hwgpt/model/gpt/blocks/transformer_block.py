@@ -1,8 +1,8 @@
 import torch
 import torch.nn as nn
 from typing import Any, Optional, Tuple
-from gpt.config import Config
-from gpt.blocks.causal_self_attention import CausalSelfAttention
+from hwgpt.model.gpt.config import Config
+from hwgpt.model.gpt.blocks.causal_self_attention import CausalSelfAttention
 
 
 class Block(nn.Module):

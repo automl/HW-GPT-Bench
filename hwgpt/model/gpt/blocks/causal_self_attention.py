@@ -2,9 +2,9 @@ import torch
 import torch.nn as nn
 import math
 from typing import Optional
-from gpt.config import Config
-from gpt.blocks.kv_cache import KVCache
-from gpt.super_modules.linear_super import SuperLinear
+from hwgpt.model.gpt.config import Config
+from hwgpt.model.gpt.blocks.kv_cache import KVCache
+from hwgpt.model.gpt.super_modules.linear_super import SuperLinear
 
 
 class CausalSelfAttention(nn.Module):

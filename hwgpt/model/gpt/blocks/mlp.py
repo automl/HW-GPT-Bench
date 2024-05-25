@@ -1,8 +1,8 @@
 import torch
 import torch.nn as nn
 from typing import Any, Optional, Tuple
-from gpt.config import Config
-from gpt.super_modules.linear_super import SuperLinear
+from hwgpt.model.gpt.config import Config
+from hwgpt.model.gpt.super_modules.linear_super import SuperLinear
 from torch.utils.checkpoint import checkpoint
 
 

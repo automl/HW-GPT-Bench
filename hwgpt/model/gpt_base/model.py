@@ -1,3 +1,5 @@
+# Copyright Lightning AI. Licensed under the Apache License 2.0, see LICENSE file.
+
 """Full definition of a decoder-only transformer-based language model, all of it in this single file.
 
 Based on the nanoGPT implementation: https://github.com/karpathy/nanoGPT and
@@ -11,7 +13,7 @@ import torch
 import torch.nn as nn
 from typing_extensions import Self
 
-from gpt_base.config import Config
+from hwgpt.model.gpt_base.config import Config
 
 
 class GPT(nn.Module):

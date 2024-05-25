@@ -11,11 +11,11 @@ import torch
 import torch.nn as nn
 from typing_extensions import Self
 
-from gpt.config import Config
-from gpt.blocks import *
-from gpt.super_modules.embedding_super import SuperEmbedding
-from gpt.super_modules.rotary_embedding import SuperRotaryEmbedding
-from gpt.super_modules.lmhead_super import LMHeadSuper
+from hwgpt.model.gpt.config import Config
+from hwgpt.model.gpt.blocks import *
+from hwgpt.model.gpt.super_modules.embedding_super import SuperEmbedding
+from hwgpt.model.gpt.super_modules.rotary_embedding import SuperRotaryEmbedding
+from hwgpt.model.gpt.super_modules.lmhead_super import LMHeadSuper
 
 
 class GPT(nn.Module):
@@ -54,8 +54,8 @@ class GPT(nn.Module):
     @property
     def norm_class(self):
         # `self._norm_class` cannot be the type to keep the config json serializable
-        from gpt.super_modules.rmsnorm_super import RMSNormSuper
-        from gpt.super_modules.layernorm_super import LayerNormSuper
+        from hwgpt.model.gpt.super_modules.rmsnorm_super import RMSNormSuper
+        from hwgpt.model.gpt.super_modules.layernorm_super import LayerNormSuper
 
         if self.config._norm_class == "RMSNorm":
 

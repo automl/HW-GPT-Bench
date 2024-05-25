@@ -31,7 +31,7 @@ from typing_extensions import Self
 import numpy as np
 
 if TYPE_CHECKING:
-    from gpt.model import GPT
+    from hwgpt.model.gpt.model import GPT
 
 
 def find_multiple(n: int, k: int) -> int:

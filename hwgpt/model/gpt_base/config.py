@@ -9,8 +9,8 @@ from typing import Any, Literal, Optional, Type, Union
 import torch
 from typing_extensions import Self
 
-import gpt_base.model
-from gpt.utils import find_multiple
+import hwgpt.model.gpt_base.model
+from hwgpt.model.gpt.utils import find_multiple
 
 
 @dataclass
@@ -147,7 +147,7 @@ class Config:
     @property
     def mlp_class(self) -> Type:
         # `self._mlp_class` cannot be the type to keep the config json serializable
-        return getattr(lit_gpt.model, self._mlp_class)
+        return getattr(hwgpt.model.gpt.model, self._mlp_class)
 
     @property
     def norm_class(self) -> Type:
@@ -155,7 +155,7 @@ class Config:
         if self._norm_class == "RMSNorm":
             from functools import partial
 
-            from lit_gpt.rmsnorm import RMSNorm
+            from hwgpt.model.gpt_base.rmsnorm import RMSNorm
 
             return partial(RMSNorm, add_unit_offset="Gemma" in self.name)
         return getattr(torch.nn, self._norm_class)
