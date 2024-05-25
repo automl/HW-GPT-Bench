@@ -119,6 +119,7 @@ def normalize_energy(energy, device, scale):
         energy = (energy - min_energy) / (max_energy - min_energy)
     return energy
 
+
 def normalize_latency(latency, device, scale):
     with open(
         "hwmetric_predictor_ckpts/max_min_stats_latency_"
@@ -135,27 +136,44 @@ def normalize_latency(latency, device, scale):
     # print(latency)
     return latency
 
+
 def normalize_objectives(metric_values, objectives_list, devices, search_space):
-    metric_values_normalized  = []
+    metric_values_normalized = []
     for i, objective in enumerate(objectives_list):
         if objective == "latency":
-           metric_values_normalized.append(normalize_latency(metric_values[i], devices[i], search_space))
+            metric_values_normalized.append(
+                normalize_latency(metric_values[i], devices[i], search_space)
+            )
         elif objective == "energy":
-           metric_values_normalized.append(normalize_energy(metric_values[i], devices[i], search_space))
+            metric_values_normalized.append(
+                normalize_energy(metric_values[i], devices[i], search_space)
+            )
         else:
             raise ValueError("Metric nor supported")
     return metric_values_normalized
 
-def get_all_hw_surrogates(max_layers, search_space, objectives, devices, surrogate_type):
+
+def get_all_hw_surrogates(
+    max_layers, search_space, objectives, devices, surrogate_type
+):
     all_surrogates = []
-    for i,objective in enumerate(objectives):
-        all_surrogates.append(get_hw_predictor_surrogate(max_layers,search_space,devices[i],surrogate_type,objectives[i]))
+    for i, objective in enumerate(objectives):
+        all_surrogates.append(
+            get_hw_predictor_surrogate(
+                max_layers, search_space, devices[i], surrogate_type, objectives[i]
+            )
+        )
     return all_surrogates
 
-def get_hw_predictor_surrogate(max_layers, search_space, device, surrogate_type, metric="energy"):
+
+def get_hw_predictor_surrogate(
+    max_layers, search_space, device, surrogate_type, metric="energy"
+):
     if surrogate_type == "conformal_quantile":
         surrogate_path = (
-            "hwmetric_predictor_ckpts/conformal_quantile_regression_"+str(metric)+"_"
+            "hwmetric_predictor_ckpts/conformal_quantile_regression_"
+            + str(metric)
+            + "_"
             + str(device)
             + "_"
             + str(search_space)
@@ -165,7 +183,9 @@ def get_hw_predictor_surrogate(max_layers, search_space, device, surrogate_type,
             predictor = pickle.load(f)
     elif surrogate_type == "quantile":
         surrogate_path = (
-            "hwmetric_predictor_ckpts/conformal_quantile_regression_"+str(metric)+"_"
+            "hwmetric_predictor_ckpts/conformal_quantile_regression_"
+            + str(metric)
+            + "_"
             + str(device)
             + "_"
             + str(search_space)
@@ -175,7 +195,15 @@ def get_hw_predictor_surrogate(max_layers, search_space, device, surrogate_type,
             predictor = pickle.load(f)
     elif surrogate_type == "mlp":
         predictor = Nethw(max_layers, False, 256, 256).cuda()
-        path = "hwmetric_predictor_ckpts/" + str(device) + "_"+ str(metric)+ "_gpu_"+ str(search_space)+".pt"
+        path = (
+            "hwmetric_predictor_ckpts/"
+            + str(device)
+            + "_"
+            + str(metric)
+            + "_gpu_"
+            + str(search_space)
+            + ".pt"
+        )
         predictor.load_state_dict(torch.load(path))
     return predictor
 

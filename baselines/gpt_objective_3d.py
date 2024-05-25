@@ -14,20 +14,15 @@ from lib.utils import (
     get_all_hw_surrogates,
     get_ppl_predictor_surrogate,
     normalize_arch_feature_map,
-    get_max_min_stats
+    get_max_min_stats,
+    search_spaces,
 )
 
 
 report = Reporter()
 
 
-def objective(
-    sampled_config,
-    device_list,
-    search_space,
-    surrogate_type,
-    objectives
-):
+def objective(sampled_config, device_list, search_space, surrogate_type, objectives):
     max_layers = get_max_min_stats(search_space)["max_layers"]
     arch_feature_map = get_arch_feature_map(sampled_config, search_space)
     arch_feature_map_ppl_predictor = convert_config_to_one_hot(
@@ -39,7 +34,9 @@ def objective(
     # print(arch_feature_map_predictor)
     ppl_predictor = get_ppl_predictor_surrogate(search_space)
     perplexity = ppl_predictor(arch_feature_map_ppl_predictor.cuda().unsqueeze(0))
-    hw_metric_1_surrogate, hw_metric_2_surrogate = get_all_hw_surrogates(max_layers,search_space, objectives,device_list,surrogate_type)
+    hw_metric_1_surrogate, hw_metric_2_surrogate = get_all_hw_surrogates(
+        max_layers, search_space, objectives, device_list, surrogate_type
+    )
     hw_metric_1 = predict_hw_surrogate(
         arch_feature_map_predictor, hw_metric_1_surrogate, surrogate_type
     )
@@ -47,10 +44,14 @@ def objective(
         arch_feature_map_predictor, hw_metric_2_surrogate, surrogate_type, objectives[1]
     )
 
-    hw_metric_1_norm, hw_metric_2_norm = normalize_objectives([hw_metric_1, hw_metric_2], objectives, device_list,search_space)
+    hw_metric_1_norm, hw_metric_2_norm = normalize_objectives(
+        [hw_metric_1, hw_metric_2], objectives, device_list, search_space
+    )
     ppl = perplexity.item()
     ppl_norm = normalize_ppl(ppl)
-    report(perplexity=ppl_norm, hw_metric_1_norm=hw_metric_1_norm, hw_metric_2_norm=hw_metric_2_norm)
+    report(
+        perplexity=ppl_norm, hw_metric_1=hw_metric_1_norm, hw_metric_2=hw_metric_2_norm
+    )
 
 
 if __name__ == "__main__":
@@ -59,8 +60,6 @@ if __name__ == "__main__":
 
     root = logging.getLogger()
     root.setLevel(logging.INFO)
-    # [3]
-    max_layers = 12
     parser = argparse.ArgumentParser()
     parser.add_argument("--epochs", type=int, default=100)
     parser.add_argument("--surrogate_type", type=str, default="conformal_quantile")
@@ -73,12 +72,15 @@ if __name__ == "__main__":
     parser.add_argument("--bias", type=bool, default=True)
     parser.add_argument("--objective_1", type=str, default="energy")
     parser.add_argument("--objective_2", type=str, default="latency")
+    args = parser.parse_known_args()[0]
+    search_space = search_spaces[args.search_space]
+    max_layers = max(search_spaces["n_layer_choices"])
     for i in range(max_layers):
         parser.add_argument(f"--num_heads_{i}", type=int, default=12)
         parser.add_argument(f"--mlp_ratio_{i}", type=int, default=4)
 
-    args, _ = parser.parse_known_args()
     # Evaluate objective and report results to Syne Tune
+    args, _ = parser.parse_known_args()
     print(vars(args))
     sample_config = {}
     sample_config["sample_n_layer"] = args.num_layers
@@ -93,6 +95,6 @@ if __name__ == "__main__":
         sampled_config=sample_config,
         search_space=args.search_space,
         surrogate_type=args.surrogate_type,
-        device_list = [args.device_1, args.device_2],
-        objectives = [args.objective_1, args.objective2]
+        device_list=[args.device_1, args.device_2],
+        objectives=[args.objective_1, args.objective2],
     )

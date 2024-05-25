@@ -21,6 +21,7 @@ from syne_tune.optimizer.schedulers.multiobjective.linear_scalarizer import (
 import os
 import json
 import pickle
+from lib.utils import search_spaces
 
 # Configuration space (or search space)
 
@@ -72,25 +73,34 @@ if __name__ == "__main__":
         default=12,
     )
     parser.add_argument(
-        "--device_latency",
+        "--device_1",
         type=str,
         default="rtx2080",
     )
     parser.add_argument(
-        "--device_energy",
+        "--device_2",
         type=str,
         default="a6000",
     )
+    parser.add_argument("--objective_1", type=str, default="energy")
+    parser.add_argument("--objective_2", type=str, deafult="latency")
+    parser.add_argument("--search_space", type=str, default="s")
+    parser.add_argument("--surrogate_type", type=str, default="conformal_quantile")
     args, _ = parser.parse_known_args()
+    search_space = search_spaces[args.search_space]
+    max_layers = max(search_spaces["n_layer_choices"])
     config_space = {
-        "max_num_layers": args.max_num_layers,
-        "device_latency": args.device_latency,
-        "device_energy": args.device_energy,
+        "search_space": args.search_space,
+        "device_1": args.device_1,
+        "device_2": args.device_2,
+        "objective_1": args.objective_1,
+        "objective_2": args.objective_2,
+        "surrogate_type": args.surrogate_type,
         "num_layers": choice([10, 11, 12]),
         "embed_dim": choice([768, 384, 192]),
         "bias": choice([True, False]),
     }
-    for i in range(args.max_num_layers):
+    for i in range(max_layers):
         config_space[f"mlp_ratio_{i}"] = choice([2, 3, 4])
         config_space[f"num_heads_{i}"] = choice([4, 8, 12])
 
@@ -98,11 +108,11 @@ if __name__ == "__main__":
     # - `mode` and `metric` must match what is reported in the training script
     # - Metrics need to be reported after each epoch, `resource_attr` must match
     #   what is reported in the training script
-    train_file = "run_nas_lm_from_scratch_3_objs.py"
+    train_file = "gpt_objective_3d.py"
     entry_point = Path(__file__).parent / train_file
     max_resource_level = 1  # Maximum number of training epochs
     mode = "min"
-    metrics = ["perplexity", "energy", "latency"]
+    metrics = ["perplexity", "hw_metric_1", "hw_metric_2"]
     resource_attr = "epoch"
     max_resource_attr = "epochs"
 

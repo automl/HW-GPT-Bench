@@ -21,6 +21,7 @@ from syne_tune.optimizer.schedulers.multiobjective.linear_scalarizer import (
 import os
 import json
 import pickle
+from lib.utils import search_spaces
 
 # Configuration space (or search space)
 
@@ -67,24 +68,26 @@ if __name__ == "__main__":
         default="mogpt",
     )
     parser.add_argument(
-        "--max_num_layers",
-        type=int,
-        default=12,
-    )
-    parser.add_argument(
         "--device",
         type=str,
         default="P100",
     )
+    parser.add_argument("--search_space", type=str, default="s")
+    parser.add_argument("--surrogate_type", type=str, default="conformal_quantile")
+    parser.add_argument("--objective", type=str, default="energy")
     args, _ = parser.parse_known_args()
+    search_space = search_spaces[args.search_space]
+    max_layers = max(search_spaces["n_layer_choices"])
     config_space = {
-        "max_num_layers": args.max_num_layers,
+        "search_space": args.search_space,
+        "surrogate_type": args.surrogate_type,
+        "objective": args.objective,
         "device": args.device,
         "num_layers": choice([10, 11, 12]),
         "embed_dim": choice([768, 384, 192]),
         "bias": choice([True, False]),
     }
-    for i in range(args.max_num_layers):
+    for i in range(max_layers):
         config_space[f"mlp_ratio_{i}"] = choice([2, 3, 4])
         config_space[f"num_heads_{i}"] = choice([4, 8, 12])
 
@@ -92,11 +95,11 @@ if __name__ == "__main__":
     # - `mode` and `metric` must match what is reported in the training script
     # - Metrics need to be reported after each epoch, `resource_attr` must match
     #   what is reported in the training script
-    train_file = "run_nas_lm_from_scratch.py"
+    train_file = "gpt_objective_2d.py"
     entry_point = Path(__file__).parent / train_file
     max_resource_level = 1  # Maximum number of training epochs
     mode = "min"
-    metrics = ["perplexity", "energy"]
+    metrics = ["perplexity", "hw_metric"]
     resource_attr = "epoch"
     max_resource_attr = "epochs"
 
