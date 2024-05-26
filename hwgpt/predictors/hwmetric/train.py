@@ -6,7 +6,8 @@ import torch.optim as optim
 import argparse
 import numpy as np
 import scipy
-
+from hwgpt.predictors.hwmetric.utils import get_model_and_datasets
+import pickle
 
 def train(model, device, train_loader, optimizer, epoch, log_interval=10):
     model.train()
@@ -68,9 +69,28 @@ if __name__ == "__main__":
     parser.add_argument(
         "--metric",
         type=str,
-        default="energy_gpu",
+        default="energies",
     )
-    parser.add_argument("--search_space", type=str, default="", help="search space")
+    parser.add_argument(
+        "--search_space",
+        type=str,
+        default="s"
+    )
+    parser.add_argument(
+        '---model',
+        type="str",
+        default="conformal_quantile"
+    )
+    parser.add_argument(
+        "--type",
+        type="str",
+        default="quantile"
+    )
+    parser.add_argument(
+        "--num_quantiles",
+        type="str",
+        default=10
+    )
     parser.add_argument(
         "--batch-size",
         type=int,
@@ -95,77 +115,33 @@ if __name__ == "__main__":
     parser.add_argument(
         "--seed", type=int, default=1, metavar="S", help="random seed ((default: 1)"
     )
-    parser.add_argument(
-        "--hw_embed_on",
-        action="store_true",
-        default=False,
-    )
-    parser.add_argument(
-        "--save_path",
-        type=str,
-        default="hwmetric_predictor_ckpts/",
-        help="path to save the model checkpoints",
-    )
     args = parser.parse_args()
     torch.manual_seed(args.seed)
-    # devices_all = ["P100","a6000", "rtx2080", "rtx3080", "v100", "a100", "a40", "h100", "cpu_mlgpu", "cpu_alldlc", "cpu_p100", "cpu_p100", "cpu_a6000", "cpu_meta", "helix_cpu"]
-    models = ["", "m", "l"]
-    gpus = ["a100", "a6000", "rtx2080", "rtx3080", "v100", "P100", "a40", "h100"]
+    model, train_dataset, test_dataset = get_model_and_datasets(args)
 
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-    for device_gpu in gpus:
-        for model in models:
-            args.search_space = model
-            args.device = device_gpu
-            kwargs = (
-                {"num_workers": 1, "pin_memory": True}
-                if torch.cuda.is_available()
-                else {}
-            )
-            train_dataset = HWDataset(
-                mode="train",
-                device_name=args.device,
-                search_space=args.search_space,
-                transform=False,
-                metric=args.metric,
-            )
-            test_dataset = HWDataset(
-                mode="test",
-                device_name=args.device,
-                search_space=args.search_space,
-                transform=False,
-                metric=args.metric,
-            )
-            train_loader = torch.utils.data.DataLoader(
+    train_loader = torch.utils.data.DataLoader(
                 train_dataset, batch_size=1024, shuffle=True
             )
-            test_loader = torch.utils.data.DataLoader(
+    test_loader = torch.utils.data.DataLoader(
                 test_dataset, batch_size=1024, shuffle=False
             )
-            # get the search space
-
-            if args.search_space == "":
-                ss = "s"
-            else:
-                ss = args.search_space
-            choices_dict = search_spaces[ss]
-            print(choices_dict)
-            num_layers = max(choices_dict["n_layer_choices"])
-            hw_embed_on = args.hw_embed_on
-            hw_embed_dim = 256
-            layer_size = 256
-            print(6 + 6 * num_layers + 2)
-            model = Net(num_layers, hw_embed_on, hw_embed_dim, layer_size).to(device)
-            optimizer = optim.Adam(model.parameters(), lr=args.lr)
-            save_path = (
-                args.save_path
-                + args.device
-                + "_"
-                + args.metric
-                + "_"
-                + args.search_space
-            )  # + "_hw_embed_on_" + str(hw_embed_on) + "_hw_embed_dim_" + str(hw_embed_dim) + "_layer_size_" + str(layer_size) + "_epochs_" + str(args.epochs) + "_lr_" + str(args.lr) + "_seed_" + str(args.seed) + ".pt"
-            for epoch in range(1, args.epochs + 1):
-                train(model, device, train_loader, optimizer, epoch)
-                test(model, device, test_loader)
-                torch.save(model.state_dict(), save_path + ".pt")
+    if args.model == "conformal_quantile" or args.model == "quantile":
+        X_train = train_dataset.arch_features_train.data.numpy()
+        X_test = test_dataset.arch_features_test.data.numpy()
+        Y_train = train_dataset.latencies_train.data.numpy()
+        Y_test = test_dataset.latencies_test.data.numpy()
+        model.fit(X_train,Y_test)
+        base_path = "data_collection/gpt_datasets/predictor_ckpts/hwmetric/"+str(args.model)+"/"
+        model_path = base_path+args.metric+"_"+args.search_space+"_"+args.device+".pkl"
+        with open(model_path,"wb") as f:
+            pickle.dump(model,f)
+    else:
+        optimizer = optim.Adam(model.parameters(), lr=args.lr)
+        device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+        base_path = "data_collection/gpt_datasets/predictor_ckpts/hwmetric/"+str(args.model)+"/"
+        model_path = base_path+args.metric+"_"+args.search_space+"_"+args.device+".pth"      
+        for epoch in range(1, args.epochs + 1):
+              train(model, device, train_loader, optimizer, epoch)
+              test(model, device, test_loader)
+        torch.save(model.state_dict(), model_path)

@@ -1,7 +1,7 @@
 import pickle
 import torch
-from predictors.hwmetric.net import Net as Nethw
-from predictors.metric.net import Net
+from hwgpt.predictors.hwmetric.net import Net as Nethw
+from hwgpt.predictors.metric.net import Net
 import numpy as np
 
 search_spaces = {
@@ -65,7 +65,7 @@ def convert_str_to_arch(arch_str):
     sampled_arch["sample_embed_dim"] = int(embed_dim)
     sampled_arch["sample_bias"] = bool(bias)
     sampled_arch["sample_mlp_ratio"] = []
-    sampled_arch["sample_n_headß"] = []
+    sampled_arch["sample_n_head"] = []
     for i in range(len(mlp_ratios)):
         sampled_arch["sample_mlp_ratio"].append(int(mlp_ratios[i]))
         sampled_arch["sample_n_head"].append(int(heads[i]))
@@ -211,41 +211,26 @@ def get_all_hw_surrogates(
 
 def get_hw_predictor_surrogate(
     max_layers, search_space, device, surrogate_type, metric="energy"
-):
+):  
+    base_path = "data_collection/gpt_datasets/predictor_ckpts/hwmetric/"+str(surrogate_type)+"/"
+    model_path = base_path+metric+"_"+search_space+"_"+device
     if surrogate_type == "conformal_quantile":
         surrogate_path = (
-            "hwmetric_predictor_ckpts/conformal_quantile_regression_"
-            + str(metric)
-            + "_"
-            + str(device)
-            + "_"
-            + str(search_space)
-            + ".pkl"
+            model_path+ ".pkl"
         )
         with open(surrogate_path, "rb") as f:
             predictor = pickle.load(f)
     elif surrogate_type == "quantile":
         surrogate_path = (
-            "hwmetric_predictor_ckpts/conformal_quantile_regression_"
-            + str(metric)
-            + "_"
-            + str(device)
-            + "_"
-            + str(search_space)
-            + ".pkl"
+            model_path + ".pkl"
         )
         with open(surrogate_path, "rb") as f:
             predictor = pickle.load(f)
     elif surrogate_type == "mlp":
         predictor = Nethw(max_layers, False, 256, 256).cuda()
         path = (
-            "hwmetric_predictor_ckpts/"
-            + str(device)
-            + "_"
-            + str(metric)
-            + "_gpu_"
-            + str(search_space)
-            + ".pt"
+            model_path
+            + ".pth"
         )
         predictor.load_state_dict(torch.load(path))
     return predictor
