@@ -25,7 +25,7 @@ class PPLDataset(torch.utils.data.Dataset):
 
         for arch in data:
             arch_config = convert_str_to_arch(arch)
-            #print(arch_config)
+            # print(arch_config)
             self.archs.append(convert_config_to_one_hot(arch_config, self.search_space))
             self.ppl.append(data[arch][self.metric])
 

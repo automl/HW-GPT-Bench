@@ -57,8 +57,8 @@ def convert_str_to_arch(arch_str):
     scale = arch_parts[1]
     num_layers = arch_parts[2]
     embed_dim = arch_parts[3]
-    mlp_ratios = arch_parts[4:(4+int(num_layers))]
-    heads = arch_parts[(4+int(num_layers)):(4+2*int(num_layers))]
+    mlp_ratios = arch_parts[4 : (4 + int(num_layers))]
+    heads = arch_parts[(4 + int(num_layers)) : (4 + 2 * int(num_layers))]
     bias = arch_parts[-1]
     sampled_arch = {}
     sampled_arch["sample_n_layer"] = int(num_layers)

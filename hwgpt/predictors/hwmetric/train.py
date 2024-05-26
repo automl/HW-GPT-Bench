@@ -55,8 +55,8 @@ def test(model, device, test_loader):
     final_target = torch.cat(test_target, dim=-1)
     final_out = torch.cat(out_test, dim=-1)
     test_loss /= len(test_loader.dataset)
-    #print(final_target.shape)
-    #print(final_out.shape)
+    # print(final_target.shape)
+    # print(final_out.shape)
     print("\nTest set: Average loss: {:.4f}\n".format(test_loss))
     print(
         "Corr",
@@ -86,7 +86,7 @@ if __name__ == "__main__":
     parser.add_argument(
         "--epochs",
         type=int,
-        default=5000,
+        default=4000,
         metavar="N",
         help="number of epochs to train (default: 10)",
     )
@@ -127,7 +127,7 @@ if __name__ == "__main__":
             + args.metric
             + "_"
             + args.type
-            +"_"
+            + "_"
             + args.search_space
             + "_"
             + args.device
@@ -149,7 +149,7 @@ if __name__ == "__main__":
             + args.metric
             + "_"
             + args.type
-            +"_"
+            + "_"
             + args.search_space
             + "_"
             + args.device
