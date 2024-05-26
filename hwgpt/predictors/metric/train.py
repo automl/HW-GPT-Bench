@@ -1,5 +1,6 @@
 from predictors.metric.net import Net
-from predictors.metric.utils import PPLDataset, search_spaces
+from predictors.metric.utils import PPLDataset
+from lib.utils import search_spaces
 import torch
 import torch.nn as nn
 import torch.optim as optim
@@ -59,7 +60,7 @@ def test(model, device, test_loader):
 
 
 if __name__ == "__main__":
-    parser = argparse.ArgumentParser(description="PyTorch PPL Predictor")
+    parser = argparse.ArgumentParser(description="PyTorch ppl/acc Predictor")
     parser.add_argument(
         "--metric",
         type=str,

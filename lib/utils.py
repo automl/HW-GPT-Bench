@@ -29,6 +29,49 @@ search_spaces = {
 }
 
 
+def convert_arch_to_str(arch, scale):
+    str_mlp = ""
+    str_heads = ""
+    for i in range(arch["sample_n_layer"]):
+        str_mlp = str_mlp + str(arch["sample_mlp_ratio"][i])
+        str_heads = str_heads + str(arch["sample_n_head"][i])
+    name = (
+        "gpt-"
+        + str(scale)
+        + "-"
+        + str(arch["sample_n_layer"])
+        + "-"
+        + str(arch["sample_embed_dim"])
+        + "-"
+        + str_mlp
+        + "-"
+        + str_heads
+        + "-"
+        + str(arch["sample_bias"])
+    )
+    return name
+
+
+def convert_str_to_arch(arch_str):
+    arch_parts = arch_str.split("-")
+    scale = arch_parts[1]
+    num_layers = arch_parts[2]
+    embed_dim = arch_parts[3]
+    mlp_ratios = arch_parts[4]
+    heads = arch_parts[5]
+    bias = arch_parts[6]
+    sampled_arch = {}
+    sampled_arch["sample_n_layer"] = int(num_layers)
+    sampled_arch["sample_embed_dim"] = int(embed_dim)
+    sampled_arch["sample_bias"] = bool(bias)
+    sampled_arch["sample_mlp_ratio"] = []
+    sampled_arch["sample_n_headß"] = []
+    for i in range(len(mlp_ratios)):
+        sampled_arch["sample_mlp_ratio"].append(int(mlp_ratios[i]))
+        sampled_arch["sample_n_head"].append(int(heads[i]))
+    return sampled_arch
+
+
 def get_max_min_stats(search_space):
     search_space_max_min = {}
     space = search_spaces[search_space]
