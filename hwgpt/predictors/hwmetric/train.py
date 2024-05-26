@@ -9,6 +9,7 @@ import scipy
 from hwgpt.predictors.hwmetric.utils import get_model_and_datasets
 import pickle
 
+
 def train(model, device, train_loader, optimizer, epoch, log_interval=10):
     model.train()
     for batch_idx, (data, target) in enumerate(train_loader):
@@ -71,26 +72,10 @@ if __name__ == "__main__":
         type=str,
         default="energies",
     )
-    parser.add_argument(
-        "--search_space",
-        type=str,
-        default="s"
-    )
-    parser.add_argument(
-        '---model',
-        type="str",
-        default="conformal_quantile"
-    )
-    parser.add_argument(
-        "--type",
-        type="str",
-        default="quantile"
-    )
-    parser.add_argument(
-        "--num_quantiles",
-        type="str",
-        default=10
-    )
+    parser.add_argument("--search_space", type=str, default="s")
+    parser.add_argument("---model", type="str", default="conformal_quantile")
+    parser.add_argument("--type", type="str", default="quantile")
+    parser.add_argument("--num_quantiles", type="str", default=10)
     parser.add_argument(
         "--batch-size",
         type=int,
@@ -121,27 +106,51 @@ if __name__ == "__main__":
 
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
     train_loader = torch.utils.data.DataLoader(
-                train_dataset, batch_size=1024, shuffle=True
-            )
+        train_dataset, batch_size=1024, shuffle=True
+    )
     test_loader = torch.utils.data.DataLoader(
-                test_dataset, batch_size=1024, shuffle=False
-            )
+        test_dataset, batch_size=1024, shuffle=False
+    )
     if args.model == "conformal_quantile" or args.model == "quantile":
         X_train = train_dataset.arch_features_train.data.numpy()
         X_test = test_dataset.arch_features_test.data.numpy()
         Y_train = train_dataset.latencies_train.data.numpy()
         Y_test = test_dataset.latencies_test.data.numpy()
-        model.fit(X_train,Y_test)
-        base_path = "data_collection/gpt_datasets/predictor_ckpts/hwmetric/"+str(args.model)+"/"
-        model_path = base_path+args.metric+"_"+args.search_space+"_"+args.device+".pkl"
-        with open(model_path,"wb") as f:
-            pickle.dump(model,f)
+        model.fit(X_train, Y_test)
+        base_path = (
+            "data_collection/gpt_datasets/predictor_ckpts/hwmetric/"
+            + str(args.model)
+            + "/"
+        )
+        model_path = (
+            base_path
+            + args.metric
+            + "_"
+            + args.search_space
+            + "_"
+            + args.device
+            + ".pkl"
+        )
+        with open(model_path, "wb") as f:
+            pickle.dump(model, f)
     else:
         optimizer = optim.Adam(model.parameters(), lr=args.lr)
         device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-        base_path = "data_collection/gpt_datasets/predictor_ckpts/hwmetric/"+str(args.model)+"/"
-        model_path = base_path+args.metric+"_"+args.search_space+"_"+args.device+".pth"      
+        base_path = (
+            "data_collection/gpt_datasets/predictor_ckpts/hwmetric/"
+            + str(args.model)
+            + "/"
+        )
+        model_path = (
+            base_path
+            + args.metric
+            + "_"
+            + args.search_space
+            + "_"
+            + args.device
+            + ".pth"
+        )
         for epoch in range(1, args.epochs + 1):
-              train(model, device, train_loader, optimizer, epoch)
-              test(model, device, test_loader)
+            train(model, device, train_loader, optimizer, epoch)
+            test(model, device, test_loader)
         torch.save(model.state_dict(), model_path)

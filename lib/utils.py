@@ -211,27 +211,24 @@ def get_all_hw_surrogates(
 
 def get_hw_predictor_surrogate(
     max_layers, search_space, device, surrogate_type, metric="energy"
-):  
-    base_path = "data_collection/gpt_datasets/predictor_ckpts/hwmetric/"+str(surrogate_type)+"/"
-    model_path = base_path+metric+"_"+search_space+"_"+device
+):
+    base_path = (
+        "data_collection/gpt_datasets/predictor_ckpts/hwmetric/"
+        + str(surrogate_type)
+        + "/"
+    )
+    model_path = base_path + metric + "_" + search_space + "_" + device
     if surrogate_type == "conformal_quantile":
-        surrogate_path = (
-            model_path+ ".pkl"
-        )
+        surrogate_path = model_path + ".pkl"
         with open(surrogate_path, "rb") as f:
             predictor = pickle.load(f)
     elif surrogate_type == "quantile":
-        surrogate_path = (
-            model_path + ".pkl"
-        )
+        surrogate_path = model_path + ".pkl"
         with open(surrogate_path, "rb") as f:
             predictor = pickle.load(f)
     elif surrogate_type == "mlp":
         predictor = Nethw(max_layers, False, 256, 256).cuda()
-        path = (
-            model_path
-            + ".pth"
-        )
+        path = model_path + ".pth"
         predictor.load_state_dict(torch.load(path))
     return predictor
 
