@@ -9,10 +9,10 @@ from lib.utils import (
     search_spaces,
 )
 import numpy as np
-from predictors.hwmetric.conformal.surrogate.quantile_regression_model import (
+from hwgpt.predictors.hwmetric.conformal.surrogate.quantile_regression_model import (
     GradientBoostingQuantileRegressor,
 )
-from predictors.hwmetric.conformal.surrogate.symmetric_conformalized_quantile_regression_model import (
+from hwgpt.predictors.hwmetric.conformal.surrogate.symmetric_conformalized_quantile_regression_model import (
     SymmetricConformalizedGradientBoostingQuantileRegressor,
 )
 
@@ -42,7 +42,7 @@ def get_model(args):
             quantiles=args.num_quantiles
         )
     elif args.model == "quantile":
-        model = GradientBoostingQuantileRegressor(quantiles=args.num_qunatiles)
+        model = GradientBoostingQuantileRegressor(quantiles=args.num_quantiles)
     elif args.model == "mlp":
         search_space = search_spaces[args.search_space]
         max_layers = max(search_space["n_layer_choices"])

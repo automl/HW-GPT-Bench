@@ -1,5 +1,5 @@
-from predictors.metric.net import Net
-from predictors.metric.utils import PPLDataset
+from hwgpt.predictors.metric.net import Net
+from hwgpt.predictors.metric.utils import PPLDataset
 from lib.utils import search_spaces
 import torch
 import torch.nn as nn
@@ -94,7 +94,7 @@ if __name__ == "__main__":
     parser.add_argument(
         "--save_path",
         type=str,
-        default="ppl_predictor_ckpts/",
+        default="data_collection/gpt_datasets/predictor_ckpts/metric/",
         help="path to save the model checkpoints",
     )
     args = parser.parse_args()

@@ -1,5 +1,5 @@
-from predictors.hwmetric.net import Net
-from predictors.hwmetric.utils import HWDataset, search_spaces
+from hwgpt.predictors.hwmetric.net import Net
+from hwgpt.predictors.hwmetric.utils import HWDataset, search_spaces
 import torch
 import torch.nn as nn
 import torch.optim as optim
@@ -55,8 +55,8 @@ def test(model, device, test_loader):
     final_target = torch.cat(test_target, dim=-1)
     final_out = torch.cat(out_test, dim=-1)
     test_loss /= len(test_loader.dataset)
-    print(final_target.shape)
-    print(final_out.shape)
+    #print(final_target.shape)
+    #print(final_out.shape)
     print("\nTest set: Average loss: {:.4f}\n".format(test_loss))
     print(
         "Corr",
@@ -73,9 +73,9 @@ if __name__ == "__main__":
         default="energies",
     )
     parser.add_argument("--search_space", type=str, default="s")
-    parser.add_argument("---model", type="str", default="conformal_quantile")
-    parser.add_argument("--type", type="str", default="quantile")
-    parser.add_argument("--num_quantiles", type="str", default=10)
+    parser.add_argument("--model", type=str, default="conformal_quantile")
+    parser.add_argument("--type", type=str, default="quantile")
+    parser.add_argument("--num_quantiles", type=str, default=9)
     parser.add_argument(
         "--batch-size",
         type=int,
@@ -86,7 +86,7 @@ if __name__ == "__main__":
     parser.add_argument(
         "--epochs",
         type=int,
-        default=100,
+        default=5000,
         metavar="N",
         help="number of epochs to train (default: 10)",
     )
@@ -116,7 +116,7 @@ if __name__ == "__main__":
         X_test = test_dataset.arch_features_test.data.numpy()
         Y_train = train_dataset.latencies_train.data.numpy()
         Y_test = test_dataset.latencies_test.data.numpy()
-        model.fit(X_train, Y_test)
+        model.fit(X_train, Y_train)
         base_path = (
             "data_collection/gpt_datasets/predictor_ckpts/hwmetric/"
             + str(args.model)
@@ -126,6 +126,8 @@ if __name__ == "__main__":
             base_path
             + args.metric
             + "_"
+            + args.type
+            +"_"
             + args.search_space
             + "_"
             + args.device
@@ -135,6 +137,7 @@ if __name__ == "__main__":
             pickle.dump(model, f)
     else:
         optimizer = optim.Adam(model.parameters(), lr=args.lr)
+        model = model.to(device)
         device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
         base_path = (
             "data_collection/gpt_datasets/predictor_ckpts/hwmetric/"
@@ -145,6 +148,8 @@ if __name__ == "__main__":
             base_path
             + args.metric
             + "_"
+            + args.type
+            +"_"
             + args.search_space
             + "_"
             + args.device

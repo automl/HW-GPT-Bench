@@ -57,9 +57,9 @@ def convert_str_to_arch(arch_str):
     scale = arch_parts[1]
     num_layers = arch_parts[2]
     embed_dim = arch_parts[3]
-    mlp_ratios = arch_parts[4]
-    heads = arch_parts[5]
-    bias = arch_parts[6]
+    mlp_ratios = arch_parts[4:(4+int(num_layers))]
+    heads = arch_parts[(4+int(num_layers)):(4+2*int(num_layers))]
+    bias = arch_parts[-1]
     sampled_arch = {}
     sampled_arch["sample_n_layer"] = int(num_layers)
     sampled_arch["sample_embed_dim"] = int(embed_dim)
@@ -210,14 +210,14 @@ def get_all_hw_surrogates(
 
 
 def get_hw_predictor_surrogate(
-    max_layers, search_space, device, surrogate_type, metric="energy"
+    max_layers, search_space, device, surrogate_type, type="quantile", metric="energy"
 ):
     base_path = (
         "data_collection/gpt_datasets/predictor_ckpts/hwmetric/"
         + str(surrogate_type)
         + "/"
     )
-    model_path = base_path + metric + "_" + search_space + "_" + device
+    model_path = base_path + metric + "_" + type + "_" + search_space + "_" + device
     if surrogate_type == "conformal_quantile":
         surrogate_path = model_path + ".pkl"
         with open(surrogate_path, "rb") as f:
@@ -269,7 +269,7 @@ def get_ppl_predictor_surrogate(search_space):
 
 
 def convert_config_to_one_hot(config, search_space):
-    choices_dict = search_space[search_space]
+    choices_dict = search_spaces[search_space]
     one_hot_embed = torch.zeros(len(choices_dict["embed_dim_choices"]))
     one_hot_layer = torch.zeros(len(choices_dict["n_layer_choices"]))
     max_layers = max(choices_dict["n_layer_choices"])
