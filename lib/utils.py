@@ -4,6 +4,22 @@ from hwgpt.predictors.hwmetric.net import Net as Nethw
 from hwgpt.predictors.metric.net import Net
 import numpy as np
 
+metrics_map = {
+    "energies": "Energy (Wh)",
+    "latencies": "Latency (ms)",
+    "perplexity": "PPL",
+    "bfloat16_memory": "Memory (MB)",
+    "float16_memory": "Memory (MB)",
+    "flops": "FLOPS",
+    "params": "Params (MB)"
+}
+dims_map = {
+    "embed_dim_choices" : "Embedding Dimensions",
+    "n_layer_choices" : "Number of Layers",
+    "mlp_ratio_choices": "MLP Ratios",
+    "n_head_choices": "No. of Heads",
+    "bias_choices": "Bias Choice"
+}
 search_spaces = {
     "s": {
         "embed_dim_choices": [192, 384, 768],
@@ -28,7 +44,13 @@ search_spaces = {
     },
 }
 
-
+choice_arch_config_map = {
+   "embed_dim_choices":"sample_embed_dim",
+    "n_layer_choices": "sample_n_layer",
+    "mlp_ratio_choices": "sample_mlp_ratio",
+    "n_head_choices":"sample_n_head",
+    "bias_choices": "sample_bias"
+}
 def convert_arch_to_str(arch, scale):
     str_mlp = ""
     str_heads = ""
@@ -218,6 +240,7 @@ def get_hw_predictor_surrogate(
         + "/"
     )
     model_path = base_path + metric + "_" + type + "_" + search_space + "_" + device
+    print(model_path)
     if surrogate_type == "conformal_quantile":
         surrogate_path = model_path + ".pkl"
         with open(surrogate_path, "rb") as f:

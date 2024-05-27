@@ -5,7 +5,7 @@
 #SBATCH -c 16 # number of cores
 #SBATCH --job-name=fit_predictors
 #SBATCH --mem=100GB
-types=("median" "quantile")
+types=("quantile")
 models=("conformal_quantile" "mlp" "quantile")
 metrics=("latencies" "energies" "float16_memory" "bfloat16_memory")
 search_spaces=("m" "s" "l")
