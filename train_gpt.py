@@ -1,5 +1,9 @@
-import os, sys, socket
-import argparse, collections, yaml
+import os
+import sys
+import socket
+import argparse
+import collections
+import yaml
 
 # os.environ['TORCH_DISTRIBUTED_DEBUG'] = 'DETAIL'
 # os.environ['CUDA_LAUNCH_BLOCKING'] = '1'
@@ -8,17 +12,18 @@ import logging
 import torch.cuda
 import pytorch_lightning as pl
 import numpy as np
+from typing import List
+from data_collection.pl_gpt.data.lm_datamodule import PlArrowFileModule
+from data_collection.pl_gpt.pl_module.lm_trainer_configurable import (
+    LanguageModelTrainer,
+)
 
-from pl_gpt.data.lm_datamodule import PlArrowFileModule
-from pl_gpt.pl_module.lm_trainer_configurable import LanguageModelTrainer
-
-from pl_gpt.utils.configuration import Config
-from pl_gpt.utils.instantiate import instantiate
-from pl_gpt.utils.folder_manager import get_experiment_folder
+from data_collection.pl_gpt.utils.configuration import Config
+from data_collection.pl_gpt.utils.instantiate import instantiate
+from data_collection.pl_gpt.utils.folder_manager import get_experiment_folder
 
 torch.backends.cudnn.deterministic = True
 torch.backends.cudnn.benchmark = False
-import os
 
 os.environ["HF_DATASETS_CACHE"] = "/p/scratch/ccstdl/sukthanker1/datasets/cache"
 os.environ["HF_HOME"] = "/p/scratch/ccstdl/sukthanker1/model/cache"
@@ -263,10 +268,10 @@ if __name__ == "__main__":
         else:
             try:
                 value = int(value)
-            except:
+            except Exception:
                 try:
                     value = float(value)
-                except:
+                except Exception:
                     pass
         return value
 

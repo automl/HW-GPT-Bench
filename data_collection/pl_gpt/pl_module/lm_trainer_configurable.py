@@ -1,16 +1,17 @@
-import time
-import warnings
-import numpy as np
 from collections import defaultdict
 import pytorch_lightning as pl
 import torch
 import inspect
-import random
-from gpt.model import GPT
-from gpt.utils import *
-from pl_gpt.utils import instantiate, get_class
-from pl_gpt.utils.group_parameters import group_parameters_for_optimizer
-from pl_gpt.utils.optim.lr_schedule import get_learning_rate_schedule
+from hwgpt.model.gpt.model import GPT
+from hwgpt.model.gpt.utils import (
+    sample_config,
+    sample_config_max,
+    sample_config_mid,
+    sample_config_min,
+)
+from data_collection.pl_gpt.utils.group_parameters import group_parameters_for_optimizer
+from data_collection.pl_gpt.utils.optim.lr_schedule import get_learning_rate_schedule
+from data_collection.pl_gpt.utils import instantiate
 
 
 class LanguageModelTrainer(pl.LightningModule):
@@ -136,7 +137,7 @@ class LanguageModelTrainer(pl.LightningModule):
         # loss = loss#/n
         loss_value = loss.detach()  # *n
         self.log(
-            f"train/loss",
+            "train/loss",
             loss_value,
             on_step=True,
             on_epoch=False,
@@ -171,7 +172,7 @@ class LanguageModelTrainer(pl.LightningModule):
 
         if dataloader_idx == 0:
             self.log(
-                f"val/loss_max",
+                "val/loss_max",
                 loss,
                 on_step=False,
                 on_epoch=True,
@@ -220,7 +221,7 @@ class LanguageModelTrainer(pl.LightningModule):
 
         if dataloader_idx == 0:
             self.log(
-                f"val/loss_min",
+                "val/loss_min",
                 loss,
                 on_step=False,
                 on_epoch=True,
@@ -271,7 +272,7 @@ class LanguageModelTrainer(pl.LightningModule):
 
         if dataloader_idx == 0:
             self.log(
-                f"val/loss_mid",
+                "val/loss_mid",
                 loss,
                 on_step=False,
                 on_epoch=True,

@@ -12,7 +12,7 @@ import torch.nn as nn
 from typing_extensions import Self
 
 from hwgpt.model.gpt.config import Config
-from hwgpt.model.gpt.blocks import *
+from hwgpt.model.gpt.blocks import Block
 from hwgpt.model.gpt.super_modules.embedding_super import SuperEmbedding
 from hwgpt.model.gpt.super_modules.rotary_embedding import SuperRotaryEmbedding
 from hwgpt.model.gpt.super_modules.lmhead_super import LMHeadSuper
@@ -179,7 +179,7 @@ class GPT(nn.Module):
                 batch_size, max_seq_length, rope_cache_length, device, dtype
             )"""
 
-        if self.mask_cache is None or self.mask_cache.size(3) != max_seq_length:
+        if self.mask_cache is None or self.mask_cache.size(3) != self.max_seq_length:
             # passing `attn_mask` to SDPA disables the flash implementation. since we only need the mask
             # for the kv-cache support (only during inference), we only create it in that situation
             self.mask_cache = build_mask_cache(self.max_seq_length, device)

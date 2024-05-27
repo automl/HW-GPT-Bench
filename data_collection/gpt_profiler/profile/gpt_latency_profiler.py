@@ -1,33 +1,34 @@
 from hwgpt.model.gpt_base.model import GPT
-from hwgpt.model.gpt.utils import *
+from hwgpt.model.gpt.utils import sample_config
 import pickle
 from data_collection.gpt_profiler.utils.latency_profile_utils import (
-    torch_profiler_conv,
-    torch_record_function_conv,
     torch_profiler_llm,
-    torch_record_function_llm,
 )
 from data_collection.gpt_profiler.utils.flop_utils import get_flops_macs_params
 from data_collection.gpt_profiler.utils.measure_co2 import compute_carbon_emissions
-import os, torch
+import os
+import torch
+import random
+from typing import Any, Dict
+import argparse
 
 
 class GPTLatencyProfiler:
     """
-    class for perofiling gpt latency
+    class for profiling gpt latency
     """
 
     def __init__(
         self,
-        args,
-        cfg_model,
-        batch_size=8,
-        num_archs_to_evaluate=10000,
-        num_evals=10,
-        save_path="latency_a100/",
-        resume_path="none",
-        search_space="s",
-    ):
+        args: argparse.Namespace,
+        cfg_model: Any,
+        batch_size: int = 64,
+        num_archs_to_evaluate: int = 10000,
+        num_evals: int = 10,
+        save_path: str = "latency_a100/",
+        resume_path: str = "none",
+        search_space: str = "s",
+    ) -> None:
         super().__init__()
         # build choices dict
         self.args = args
@@ -65,12 +66,12 @@ class GPTLatencyProfiler:
             self.archs_evaluated = []
         os.makedirs(save_path, exist_ok=True)
 
-    def evaluated_archs(self):
+    def evaluated_archs(self) -> None:
         self.archs_evaluated = []
         for arch in self.lat_bench:
             self.archs_evaluated.append(arch["arch"])
 
-    def sample_n_random_archs(self):
+    def sample_n_random_archs(self) -> None:
         self.archs_sampled = []
         i = 0
         while len(self.archs_sampled) < self.num_archs_to_evaluate:
@@ -88,18 +89,18 @@ class GPTLatencyProfiler:
         with open(self.arch_path, "wb") as f:
             pickle.dump(self.archs_sampled, f)
 
-    def reset_config(self, arch_config):
+    def reset_config(self, arch_config: Dict[str, Any]) -> None:
         self.cfg_model.n_embd = arch_config["sample_embed_dim"]
         self.cfg_model.n_layer = arch_config["sample_n_layer"]
         self.cfg_model.n_head = arch_config["sample_n_head"]
         self.cfg_model.mlp_ratio = arch_config["sample_mlp_ratio"]
         self.cfg_model.bias = arch_config["sample_bias"]
 
-    def create_model(self, arch_config):
+    def create_model(self, arch_config: Dict[str, Any]) -> GPT:
         self.reset_config(arch_config)
         return GPT(self.cfg_model)
 
-    def compute_metrics(self, arch_config):
+    def compute_metrics(self, arch_config: Dict[str, Any]) -> None:
         model = self.create_model(arch_config)
         model_inputs_x = torch.randint(
             0, self.cfg_model.vocab_size, (self.batch_size, self.cfg_model.block_size)
@@ -205,8 +206,7 @@ class GPTLatencyProfiler:
 
 
 if __name__ == "__main__":
-    from pl_gpt.utils.configuration import Config
-    import argparse
+    from data_collection.pl_gpt.utils.configuration import Config
 
     parser = argparse.ArgumentParser(description="GPT Profiler")
     parser.add_argument(

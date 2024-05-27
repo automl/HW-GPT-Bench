@@ -1,6 +1,5 @@
 import torch
 import torch.nn as nn
-import torch.nn.functional as F
 
 
 class Net(nn.Module):
@@ -8,7 +7,7 @@ class Net(nn.Module):
     The base model for MAML (Meta-SGD) for meta-NAS-predictor.
     """
 
-    def __init__(self, num_layers, layer_size):
+    def __init__(self, num_layers: int, layer_size: int):
         super(Net, self).__init__()
         self.layer_size = layer_size
         nfeat = 6 + 6 * num_layers + 2

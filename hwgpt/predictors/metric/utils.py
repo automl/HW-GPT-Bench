@@ -1,6 +1,7 @@
 import torch
 import pickle
-from lib.utils import convert_config_to_one_hot, search_spaces, convert_str_to_arch
+from lib.utils import convert_config_to_one_hot, convert_str_to_arch
+from typing import Tuple
 
 
 class PPLDataset(torch.utils.data.Dataset):
@@ -33,7 +34,7 @@ class PPLDataset(torch.utils.data.Dataset):
         "Denotes the total number of samples"
         return len(self.ppl)
 
-    def __getitem__(self, index):
+    def __getitem__(self, index) -> Tuple[torch.Tensor, torch.Tensor]:
         "Generates one sample of data"
         # Select sample
         one_hot = self.archs[index]

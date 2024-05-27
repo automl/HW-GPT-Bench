@@ -1,4 +1,3 @@
-import torch
 import pickle
 from lib.utils import (
     predict_hw_surrogate,
@@ -7,7 +6,6 @@ from lib.utils import (
     normalize_arch_feature_map,
 )
 from hwgpt.model.gpt.utils import sample_config_max, sample_config_min
-import numpy as np
 import argparse
 from hwgpt.predictors.hwmetric.utils import get_model
 

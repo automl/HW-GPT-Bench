@@ -6,10 +6,8 @@ from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Any, Literal, Optional, Type, Union
 
-import torch
 from typing_extensions import Self
 
-import hwgpt.model.gpt.model
 from hwgpt.model.gpt.utils import find_multiple
 
 

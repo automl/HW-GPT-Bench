@@ -3,7 +3,6 @@ from hwgpt.model.gpt.utils import sample_config_max, sample_config_min
 from lib.utils import search_spaces, convert_config_to_one_hot
 import torch
 import pickle
-import numpy as np
 import argparse
 
 if __name__ == "__main__":

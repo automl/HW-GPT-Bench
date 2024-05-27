@@ -23,7 +23,7 @@ class SuperLinear(nn.Linear):
         self.sample_bias_flag = sample_bias_flag
 
     def forward(self, x: torch.Tensor) -> torch.Tensor:
-        if self.sample_bias_flag == True:
+        if self.sample_bias_flag is True:
             # print(self.weight.shape)
             # print(self.weight[:self.sample_dim_out, :self.sample_dim_in].shape)
             # print(x.shape)

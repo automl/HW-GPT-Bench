@@ -1,9 +1,12 @@
 from hwgpt.model.gpt_base.model import GPT
-from hwgpt.model.gpt.utils import *
+from hwgpt.model.gpt.utils import sample_config
 import pickle
-from data_collection.gpt_profiler.utils.flop_utils import get_flops_macs_params
 from data_collection.gpt_profiler.utils.energy_profiler import compute_carbon_emissions
 import os
+import torch
+import argparse
+import random
+from typing import Any, Dict
 
 
 class GPTEnergyProfiler:
@@ -13,14 +16,14 @@ class GPTEnergyProfiler:
 
     def __init__(
         self,
-        args,
-        cfg_model,
-        batch_size=8,
-        num_archs_to_evaluate=10000,
-        num_evals=10,
-        save_path="latency_a100/",
-        resume_path="none",
-        search_space="s",
+        args: argparse.Namespace,
+        cfg_model: Any,
+        batch_size: int = 8,
+        num_archs_to_evaluate: int = 10000,
+        num_evals: int = 10,
+        save_path: str = "latency_a100/",
+        resume_path: str = "none",
+        search_space: str = "s",
     ):
         super().__init__()
         # build choices dict
@@ -60,12 +63,12 @@ class GPTEnergyProfiler:
             self.archs_evaluated = []
         os.makedirs(save_path, exist_ok=True)
 
-    def evaluated_archs(self):
+    def evaluated_archs(self) -> None:
         self.archs_evaluated = []
         for arch in self.lat_bench:
             self.archs_evaluated.append(arch["arch"])
 
-    def sample_n_random_archs(self):
+    def sample_n_random_archs(self) -> None:
         self.archs_sampled = []
         i = 0
         while len(self.archs_sampled) < self.num_archs_to_evaluate:
@@ -83,25 +86,22 @@ class GPTEnergyProfiler:
         with open(self.arch_path, "wb") as f:
             pickle.dump(self.archs_sampled, f)
 
-    def reset_config(self, arch_config):
+    def reset_config(self, arch_config: Dict[str, Any]) -> None:
         self.cfg_model.n_embd = arch_config["sample_embed_dim"]
         self.cfg_model.n_layer = arch_config["sample_n_layer"]
         self.cfg_model.n_head = arch_config["sample_n_head"]
         self.cfg_model.mlp_ratio = arch_config["sample_mlp_ratio"]
         self.cfg_model.bias = arch_config["sample_bias"]
 
-    def create_model(self, arch_config):
+    def create_model(self, arch_config: Dict[str, Any]) -> None:
         self.reset_config(arch_config)
         return GPT(self.cfg_model)
 
-    def compute_metrics(self, arch_config):
+    def compute_metrics(self, arch_config: Dict[str, Any]) -> None:
         model = self.create_model(arch_config)
         model_inputs_x = torch.randint(
             0, self.cfg_model.vocab_size, (self.batch_size, self.cfg_model.block_size)
         )  # .cuda()#.half()
-        model_inputs_y = torch.randint(
-            0, self.cfg_model.vocab_size, (self.batch_size, self.cfg_model.block_size)
-        )  # .cuda()
         # mean_cpu, std_cpu, mean_gpu, std_gpu, unit_cpu, unit_gpu, times_profiler_gpu, times_profiler_cpu = torch_profiler_llm(model, model_inputs_x, model_inputs_y, n=self.num_evals,use_cpu=self.cfg_model.eval_on_cpu, use_gpu=self.cfg_model.eval_on_gpu, gpu_dtype=self.gpu_dtype)
         # flops, macs, params = get_flops_macs_params(model, model_inputs_x)
         (
@@ -157,7 +157,7 @@ class GPTEnergyProfiler:
         with open(save_path, "wb") as f:
             pickle.dump(self.lat_bench, f)
 
-    def run(self):
+    def run(self) -> None:
         if os.path.exists(self.arch_path):
             with open(self.arch_path, "rb") as f:
                 self.archs_sampled = pickle.load(f)
@@ -180,7 +180,7 @@ class GPTEnergyProfiler:
 
 
 if __name__ == "__main__":
-    from pl_gpt.utils.configuration import Config
+    from data_collection.pl_gpt.utils.configuration import Config
     import argparse
 
     parser = argparse.ArgumentParser(description="GPT Profiler")

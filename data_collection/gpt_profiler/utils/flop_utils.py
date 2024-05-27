@@ -1,12 +1,11 @@
 from deepspeed.profiling.flops_profiler import FlopsProfiler
-from accelerate import Accelerator
 import os
-from deepspeed.accelerator import get_accelerator
+import torch
 
 os.environ["DS_ACCELERATOR"] = "cpu"
 
 
-def get_flops_macs_params(model, input):
+def get_flops_macs_params(model: torch.nn.Module, input: torch.Tensor):
     # use cpu for profiling
     model = model.cpu()
     input = input.cpu()
@@ -21,7 +20,7 @@ def get_flops_macs_params(model, input):
     print(os.environ["DS_ACCELERATOR"])
     try:
         model(input)
-    except:
+    except Exception:
         print("Error in getting flops")
     prof.stop_profile()
     flops = prof.get_total_flops()
