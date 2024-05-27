@@ -39,6 +39,7 @@ def main():
             if metric in hw_agnostic:
                 corr_mat_lists[metric_map[i]] = []
                 for arch in arch_stats:
+                   print(arch_stats[arch]["flops"])
                    if isinstance(arch_stats[arch][metric],list):
                     corr_mat_lists[metric_map[i]].append(np.median(arch_stats[arch][metric]))
                    else:
