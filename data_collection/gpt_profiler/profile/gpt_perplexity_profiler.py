@@ -12,7 +12,7 @@ import logging
 
 class GPTProfilerPPL:
     """
-    class for model profiling
+    class for profiling subnetwork accuracy and preplexity
     """
 
     def __init__(
@@ -68,20 +68,11 @@ class GPTProfilerPPL:
             strategy = pl.strategies.DDPStrategy(
                 find_unused_parameters=True, static_graph=False
             )
-        # strategy = pl.strategies.DeepSpeedStrategy(
-        #     **cfg.deepspeed,
-        #     remote_device=None,  # Initialize directly on GPUs instead of CPU (ZeRO-3)
-        # )
 
         else:
             strategy = pl.strategies.DDPStrategy(
                 find_unused_parameters=True, static_graph=False
             )
-
-        # strategy = pl.strategies.DeepSpeedStrategy(
-        #     **cfg.deepspeed,
-        #     remote_device=None,  # Initialize directly on GPUs instead of CPU (ZeRO-3)
-        # )
 
         torch.backends.cudnn.deterministic = True
         torch.backends.cudnn.benchmark = False
@@ -225,7 +216,7 @@ if __name__ == "__main__":
     parser.add_argument(
         "--config",
         type=str,
-        default="config/owt_sw_s_eval.yaml",
+        default="configs/config_eval/owt_s_eval.yaml",
         help="path to config file",
     )
     parser.add_argument("--start_index", type=int, default=0, help="start index")

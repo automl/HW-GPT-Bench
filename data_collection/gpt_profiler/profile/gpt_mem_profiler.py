@@ -6,9 +6,9 @@ import os
 import torch
 
 
-class GPTProfiler:
+class GPTMemProfiler:
     """
-    class for model profiling
+    class for gpu memory profiling
     """
 
     def __init__(
@@ -20,6 +20,7 @@ class GPTProfiler:
         num_evals=10,
         save_path="latency_a100/",
         resume_path="none",
+        search_space="s",
     ):
         super().__init__()
         # build choices dict
@@ -40,6 +41,10 @@ class GPTProfiler:
         self.batch_size = batch_size
         self.num_evals = num_evals
         self.save_path = save_path
+        self.search_space = search_space
+        self.arch_path = (
+            "sampled_archs/" + "sampled_archs_" + str(search_space) + ".pkl"
+        )
         self.lat_bench = []
         self.archs_evaluated = []
         if resume_path != "none" and os.path.exists(resume_path):
@@ -71,8 +76,7 @@ class GPTProfiler:
             ) and arch_sampled not in self.archs_evaluated:
                 self.archs_sampled.append(arch_sampled)
         # save archs to pickle file
-        save_path = "sampled_archs.pkl"
-        with open(save_path, "wb") as f:
+        with open(self.arch_path, "wb") as f:
             pickle.dump(self.archs_sampled, f)
 
     def reset_config(self, arch_config):
@@ -118,8 +122,8 @@ class GPTProfiler:
             pickle.dump(self.lat_bench, f)
 
     def run(self):
-        if os.path.exists("sampled_archs.pkl"):
-            with open("sampled_archs.pkl", "rb") as f:
+        if os.path.exists(self.arch_path):
+            with open(self.arch_path, "rb") as f:
                 self.archs_sampled = pickle.load(f)
             self.archs_sampled = self.archs_sampled[
                 self.args.start_index : self.args.end_index
@@ -151,6 +155,7 @@ if __name__ == "__main__":
     )
     parser.add_argument("--start_index", type=int, default=0, help="start index")
     parser.add_argument("--end_index", type=int, default=10000, help="end index")
+    parser.add_argument("--scale", type=str, default="s", help="search space")
     args = parser.parse_args()
     config = Config(config_file=args.config)
 
@@ -164,10 +169,11 @@ if __name__ == "__main__":
         + ".pkl"
     )
     print(config_model)
-    profiler = GPTProfiler(
+    profiler = GPTMemProfiler(
         args,
         config_model,
         save_path=config_model.latency_bench_save_path,
         resume_path=args.resume,
+        search_space=args.scale,
     )
     profiler.run()

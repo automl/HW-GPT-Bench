@@ -1,0 +1,184 @@
+
+resume_training: False
+
+experiment:
+  experiments_base_dir: /p/scratch/ccstdl/sukthanker1/HW-Aware-LLM-Bench/experiments
+  project_name: cl2_reg
+  session_name: gpt2s_AdamW_ATB_expt_4
+  experiment_name: default_juls # _fused-ff-prob-layer
+
+trainer:
+  num_nodes: 1
+  check_val_every_n_epoch: null
+  enable_checkpointing: true
+  enable_model_summary: true
+  enable_progress_bar: true
+  accelerator: 'gpu'
+  devices: 1 #4
+  gradient_clip_val: 1.0
+  limit_train_batches: null
+  limit_val_batches: null
+  log_every_n_steps: 100
+  max_epochs: null
+  max_steps: 200000
+  num_sanity_val_steps: 2
+  accumulate_grad_batches: 1
+  precision: 'bf16-mixed'
+  reload_dataloaders_every_n_epochs: 1
+  val_check_interval: 5000
+  deterministic: False
+
+
+
+train:
+  seed: 1234
+
+  optimizer:
+    # _target_: apex.optimizers.FusedAdam
+    _target_: torch.optim.AdamW
+#    _target_: deepspeed.ops.adam.fused_adam.FusedAdam
+    lr: 0.000316 #6e-4
+    weight_decay: 0.1
+    betas:
+      - 0.9
+      - 0.98
+    eps: 1.0e-09
+    adam_w_mode: true
+    seed: 1234
+  optimizer_param_grouping:
+    bias_weight_decay: False
+    normalization_weight_decay: False
+  scheduler:
+    num_warmup_steps: 4000 #${eval:0.01 * ${trainer.max_steps}}
+    num_training_steps: ${trainer.max_steps}
+    decay_factor: 0.1
+    schedule: "cosine" # "cosine" or "linear"
+
+
+callbacks:
+  learning_rate_monitor:
+    _target_: pytorch_lightning.callbacks.LearningRateMonitor
+    logging_interval: step
+#  log_gradient:
+#    _target_: my_gpt.utils.callbacks.log_gradient.LogParamsAndGrads
+#    log_every_n_steps: ${trainer.log_every_n_steps}
+#    log_gradient: true
+#    log_params: true
+  model_checkpoint:
+    _target_: pytorch_lightning.callbacks.ModelCheckpoint
+    dirpath: ${experiment.experiments_base_dir}
+    auto_insert_metric_name: False
+    every_n_train_steps: 10000
+    every_n_epochs: null
+    save_top_k: 1
+    monitor: "step"
+    mode: "max"
+    filename: "checkpoint-{epoch:02d}-{global_step}"
+    save_last: True
+
+
+logger:
+#  wandb:
+#    _target_: pytorch_lightning.loggers.wandb.WandbLogger
+#    project: attention
+#    name: ${name}
+#    save_dir: "."
+#    mode: online # set offline to store all logs only locally
+#    id: ${oc.select:name} # pass correct id to resume experiment!
+#    # entity: ""  # set to name of your wandb team or just remove it
+#    log_model: False
+#    prefix: ""
+#    job_type: "train"
+#    group: ""
+#    tags: [ ]
+  tensorboard:
+    _target_: pytorch_lightning.loggers.tensorboard.TensorBoardLogger
+    save_dir: "tensorboard/"
+    name: ""
+    version: "tb"
+    log_graph: False
+    default_hp_metric: True
+    prefix: ""
+
+
+deepspeed:
+  zero_optimization: True
+  stage: 2
+  contiguous_gradients: false
+  allgather_bucket_size: 5e8
+  reduce_bucket_size: 5e8
+  overlap_comm: true
+  zero_allow_untested_optimizer: true
+
+
+
+
+model:
+  embed_choices:  [320,640,1280]
+  head_choices: [8,16,20]
+  layer_choices: [34,35,36]
+  mlp_ratio_choices: [2,3,4]
+  bias_choices: [True, False]
+  precision: ${trainer.precision}
+  block_size: 1024
+  vocab_size: 50254
+  padding_multiple: 512
+  scale_embeddings: False
+  padded_vocab_size: 50254
+  max_len: 1024
+  sampling_scheme: "normal"
+
+  n_embd: 768 # 256,  # ++ hidden dimension of my_gpt
+  n_layer: 12  # ++ number of my_gpt layers
+  n_head: 12  # ++ number of heads per layer
+  head_size: 64
+
+  intermediate_size: 3072  # ++ hidden dim * ff_factor = size of feed-forward layer
+  bias: True
+  lm_head_bias: False
+  n_query_groups: 12
+
+  attn_dropout: 0.1
+  resi_dropout: 0.1
+  embed_dropout: 0.1
+  shared_attention_norm: False
+  _norm_class: "LayerNorm"
+  rope_condense_ratio: 1
+
+  scale_attn_weights: True
+  scale_attn_by_inverse_layer_idx: True
+
+  shared_embedding: True
+  pos_embedding: False  # absolute position encoding
+  rel_pos_enc: True  # relative position encoding
+  rotary_percentage: 0.25
+  _mlp_class: "GptNeoxMLP"
+  gelu_approximate: "none"
+  # fast config
+  norm_eps: 1e-5
+  rope_base: 10000
+  unpadded: True
+  parallel_residual: True
+  gpu_dtype: "float16"
+  eval_on_gpu: True
+  eval_on_cpu: False
+
+  # classic config
+
+  initializer_range: 0.02
+  latency_bench_save_path: "mem_rtx2080_l/"
+  resume_path: "none"
+  
+
+
+lm_data:
+  dataset_name: "tinystories" # openwebtext wikitext
+  num_cpu_worker: 1
+  num_gpu_worker: ${trainer.devices}
+  max_sample_len: 1024
+  seed: ${train.seed}
+  batch_size: 32
+  val_ratio: 0.0005
+  val_split_seed: 2357
+  data_dir: "/p/scratch/ccstdl/sukthanker1/datasets/"
+  cache_dir: "/p/scratch/ccstdl/sukthanker1/datasets/cache/"
