@@ -67,7 +67,7 @@ class ECDFPlotterHW():
             plt.legend(loc="upper left")
             plt.xlabel(self.metric_label)
             plt.ylabel("ECDF")
-            plt.title("ECDF of " + self.metric_label+"_"+dims_map[dim])
+            plt.title("ECDF of " + self.metric_label+" "+dims_map[dim])
             plt.savefig(save_path)    
             plt.clf()
             plt.close()
