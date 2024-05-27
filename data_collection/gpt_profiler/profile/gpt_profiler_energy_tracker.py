@@ -1,5 +1,5 @@
-from hwgpt.gpt_base.model import GPT
-from hwgpt.gpt.utils import *
+from hwgpt.model.gpt_base.model import GPT
+from hwgpt.model.gpt.utils import *
 import pickle
 from data_collection.gpt_profiler.utils.flop_utils import get_flops_macs_params
 from data_collection.gpt_profiler.utils.energy_profiler import compute_carbon_emissions

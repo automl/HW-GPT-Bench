@@ -1,15 +1,15 @@
-from gpt_base.model import GPT
-from gpt.utils import *
+from hwgpt.model.gpt_base.model import GPT
+from hwgpt.model.gpt.utils import *
 import pickle
-from profiler.utils.latency_profile_utils import (
+from data_collection.gpt_profiler.utils.latency_profile_utils import (
     torch_profiler_conv,
     torch_record_function_conv,
     torch_profiler_llm,
     torch_record_function_llm,
 )
-from profiler.utils.flop_utils import get_flops_macs_params
-from profiler.utils.measure_co2 import compute_carbon_emissions
-import os
+from data_collection.gpt_profiler.utils.flop_utils import get_flops_macs_params
+from data_collection.gpt_profiler.utils.measure_co2 import compute_carbon_emissions
+import os, torch
 
 
 class GPTLatencyProfiler:
