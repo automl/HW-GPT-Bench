@@ -1,7 +1,9 @@
-from gpt_base.model import GPT
-from gpt.utils import *
+from hwgpt.model.gpt_base.model import GPT
+from hwgpt.model.gpt.utils import *
 import pickle
-from gpt_profiler.utils.measure_memory_usage import compute_memory_consumed
+from data_collection.gpt_profiler.utils.measure_memory_usage import (
+    compute_memory_consumed,
+)
 import os
 import torch
 

@@ -1,4 +1,4 @@
-from hwgpt.gpt.utils import *
+from hwgpt.model.gpt.utils import *
 import pickle
 from data_collection.pl_gpt.pl_module.lm_evaluator_configurable import (
     LanguageModelEvaluator,
