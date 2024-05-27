@@ -10,7 +10,7 @@ plt.rcParams['grid.linestyle'] = 'dotted'
 plt.rcParams['font.size'] = 16
 plt.rcParams['figure.autolayout'] = True
 class ECDFPlotterHW():
-    def __init__(self, device="a40", metric="energies", type="median", surrogate="conformal_quantile", search_space="s", num_archs=10000):
+    def __init__(self, device="a40", metric="energies", type="median", surrogate="conformal_quantile", search_space="s", num_archs=50000):
         self.device = device
         self.metric = metric
         self.type = type
