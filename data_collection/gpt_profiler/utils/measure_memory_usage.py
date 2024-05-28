@@ -2,7 +2,12 @@ import torch
 
 
 def compute_memory_consumed(
-    model, input, n=10, use_gpu=True, use_cpu=True, gpu_dtype=torch.bfloat16
+    model: torch.nn.Module,
+    input: torch.Tensor,
+    n: int = 10,
+    use_gpu: bool = True,
+    use_cpu: bool = True,
+    gpu_dtype: torch.dtype = torch.bfloat16,
 ):
     if use_gpu:
         memory = []

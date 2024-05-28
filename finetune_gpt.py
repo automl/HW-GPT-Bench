@@ -1,5 +1,7 @@
-import os, sys, socket
-import argparse, collections, yaml
+import sys
+import argparse
+import collections
+import yaml
 
 # os.environ['TORCH_DISTRIBUTED_DEBUG'] = 'DETAIL'
 # os.environ['CUDA_LAUNCH_BLOCKING'] = '1'
@@ -8,17 +10,20 @@ import logging
 import torch.cuda
 import pytorch_lightning as pl
 import numpy as np
+from typing import List
+import os
+from data_collection.pl_gpt.data.lm_datamodule import PlArrowFileModule
+from data_collection.pl_gpt.pl_module.lm_finetune_configurable import (
+    LanguageModelTrainer,
+)
 
-from pl_gpt.data.lm_datamodule import PlArrowFileModule
-from pl_gpt.pl_module.lm_finetune_configurable import LanguageModelTrainer
-
-from pl_gpt.utils.configuration import Config
-from pl_gpt.utils.instantiate import instantiate
-from pl_gpt.utils.folder_manager import get_experiment_folder
-
+from data_collection.pl_gpt.utils.configuration import Config
+from data_collection.pl_gpt.utils.instantiate import instantiate
+from data_collection.pl_gpt.utils.folder_manager import get_experiment_folder
+from typing import Any, Dict
 torch.backends.cudnn.deterministic = True
 torch.backends.cudnn.benchmark = False
-import os
+
 
 os.environ["HF_DATASETS_CACHE"] = "/p/scratch/ccstdl/sukthanker1/datasets/cache"
 os.environ["HF_HOME"] = "/p/scratch/ccstdl/sukthanker1/model/cache"
@@ -28,7 +33,7 @@ def bold(msg):
     return f"\033[1m{msg}\033[0m"
 
 
-def main(cfg, arch, arch_id):
+def main(cfg:Any, arch:Dict[str,Any], arch_id:int):
     """
     Launch pretraining
     """
@@ -253,7 +258,7 @@ def main(cfg, arch, arch_id):
         return metrics_dict
 
 
-def finetune_archs(args, arch_list):
+def finetune_archs(args:argparse.Namespace, arch_list:List):
 
     from functools import reduce  # forward compatibility for Python 3
     import operator
@@ -282,10 +287,10 @@ def finetune_archs(args, arch_list):
         else:
             try:
                 value = int(value)
-            except:
+            except Exception:
                 try:
                     value = float(value)
-                except:
+                except Exception:
                     pass
         return value
 

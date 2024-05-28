@@ -1,13 +1,17 @@
-from hwgpt.model.gpt.utils import *
+from hwgpt.model.gpt.utils import sample_config
 import pickle
 from data_collection.pl_gpt.pl_module.lm_evaluator_configurable import (
     LanguageModelEvaluator,
 )
-from pl_gpt.data.lm_datamodule_nas import PlArrowFileModule
-from pl_gpt.utils.instantiate import instantiate
+from data_collection.pl_gpt.data.lm_datamodule_nas import PlArrowFileModule
+from data_collection.pl_gpt.utils.instantiate import instantiate
 import pytorch_lightning as pl
 import os
 import logging
+import argparse
+import torch
+import random
+from typing import Any, Dict
 
 
 class GPTProfilerPPL:
@@ -17,10 +21,10 @@ class GPTProfilerPPL:
 
     def __init__(
         self,
-        args,
-        cfg,
-        num_archs_to_evaluate=100,
-        resume_path="none",
+        args: argparse.Namespace,
+        cfg: Any,
+        num_archs_to_evaluate: int = 100,
+        resume_path: str = "none",
     ):
         super().__init__()
         # build choices dict
@@ -106,12 +110,12 @@ class GPTProfilerPPL:
         save_path = "arch_ppl_bench_" + self.model_scale
         os.makedirs(save_path, exist_ok=True)
 
-    def evaluated_archs(self):
+    def evaluated_archs(self) -> None:
         self.archs_evaluated = []
         for arch in self.lat_bench:
             self.archs_evaluated.append(arch["arch"])
 
-    def sample_n_random_archs(self):
+    def sample_n_random_archs(self) -> None:
         self.archs_sampled = []
         i = 0
         while len(self.archs_sampled) < self.num_archs_to_evaluate:
@@ -130,14 +134,14 @@ class GPTProfilerPPL:
         with open(save_path, "wb") as f:
             pickle.dump(self.archs_sampled, f)
 
-    def reset_config(self, arch_config):
+    def reset_config(self, arch_config: Dict[str, Any]) -> None:
         self.cfg_model.n_embd = arch_config["sample_embed_dim"]
         self.cfg_model.n_layer = arch_config["sample_n_layer"]
         self.cfg_model.n_head = arch_config["sample_n_head"]
         self.cfg_model.mlp_ratio = arch_config["sample_mlp_ratio"]
         self.cfg_model.bias = arch_config["sample_bias"]
 
-    def create_model(self, arch_config):
+    def create_model(self, arch_config: Dict[str, Any]) -> None:
         arch_config["sample_intermediate_size"] = [
             int(arch_config["sample_mlp_ratio"][i] * arch_config["sample_embed_dim"])
             for i in range(arch_config["sample_n_layer"])
@@ -151,16 +155,10 @@ class GPTProfilerPPL:
             arch_config["sample_layer_indices"],
         )
 
-    def compute_metrics(self, arch_config):
+    def compute_metrics(self, arch_config: Dict[str, Any]) -> None:
         self.trainer_pl.set_sample_config(arch_config)
         self.trainer.validate(self.trainer_pl, self.data_module.val_nas_dataloader())
         # print agregated stats across all processes only once
-        if os.environ.get("LOCAL_RANK") is None or os.environ.get("LOCAL_RANK") == 0:
-            is_rank_zero = True
-            rank = 0
-        else:
-            is_rank_zero = False
-            rank = os.environ.get("LOCAL_RANK")
         # if is_rank_zero:
         print(self.trainer_pl.current_metrics)
         metrics_dict = {}
@@ -185,7 +183,7 @@ class GPTProfilerPPL:
             with open(save_path, "wb") as f:
                 pickle.dump(self.ppl_bench, f)
 
-    def run(self):
+    def run(self) -> None:
         path_pickle = "sampled_archs_" + self.model_scale + ".pkl"
         if os.path.exists(path_pickle):
             with open(path_pickle, "rb") as f:
@@ -209,7 +207,7 @@ class GPTProfilerPPL:
 
 
 if __name__ == "__main__":
-    from pl_gpt.utils.configuration import Config
+    from data_collection.pl_gpt.utils.configuration import Config
     import argparse
 
     parser = argparse.ArgumentParser(description="GPT Profiler")

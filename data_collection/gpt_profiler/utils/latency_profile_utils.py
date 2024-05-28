@@ -3,11 +3,9 @@ from torch.profiler import profile, record_function, ProfilerActivity
 import numpy as np
 
 # from generate.base import generate
-import os
 
 
-def get_latency_from_string(s, sub_str="CPU time total: "):
-    print(s)
+def get_latency_from_string(s: str, sub_str: str = "CPU time total: "):
     index = s.find(sub_str)  # find the index of the substring
     if index != -1:  # check if substring is found
         # print(s[-2])
@@ -30,7 +28,7 @@ def get_latency_from_string(s, sub_str="CPU time total: "):
         print("Substring not found")
 
 
-def torch_profiler_conv(model, inputs, n=10):
+def torch_profiler_conv(model: torch.nn.Module, inputs: torch.Tensor, n: int = 10):
     times_profiler_cpu = []
     times_profiler_gpu = []
     inputs = inputs.cuda()
@@ -74,13 +72,13 @@ def torch_profiler_conv(model, inputs, n=10):
 
 
 def torch_profiler_llm(
-    model,
-    model_inputs_x,
-    model_inputs_y,
-    n=10,
-    use_gpu=True,
-    use_cpu=True,
-    gpu_dtype=torch.bfloat16,
+    model: torch.nn.Module,
+    model_inputs_x: torch.Tensor,
+    model_inputs_y: torch.Tensor,
+    n: int = 10,
+    use_gpu: bool = True,
+    use_cpu: bool = True,
+    gpu_dtype: torch.dtype = torch.bfloat16,
 ):
     times_profiler_cpu = []
     times_profiler_gpu = []
@@ -144,7 +142,9 @@ def torch_profiler_llm(
     )
 
 
-def torch_record_function_conv(model, inputs, n=10):
+def torch_record_function_conv(
+    model: torch.nn.Module, inputs: torch.Tensor, n: int = 10
+):
     times_profiler_cpu = []
     times_profiler_gpu = []
 
@@ -155,7 +155,7 @@ def torch_record_function_conv(model, inputs, n=10):
     for i in range(n):
         start.record()
         with torch.no_grad():
-            out = model(inputs)
+            _ = model(inputs)
         end.record()
         # Waits for everything to finish running
         torch.cuda.synchronize()
@@ -166,7 +166,7 @@ def torch_record_function_conv(model, inputs, n=10):
     for i in range(n):
         start.record()
         with torch.no_grad():
-            out = model(inputs)
+            _ = model(inputs)
         end.record()
         # Waits for everything to finish running
         torch.cuda.synchronize()
@@ -183,7 +183,11 @@ def torch_record_function_conv(model, inputs, n=10):
 
 
 def torch_record_function_llm(
-    model, model_inputs_x, model_inputs_y, n=10, use_cpu=False
+    model: torch.nn.Module,
+    model_inputs_x: torch.Tensor,
+    model_inputs_y: torch.Tensor,
+    n: int = 10,
+    use_cpu: bool = False,
 ):
     times_profiler_cpu = []
     times_profiler_gpu = []

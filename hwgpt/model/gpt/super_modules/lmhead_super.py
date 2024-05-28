@@ -10,7 +10,7 @@ class LMHeadSuper(nn.Linear):
         # the largest embed dim
         self.super_dim_in = super_dim_in
         self.output_dim = output_dim
-        if bias == False:
+        if bias is False:
             self.bias = None
 
         # the current sampled embed dim
@@ -21,7 +21,7 @@ class LMHeadSuper(nn.Linear):
         self.sample_bias_flag = sample_bias_flag
 
     def forward(self, x: torch.Tensor) -> torch.Tensor:
-        if self.bias != None:
+        if self.bias is None:
             return F.linear(x, self.weight[:, : self.sample_dim_in], self.bias)
         else:
             return F.linear(x, self.weight[:, : self.sample_dim_in])

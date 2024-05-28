@@ -18,11 +18,18 @@ from lib.utils import (
     search_spaces,
 )
 
+from typing import List, Dict, Any
 
 report = Reporter()
 
 
-def objective(sampled_config, device_list, search_space, surrogate_type, objectives):
+def objective(
+    sampled_config: Dict[str, Any],
+    device_list: List[str],
+    search_space: str,
+    surrogate_type: str,
+    objectives: List[str],
+) -> Reporter:
     max_layers = get_max_min_stats(search_space)["max_layers"]
     arch_feature_map = get_arch_feature_map(sampled_config, search_space)
     arch_feature_map_ppl_predictor = convert_config_to_one_hot(
@@ -86,11 +93,11 @@ if __name__ == "__main__":
     sample_config["sample_n_layer"] = args.num_layers
     sample_config["sample_embed_dim"] = args.embed_dim
     sample_config["sample_bias"] = args.bias
-    sample_config[f"sample_n_head"] = []
-    sample_config[f"sample_mlp_ratio"] = []
+    sample_config["sample_n_head"] = []
+    sample_config["sample_mlp_ratio"] = []
     for i in range(max_layers):
-        sample_config[f"sample_n_head"].append(getattr(args, f"num_heads_{i}"))
-        sample_config[f"sample_mlp_ratio"].append(getattr(args, f"mlp_ratio_{i}"))
+        sample_config["sample_n_head"].append(getattr(args, f"num_heads_{i}"))
+        sample_config["sample_mlp_ratio"].append(getattr(args, f"mlp_ratio_{i}"))
     objective(
         sampled_config=sample_config,
         search_space=args.search_space,

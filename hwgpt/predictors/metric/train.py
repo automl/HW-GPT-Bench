@@ -8,7 +8,14 @@ import argparse
 import scipy
 
 
-def train(model, device, train_loader, optimizer, epoch, log_interval=10):
+def train(
+    model: torch.nn.Module,
+    device: str,
+    train_loader: torch.utils.data.DataLoader,
+    optimizer: optim.Adam,
+    epoch: int,
+    log_interval: int = 10,
+):
     model.train()
     for batch_idx, (data, target) in enumerate(train_loader):
         data, target = data.to(device), target.to(device)
@@ -31,7 +38,7 @@ def train(model, device, train_loader, optimizer, epoch, log_interval=10):
             )
 
 
-def test(model, device, test_loader):
+def test(model: torch.nn.Module, device: str, test_loader: torch.utils.data.DataLoader):
     model.eval()
     test_loss = 0
     out_test = []

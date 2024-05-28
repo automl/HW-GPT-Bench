@@ -229,7 +229,7 @@ if __name__ == "__main__":
 
     os.makedirs("results", exist_ok=True)
     save_path = (
-        f"results/"
+        "results/"
         + args.experiment_tag
         + "_"
         + args.method

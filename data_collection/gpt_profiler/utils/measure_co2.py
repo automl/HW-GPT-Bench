@@ -4,7 +4,12 @@ import torch
 
 
 def compute_carbon_emissions(
-    model, input, n=10, use_gpu=True, use_cpu=True, gpu_dtype=torch.bfloat16
+    model: torch.nn.Module,
+    input: torch.Tensor,
+    n: int = 10,
+    use_gpu: bool = True,
+    use_cpu: bool = True,
+    gpu_dtype: torch.dtype = torch.bfloat16,
 ):
 
     mean_co2_cpu = None
@@ -28,7 +33,7 @@ def compute_carbon_emissions(
             with torch.no_grad():
                 model(input)
             emissions = emissions_tracker.stop()
-            if emissions == None:
+            if emissions is None:
                 emissions = 0
             emissions_cpu.append(emissions)
             energy_cpu.append(emissions_tracker._total_energy.kWh * 1000)
@@ -51,7 +56,7 @@ def compute_carbon_emissions(
                 with torch.amp.autocast(device_type="cuda", dtype=gpu_dtype):
                     model(input)
             emissions = emissions_tracker.stop()
-            if emissions == None:
+            if emissions is None:
                 emissions = 0
             emissions_gpu.append(emissions)
             energy_gpu.append(emissions_tracker._total_energy.kWh * 1000)

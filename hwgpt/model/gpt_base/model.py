@@ -294,7 +294,7 @@ class CausalSelfAttention(nn.Module):
         i: int = 0,
     ) -> "KVCache":
         heads = 1 if self.config.n_query_groups == 1 else self.config.n_head[i]
-        head_size = config.head_size
+        head_size = self.config.head_size
         rope_elem = int(self.head_size * self.config.rotary_percentage)
         v_shape = (batch_size, heads, max_seq_length, head_size)
         if rope_cache_length is None:
