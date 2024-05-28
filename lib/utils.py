@@ -252,7 +252,7 @@ def get_hw_predictor_surrogate(
         with open(surrogate_path, "rb") as f:
             predictor = pickle.load(f)
     elif surrogate_type == "mlp":
-        predictor = Nethw(max_layers, False, 128,128).cuda()
+        predictor = Nethw(max_layers, False, 128, 128).cuda()
         path = model_path + ".pth"
         predictor.load_state_dict(torch.load(path))
     return predictor
@@ -271,7 +271,7 @@ def predict_hw_surrogate(
             return energy
         energy = energy[0, quantile]
     else:
-        energy = surrogate(torch.tensor(arch).cuda())#.item()
+        energy = surrogate(torch.tensor(arch).cuda())  # .item()
     return energy
 
 
@@ -284,11 +284,17 @@ def get_ppl_predictor_surrogate(search_space):
         max_layers = 36
     ppl_predictor = Net(max_layers, 128).cuda()
     if search_space == "s":
-        pred_path = "data_collection/gpt_datasets/predictor_ckpts/metric/perplexity_s.pt"
+        pred_path = (
+            "data_collection/gpt_datasets/predictor_ckpts/metric/perplexity_s.pt"
+        )
     elif search_space == "m":
-        pred_path = "data_collection/gpt_datasets/predictor_ckpts/metric/perplexity_m.pt"
+        pred_path = (
+            "data_collection/gpt_datasets/predictor_ckpts/metric/perplexity_m.pt"
+        )
     else:
-        pred_path = "data_collection/gpt_datasets/predictor_ckpts/metric/perplexity_l.pt"
+        pred_path = (
+            "data_collection/gpt_datasets/predictor_ckpts/metric/perplexity_l.pt"
+        )
     ppl_predictor.load_state_dict(torch.load(pred_path))
     return ppl_predictor
 

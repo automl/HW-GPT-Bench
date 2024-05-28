@@ -1,4 +1,3 @@
-
 from lib.utils import (
     get_hw_predictor_surrogate,
     search_spaces,
@@ -69,8 +68,8 @@ class ECDFPlotterHW:
                 return_all=True,
             )
             if "quantile" in self.surrogate_type:
-                predictions_surrogate=predictions_surrogate[0]
-            #print(predictions_surrogate)
+                predictions_surrogate = predictions_surrogate[0]
+            # print(predictions_surrogate)
             for pred in predictions_surrogate:
                 predictions.append((arch, pred.item()))
         return predictions
@@ -97,7 +96,7 @@ class ECDFPlotterHW:
             i = 0
             for choice in self.stratified_results[dim]:
                 plt.grid(linestyle="--")
-                #print(self.stratified_results[dim][choice])
+                # print(self.stratified_results[dim][choice])
                 plt.ecdf(
                     self.stratified_results[dim][choice],
                     label=choice,

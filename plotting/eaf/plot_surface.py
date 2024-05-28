@@ -70,9 +70,13 @@ class EmpiricalAttainmentFuncPlot:
     ):
         self.step_dir = _step_direction(larger_is_better_objectives)
         self.larger_is_better_objectives = (
-            larger_is_better_objectives if larger_is_better_objectives is not None else []
+            larger_is_better_objectives
+            if larger_is_better_objectives is not None
+            else []
         )
-        self._ref_point = ref_point.copy().astype(np.float64) if ref_point is not None else None
+        self._ref_point = (
+            ref_point.copy().astype(np.float64) if ref_point is not None else None
+        )
         self.log_scale = log_scale if log_scale is not None else []
         self.x_is_log, self.y_is_log = 0 in self.log_scale, 1 in self.log_scale
         self._plot_kwargs = dict(
@@ -81,8 +85,8 @@ class EmpiricalAttainmentFuncPlot:
         )
 
         if true_pareto_sols is not None:
-            self.x_min, self.x_max, self.y_min, self.y_max = _get_slighly_expanded_value_range(
-                true_pareto_sols, self.log_scale
+            self.x_min, self.x_max, self.y_min, self.y_max = (
+                _get_slighly_expanded_value_range(true_pareto_sols, self.log_scale)
             )
             self._true_pareto_sols = true_pareto_sols.copy()
         else:
@@ -95,7 +99,9 @@ class EmpiricalAttainmentFuncPlot:
 
     def _transform_surface_list(self, surfs_list: list[np.ndarray]) -> list[np.ndarray]:
         for surf in surfs_list:
-            x_min, x_max, y_min, y_max = _get_slighly_expanded_value_range(surf, self.log_scale)
+            x_min, x_max, y_min, y_max = _get_slighly_expanded_value_range(
+                surf, self.log_scale
+            )
             self.x_min, self.x_max = min(self.x_min, x_min), max(self.x_max, x_max)
             self.y_min, self.y_max = min(self.y_min, y_min), max(self.y_max, y_max)
 
@@ -148,7 +154,9 @@ class EmpiricalAttainmentFuncPlot:
                 The plotted line object.
         """
         if len(surf.shape) != 2 or surf.shape[1] != 2:
-            raise ValueError(f"The shape of surf must be (n_points, 2), but got {surf.shape}")
+            raise ValueError(
+                f"The shape of surf must be (n_points, 2), but got {surf.shape}"
+            )
 
         _surf = surf.copy()
         if transform:
@@ -159,7 +167,9 @@ class EmpiricalAttainmentFuncPlot:
         kwargs.update(drawstyle=f"steps-{self.step_dir}")
         _check_surface(_surf)
         X, Y = _surf[:, 0], _surf[:, 1]
-        line = ax.plot(X, Y, color=color, label=label, linestyle=linestyle, marker=marker, **kwargs)[0]
+        line = ax.plot(
+            X, Y, color=color, label=label, linestyle=linestyle, marker=marker, **kwargs
+        )[0]
         _change_scale(ax, self.log_scale)
         return line
 
@@ -195,7 +205,9 @@ class EmpiricalAttainmentFuncPlot:
                 The plotted line object.
         """
         if self._true_pareto_sols is None:
-            raise AttributeError("true_pareto_sols is not provided at the instantiation")
+            raise AttributeError(
+                "true_pareto_sols is not provided at the instantiation"
+            )
 
         true_pareto_surf = pareto_front_to_surface(
             self._true_pareto_sols.copy(),
@@ -258,7 +270,9 @@ class EmpiricalAttainmentFuncPlot:
         n_surfs = len(_surfs)
         linestyles = linestyles if linestyles is not None else [None] * n_surfs
         markers = markers if markers is not None else [None] * n_surfs
-        for surf, color, label, linestyle, marker in zip(_surfs, colors, labels, linestyles, markers):
+        for surf, color, label, linestyle, marker in zip(
+            _surfs, colors, labels, linestyles, markers
+        ):
             kwargs.update(color=color, label=label, linestyle=linestyle, marker=marker)
             line = self.plot_surface(ax, surf, transform=False, **kwargs)
             lines.append(line)
@@ -308,7 +322,9 @@ class EmpiricalAttainmentFuncPlot:
                 The plotted line object.
         """
         if surfs.shape[0] != 3:
-            raise ValueError(f"plot_surface_with_band requires three levels, but got only {surfs.shape[0]} levels")
+            raise ValueError(
+                f"plot_surface_with_band requires three levels, but got only {surfs.shape[0]} levels"
+            )
 
         _surfs = deepcopy(surfs)
         if transform:
@@ -324,12 +340,16 @@ class EmpiricalAttainmentFuncPlot:
         marker_kwargs, kwargs = _extract_marker_kwargs(**kwargs)
         kwargs.update(color=color)
         alpha = kwargs.pop("alpha", None)
-        ax.fill_between(X, _surfs[0, :, 1], _surfs[2, :, 1], alpha=0.2, step=self.step_dir, **kwargs)
+        ax.fill_between(
+            X, _surfs[0, :, 1], _surfs[2, :, 1], alpha=0.2, step=self.step_dir, **kwargs
+        )
         kwargs["alpha"] = alpha
 
         # marker and linestyle are only for plot
         kwargs.update(label=label, linestyle=linestyle, marker=marker, **marker_kwargs)
-        line = ax.plot(X, _surfs[1, :, 1], drawstyle=f"steps-{self.step_dir}", **kwargs)[0]
+        line = ax.plot(
+            X, _surfs[1, :, 1], drawstyle=f"steps-{self.step_dir}", **kwargs
+        )[0]
         _change_scale(ax, self.log_scale)
         return line
 
@@ -375,7 +395,9 @@ class EmpiricalAttainmentFuncPlot:
         n_surfs = len(_surfs_list)
         linestyles = linestyles if linestyles is not None else [None] * n_surfs
         markers = markers if markers is not None else [None] * n_surfs
-        for surf, color, label, linestyle, marker in zip(_surfs_list, colors, labels, linestyles, markers):
+        for surf, color, label, linestyle, marker in zip(
+            _surfs_list, colors, labels, linestyles, markers
+        ):
             kwargs.update(color=color, label=label, linestyle=linestyle, marker=marker)
             line = self.plot_surface_with_band(ax, surf, transform=False, **kwargs)
             lines.append(line)
@@ -384,7 +406,9 @@ class EmpiricalAttainmentFuncPlot:
         ax.set_ylim(self.y_min, self.y_max)
         return lines
 
-    def _transform_ref_point_and_costs_array(self, costs_array: np.ndarray) -> tuple[np.ndarray, np.ndarray]:
+    def _transform_ref_point_and_costs_array(
+        self, costs_array: np.ndarray
+    ) -> tuple[np.ndarray, np.ndarray]:
         ref_point = self._ref_point.copy()
         _costs_array = costs_array.copy()
         if self.x_is_log:
@@ -395,8 +419,12 @@ class EmpiricalAttainmentFuncPlot:
             ref_point[1] = np.log(ref_point[1])
 
         if len(self.larger_is_better_objectives) > 0:
-            _costs_array = _change_directions(_costs_array, self.larger_is_better_objectives)
-            ref_point = _change_directions(ref_point[np.newaxis], self.larger_is_better_objectives)[0]
+            _costs_array = _change_directions(
+                _costs_array, self.larger_is_better_objectives
+            )
+            ref_point = _change_directions(
+                ref_point[np.newaxis], self.larger_is_better_objectives
+            )[0]
 
         return ref_point, _costs_array
 
@@ -450,14 +478,18 @@ class EmpiricalAttainmentFuncPlot:
                 f"The shape of costs_array must be (n_independent_runs, n_points, 2), but got {costs_array.shape}"
             )
         if self._ref_point is None:
-            raise AttributeError("ref_point must be provided for plot_hypervolume2d_with_band")
+            raise AttributeError(
+                "ref_point must be provided for plot_hypervolume2d_with_band"
+            )
 
         ref_point, _costs_array = self._transform_ref_point_and_costs_array(costs_array)
         (n_runs, n_observations, _) = _costs_array.shape
         hvs = np.zeros((n_runs, n_observations))
         for i in range(n_observations):
-            hvs[:, i] = _compute_hypervolume2d(costs_array=_costs_array[:, : i + 1], ref_point=ref_point)
-        #print(hvs)
+            hvs[:, i] = _compute_hypervolume2d(
+                costs_array=_costs_array[:, : i + 1], ref_point=ref_point
+            )
+        # print(hvs)
         if normalize:
             if self._true_pareto_sols is None:
                 raise AttributeError(
@@ -546,9 +578,19 @@ class EmpiricalAttainmentFuncPlot:
         n_lines = len(costs_array)
         linestyles = linestyles if linestyles is not None else [None] * n_lines
         markers = markers if markers is not None else [None] * n_lines
-        for _costs_array, color, label, linestyle, marker in zip(costs_array, colors, labels, linestyles, markers):
-            kwargs.update(color=color, label=label, linestyle=linestyle, marker=marker, normalize=normalize)
-            line = self.plot_hypervolume2d_with_band(ax, _costs_array, log=False, axis_label=False, **kwargs)
+        for _costs_array, color, label, linestyle, marker in zip(
+            costs_array, colors, labels, linestyles, markers
+        ):
+            kwargs.update(
+                color=color,
+                label=label,
+                linestyle=linestyle,
+                marker=marker,
+                normalize=normalize,
+            )
+            line = self.plot_hypervolume2d_with_band(
+                ax, _costs_array, log=False, axis_label=False, **kwargs
+            )
             lines.append(line)
 
         if log:
@@ -562,12 +604,18 @@ class EmpiricalAttainmentFuncPlot:
 
     def _compute_true_pareto_surface_hypervolume2d(self) -> float:
         if self._true_pareto_sols is None:
-            raise AttributeError("true_pareto_sols is not provided at the instantiation")
+            raise AttributeError(
+                "true_pareto_sols is not provided at the instantiation"
+            )
 
         if self._ref_point is None:
-            raise AttributeError("ref_point must be provided for plot_hypervolume2d_with_band")
+            raise AttributeError(
+                "ref_point must be provided for plot_hypervolume2d_with_band"
+            )
 
-        ref_point, true_pf = self._transform_ref_point_and_costs_array(self._true_pareto_sols)
+        ref_point, true_pf = self._transform_ref_point_and_costs_array(
+            self._true_pareto_sols
+        )
         hv = _compute_hypervolume2d(true_pf[np.newaxis], ref_point)[0]
         return hv
 

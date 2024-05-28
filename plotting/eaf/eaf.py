@@ -35,7 +35,9 @@ def _get_pf_set_list(costs: np.ndarray) -> list[np.ndarray]:
     return pf_set_list
 
 
-def _compute_emp_att_surf(X: np.ndarray, pf_set_list: list[np.ndarray], levels: np.ndarray) -> np.ndarray:
+def _compute_emp_att_surf(
+    X: np.ndarray, pf_set_list: list[np.ndarray], levels: np.ndarray
+) -> np.ndarray:
     """
     Compute the empirical attainment surface of the given Pareto front sets.
 
@@ -146,28 +148,40 @@ def get_empirical_attainment_surface(
 
     if len(costs.shape) != 3:
         # costs.shape = (n_independent_runs, n_samples, n_obj)
-        raise ValueError(f"costs must have the shape of (n_independent_runs, n_samples, n_obj), but got {costs.shape}")
+        raise ValueError(
+            f"costs must have the shape of (n_independent_runs, n_samples, n_obj), but got {costs.shape}"
+        )
 
     (n_independent_runs, _, n_obj) = costs.shape
     if n_obj != 2:
         raise NotImplementedError("Three or more objectives are not supported.")
     if not all(1 <= level <= n_independent_runs for level in levels):
-        raise ValueError(f"All elements in levels must be in [1, n_independent_runs], but got {levels}")
+        raise ValueError(
+            f"All elements in levels must be in [1, n_independent_runs], but got {levels}"
+        )
     if not np.all(np.maximum.accumulate(levels) == levels):
         raise ValueError(f"levels must be an increasing sequence, but got {levels}")
 
     _costs = costs.copy()
     if larger_is_better_objectives is not None:
-        _costs = _change_directions(_costs, larger_is_better_objectives=larger_is_better_objectives)
+        _costs = _change_directions(
+            _costs, larger_is_better_objectives=larger_is_better_objectives
+        )
 
     log_scale = log_scale if log_scale is not None else []
     pf_set_list = _get_pf_set_list(_costs)
     pf_sols = np.vstack(pf_set_list)
-    X = np.unique(np.hstack([LOGEPS if 0 in log_scale else -np.inf, pf_sols[:, 0], np.inf]))
+    X = np.unique(
+        np.hstack([LOGEPS if 0 in log_scale else -np.inf, pf_sols[:, 0], np.inf])
+    )
 
-    emp_att_surfs = _compute_emp_att_surf(X=X, pf_set_list=pf_set_list, levels=np.asarray(levels))
+    emp_att_surfs = _compute_emp_att_surf(
+        X=X, pf_set_list=pf_set_list, levels=np.asarray(levels)
+    )
     if larger_is_better_objectives is not None:
-        emp_att_surfs = _change_directions(emp_att_surfs, larger_is_better_objectives=larger_is_better_objectives)
+        emp_att_surfs = _change_directions(
+            emp_att_surfs, larger_is_better_objectives=larger_is_better_objectives
+        )
     if larger_is_better_objectives is not None and 0 in larger_is_better_objectives:
         emp_att_surfs = np.flip(emp_att_surfs, axis=1)
 

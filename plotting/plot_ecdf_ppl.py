@@ -4,7 +4,7 @@ from lib.utils import (
     choice_arch_config_map,
     metrics_map,
     dims_map,
-    convert_config_to_one_hot
+    convert_config_to_one_hot,
 )
 from hwgpt.model.gpt.utils import sample_config
 import matplotlib.pyplot as plt
@@ -41,8 +41,10 @@ class ECDFPlotterPPL:
     def compute_predictions(self):
         predictions = []
         for arch in self.sampled_archs:
-            arch_feature = convert_config_to_one_hot(arch, search_space=self.search_space_str)
-            predictions_surrogate =self.surrogate(arch_feature.cuda().unsqueeze(0))
+            arch_feature = convert_config_to_one_hot(
+                arch, search_space=self.search_space_str
+            )
+            predictions_surrogate = self.surrogate(arch_feature.cuda().unsqueeze(0))
             predictions.append((arch, predictions_surrogate.item()))
         return predictions
 
@@ -76,8 +78,8 @@ class ECDFPlotterPPL:
                 + "_"
                 + "ecdf_"
                 + str(self.search_space_str)
-                +"_"
-                +str(dim)
+                + "_"
+                + str(dim)
                 + ".pdf"
             )
             plt.legend(loc="upper left")
@@ -95,5 +97,5 @@ class ECDFPlotterPPL:
         return sampled_archs
 
 
-for scale in ["s","m","l"]:
+for scale in ["s", "m", "l"]:
     plot = ECDFPlotterPPL(search_space=scale)

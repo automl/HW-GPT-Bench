@@ -10,19 +10,28 @@ import numpy as np
 LOGEPS = 1e-300
 
 
-def _compute_hypervolume2d(costs_array: np.ndarray, ref_point: np.ndarray) -> np.ndarray:
+def _compute_hypervolume2d(
+    costs_array: np.ndarray, ref_point: np.ndarray
+) -> np.ndarray:
     # costs must be better when they are smaller
-    if not np.all(costs_array[..., 0] <= ref_point[0]) or not np.all(costs_array[..., 1] <= ref_point[1]):
+    if not np.all(costs_array[..., 0] <= ref_point[0]) or not np.all(
+        costs_array[..., 1] <= ref_point[1]
+    ):
         raise ValueError("all values in costs must be smaller than ref_point")
 
     # Sort by x in asc, then by y in desc
     (n_runs, _, _) = costs_array.shape
     orders = np.lexsort((-costs_array[..., 1], costs_array[..., 0]), axis=-1)
 
-    sorted_costs_array = np.stack([costs[order] for i, (costs, order) in enumerate(zip(costs_array, orders))])
+    sorted_costs_array = np.stack(
+        [costs[order] for i, (costs, order) in enumerate(zip(costs_array, orders))]
+    )
     assert sorted_costs_array.shape == costs_array.shape
 
-    w = np.hstack([sorted_costs_array[:, 1:, 0], np.full((n_runs, 1), ref_point[0])]) - sorted_costs_array[..., 0]
+    w = (
+        np.hstack([sorted_costs_array[:, 1:, 0], np.full((n_runs, 1), ref_point[0])])
+        - sorted_costs_array[..., 0]
+    )
     h = ref_point[1] - np.minimum.accumulate(sorted_costs_array[..., 1], axis=-1)
     return np.sum(w * h, axis=-1)
 
@@ -46,8 +55,12 @@ def _get_slighly_expanded_value_range(
 
     X = X[np.isfinite(X) & (X > LOGEPS) if x_is_log else np.isfinite(X)]
     Y = Y[np.isfinite(Y) & (Y > LOGEPS) if y_is_log else np.isfinite(Y)]
-    (x_min, x_max) = (np.log(X.min()), np.log(X.max())) if x_is_log else (X.min(), X.max())
-    (y_min, y_max) = (np.log(Y.min()), np.log(Y.max())) if y_is_log else (Y.min(), Y.max())
+    (x_min, x_max) = (
+        (np.log(X.min()), np.log(X.max())) if x_is_log else (X.min(), X.max())
+    )
+    (y_min, y_max) = (
+        (np.log(Y.min()), np.log(Y.max())) if y_is_log else (Y.min(), Y.max())
+    )
 
     x_min -= 0.1 * (x_max - x_min)
     x_max += 0.1 * (x_max - x_min)
@@ -98,7 +111,9 @@ def pareto_front_to_surface(
             Also this array is now sorted with respect to the first objective.
     """
     if len(pareto_front.shape) != 2:
-        raise ValueError(f"The shape of pareto_front must be (n_sols, n_obj), but got {pareto_front.shape}")
+        raise ValueError(
+            f"The shape of pareto_front must be (n_sols, n_obj), but got {pareto_front.shape}"
+        )
     if (
         not np.all(x_min <= pareto_front[:, 0])
         or not np.all(pareto_front[:, 0] <= x_max)
@@ -111,7 +126,9 @@ def pareto_front_to_surface(
         )
 
     log_scale = [] if log_scale is None else log_scale
-    larger_is_better_objectives = [] if larger_is_better_objectives is None else larger_is_better_objectives
+    larger_is_better_objectives = (
+        [] if larger_is_better_objectives is None else larger_is_better_objectives
+    )
     x_min = max(LOGEPS, x_min) if 0 in log_scale else x_min
     maximize_x = 0 in larger_is_better_objectives
     y_min = max(LOGEPS, y_min) if 1 in log_scale else y_min
@@ -127,14 +144,18 @@ def pareto_front_to_surface(
     modified_pf[-1] = [x_min, y_border] if maximize_x else [x_max, y_border]
 
     if len(larger_is_better_objectives) > 0:
-        modified_pf = _change_directions(modified_pf, larger_is_better_objectives=larger_is_better_objectives)
+        modified_pf = _change_directions(
+            modified_pf, larger_is_better_objectives=larger_is_better_objectives
+        )
 
     # Sort by the first objective, then the second objective
     order = np.lexsort((-modified_pf[:, 1], modified_pf[:, 0]))
     modified_pf = modified_pf[order]
 
     if len(larger_is_better_objectives) > 0:
-        modified_pf = _change_directions(modified_pf, larger_is_better_objectives=larger_is_better_objectives)
+        modified_pf = _change_directions(
+            modified_pf, larger_is_better_objectives=larger_is_better_objectives
+        )
     if maximize_x:
         modified_pf = np.flip(modified_pf, axis=0)
 
@@ -143,7 +164,9 @@ def pareto_front_to_surface(
 
 def _check_surface(surf: np.ndarray) -> np.ndarray:
     if len(surf.shape) != 2:
-        raise ValueError(f"The shape of surf must be (n_points, n_obj), but got {surf.shape}")
+        raise ValueError(
+            f"The shape of surf must be (n_points, n_obj), but got {surf.shape}"
+        )
 
     X = surf[:, 0]
     if np.any(np.maximum.accumulate(X) != X):
