@@ -1,3 +1,8 @@
 ecdf_plots/
 *pdf
 *out
+*/*/*/*/*/__pycache__
+*/*/*/*/__pycache__
+*/*/*/__pycache__
+*/*/__pycache_
+*/__pycache___

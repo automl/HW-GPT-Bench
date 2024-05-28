@@ -252,7 +252,7 @@ def get_hw_predictor_surrogate(
         with open(surrogate_path, "rb") as f:
             predictor = pickle.load(f)
     elif surrogate_type == "mlp":
-        predictor = Nethw(max_layers, False, 256, 256).cuda()
+        predictor = Nethw(max_layers, False, 128,128).cuda()
         path = model_path + ".pth"
         predictor.load_state_dict(torch.load(path))
     return predictor
@@ -271,7 +271,7 @@ def predict_hw_surrogate(
             return energy
         energy = energy[0, quantile]
     else:
-        energy = surrogate(arch.cuda().unsqueze(0)).item()
+        energy = surrogate(torch.tensor(arch).cuda())#.item()
     return energy
 
 
