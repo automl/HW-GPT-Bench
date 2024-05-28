@@ -11,7 +11,7 @@ from hwgpt.model.gpt.utils import (
 from data_collection.pl_gpt.utils import instantiate
 from data_collection.pl_gpt.utils.group_parameters import group_parameters_for_optimizer
 from data_collection.pl_gpt.utils.optim.lr_schedule import get_learning_rate_schedule
-
+from typing import Any, Dict
 
 class LanguageModelTrainer(pl.LightningModule):
     """
@@ -20,12 +20,12 @@ class LanguageModelTrainer(pl.LightningModule):
 
     def __init__(
         self,
-        cfg_train,
-        cfg_model,
-        py_logger,
-        val_sets_name,
-        ignore_index,
-        arch_sampled,
+        cfg_train:Any,
+        cfg_model:Any,
+        py_logger:Any,
+        val_sets_name:Any,
+        ignore_index:bool,
+        arch_sampled:Dict[str,Any],
     ):
         super().__init__()
 
@@ -86,7 +86,7 @@ class LanguageModelTrainer(pl.LightningModule):
 
         return self.arch_sampled
 
-    def training_step(self, batch, batch_idx, dataloader_idx=0):
+    def training_step(self, batch:Dict, batch_idx:int, dataloader_idx:int=0):
 
         sampled_config = self.get_arch_sampled()
         sample_intermediate_size = [
@@ -134,7 +134,7 @@ class LanguageModelTrainer(pl.LightningModule):
         # loss = loss#/n
         loss_value = loss.detach()  # *n
         self.log(
-            f"train/loss",
+            "train/loss",
             loss_value,
             on_step=True,
             on_epoch=False,
@@ -144,7 +144,7 @@ class LanguageModelTrainer(pl.LightningModule):
 
         return {"loss": loss}
 
-    def validation_step(self, batch, batch_idx, dataloader_idx=0):
+    def validation_step(self, batch:Dict, batch_idx:int, dataloader_idx:int=0):
 
         sampled_config = self.arch_sampled
         sample_intermediate_size = [
@@ -230,7 +230,7 @@ class LanguageModelTrainer(pl.LightningModule):
         #    self.current_metrics = None
         self.validation_step_outputs.clear()
 
-    def all_reduce(self, metrics):
+    def all_reduce(self, metrics:Dict):
         metrics_reduce = {}
         for key, value in metrics.items():
             mean_value = value.mean()
@@ -277,7 +277,7 @@ class LanguageModelTrainer(pl.LightningModule):
                 "monitor": self.cfg_train.get("scheduler_monitor", "val/loss"),
             }
 
-    def optimizer_zero_grad(self, epoch, batch_idx, optimizer):
+    def optimizer_zero_grad(self, epoch:int, batch_idx:int, optimizer:torch.optim.Optimizer):
         # https://pytorch-lightning.readthedocs.io/en/latest/guides/speed.html#set-grads-to-none
         # TD [2022-04-30]: DeepSpeed optimizer uses the kwarg set_grad_to_none instead of set_to_none
         if "set_to_none" in inspect.signature(optimizer.zero_grad).parameters:
