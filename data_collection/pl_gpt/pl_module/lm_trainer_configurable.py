@@ -14,6 +14,7 @@ from data_collection.pl_gpt.utils.optim.lr_schedule import get_learning_rate_sch
 from data_collection.pl_gpt.utils import instantiate
 from typing import Any, Dict
 
+
 class LanguageModelTrainer(pl.LightningModule):
     """
     PTL wrapper class for model training
@@ -21,11 +22,11 @@ class LanguageModelTrainer(pl.LightningModule):
 
     def __init__(
         self,
-        cfg_train:Any,
-        cfg_model:Any,
-        py_logger:Any,
-        val_sets_name:Any,
-        ignore_index:bool,
+        cfg_train: Any,
+        cfg_model: Any,
+        py_logger: Any,
+        val_sets_name: Any,
+        ignore_index: bool,
     ):
         super().__init__()
 
@@ -73,7 +74,7 @@ class LanguageModelTrainer(pl.LightningModule):
             self.choices_dict, layer_sampling_scheme=self.scheme
         )
 
-    def get_arch_sampled(self, seed:int):
+    def get_arch_sampled(self, seed: int):
         if self.train_strategy == "random":
             return sample_config(
                 self.choices_dict, layer_sampling_scheme=self.scheme, seed=seed
@@ -88,7 +89,7 @@ class LanguageModelTrainer(pl.LightningModule):
                     self.choices_dict, layer_sampling_scheme=self.scheme, seed=seed
                 )
 
-    def training_step(self, batch:Dict, batch_idx:int, dataloader_idx:int=0):
+    def training_step(self, batch: Dict, batch_idx: int, dataloader_idx: int = 0):
         seed = hash((self.global_step, self.current_epoch, self.local_rank))
 
         sampled_config = self.get_arch_sampled(seed)
@@ -147,7 +148,7 @@ class LanguageModelTrainer(pl.LightningModule):
 
         return {"loss": loss}
 
-    def validation_step(self, batch:Dict, batch_idx:int, dataloader_idx:int=0):
+    def validation_step(self, batch: Dict, batch_idx: int, dataloader_idx: int = 0):
 
         sampled_config = self.config_max
         # print(sampled_config)
@@ -400,7 +401,9 @@ class LanguageModelTrainer(pl.LightningModule):
                 "monitor": self.cfg_train.get("scheduler_monitor", "val/loss"),
             }
 
-    def optimizer_zero_grad(self, epoch:int, batch_idx:int, optimizer:torch.optim.Optimizer):
+    def optimizer_zero_grad(
+        self, epoch: int, batch_idx: int, optimizer: torch.optim.Optimizer
+    ):
         # https://pytorch-lightning.readthedocs.io/en/latest/guides/speed.html#set-grads-to-none
         # TD [2022-04-30]: DeepSpeed optimizer uses the kwarg set_grad_to_none instead of set_to_none
         if "set_to_none" in inspect.signature(optimizer.zero_grad).parameters:

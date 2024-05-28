@@ -5,7 +5,7 @@ import torch.nn as nn
 import inspect
 
 
-from pl_gpt.utils import instantiate, get_class
+from data_collection.pl_gpt.utils import instantiate, get_class
 
 
 # try:

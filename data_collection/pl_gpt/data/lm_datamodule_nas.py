@@ -16,8 +16,8 @@ from torch.utils.data import DataLoader
 from datasets import load_dataset
 from transformers import GPT2TokenizerFast
 
-from pl_gpt.data.detokenizer import wikitext_detokenize
-from pl_gpt.data.collators import DataCollator
+from data_collection.pl_gpt.data.detokenizer import wikitext_detokenize
+from data_collection.pl_gpt.data.collators import DataCollator
 import os
 
 os.environ["HF_DATASETS_CACHE"] = "/p/scratch/ccstdl/sukthanker1/datasets/cache"

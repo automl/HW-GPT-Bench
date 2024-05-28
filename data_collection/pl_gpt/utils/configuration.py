@@ -35,7 +35,7 @@ class SimpleNestedNamespace(Dict):
     @property
     def mlp_class(self):
         # `self._mlp_class` cannot be the type to keep the config json serializable
-        from gpt_base.model import GptNeoxMLP, LLaMAMLP
+        from hwgpt.model.gpt_base.model import GptNeoxMLP, LLaMAMLP
 
         if self._mlp_class == "GptNeoMLP":
             return GptNeoxMLP
@@ -48,7 +48,7 @@ class SimpleNestedNamespace(Dict):
         if self._norm_class == "RMSNorm":
             from functools import partial
 
-            from gpt_base.rmsnorm import RMSNorm
+            from hwgpt.model.gpt_base.rmsnorm import RMSNorm
 
             return partial(RMSNorm, add_unit_offset="Gemma" in self.name)
         return getattr(torch.nn, self._norm_class)
@@ -134,8 +134,8 @@ if __name__ == "__main__":
 
     print(type(config.deepspeed.allgather_bucket_size))
     print(config)
-    from gpt.model import GPT
-    from gpt.utils import *
+    from hwgpt.model.gpt.model import GPT
+    from hwgpt.model.gpt.utils import sample_config
 
     sample_embed_dim = config.model.embed_choices
     sample_n_head = config.model.head_choices

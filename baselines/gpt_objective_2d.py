@@ -69,7 +69,7 @@ if __name__ == "__main__":
     parser.add_argument("--objective", type=str, default="energy")
     args = parser.parse_known_args()[0]
     search_space = search_spaces[args.search_space]
-    max_layers = max(search_spaces["n_layer_choices"])
+    max_layers = max(search_space["n_layer_choices"])
     for i in range(max_layers):
         parser.add_argument(f"--num_heads_{i}", type=int, default=12)
         parser.add_argument(f"--mlp_ratio_{i}", type=int, default=4)

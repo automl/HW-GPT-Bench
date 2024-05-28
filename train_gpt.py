@@ -29,11 +29,11 @@ os.environ["HF_DATASETS_CACHE"] = "/p/scratch/ccstdl/sukthanker1/datasets/cache"
 os.environ["HF_HOME"] = "/p/scratch/ccstdl/sukthanker1/model/cache"
 
 
-def bold(msg:str):
+def bold(msg: str):
     return f"\033[1m{msg}\033[0m"
 
 
-def main(cfg:Any):
+def main(cfg: Any):
     """
     Launch pretraining
     """
@@ -145,14 +145,14 @@ def main(cfg:Any):
 
     if is_rank_zero:
 
-        def count_parameters(parameters:int):
+        def count_parameters(parameters: int):
             return sum(p.numel() for p in parameters if p.requires_grad)
 
         logger.info(
             f"#### trainable_parameters {count_parameters(model_module.parameters())}"
         )
 
-        def print_model_param_stats(model:torch.nn.Module):
+        def print_model_param_stats(model: torch.nn.Module):
             for idx, (name, params) in enumerate(model.named_parameters()):
                 logger.info(
                     f"{idx:03d} {name:70} shape:{str(list(params.shape)):12} mean:{params.mean():8.4f} std:{params.std():8.6f} grad: {params.requires_grad}"
@@ -246,7 +246,7 @@ if __name__ == "__main__":
     from functools import reduce  # forward compatibility for Python 3
     import operator
 
-    def update(d:Dict, u:Dict):
+    def update(d: Dict, u: Dict):
         for k, v in u.items():
             if isinstance(v, collections.abc.Mapping):
                 d[k] = update(d.get(k, {}), v)
@@ -254,13 +254,13 @@ if __name__ == "__main__":
                 d[k] = v
         return d
 
-    def getFromDict(dataDict:Dict, mapList:List):
+    def getFromDict(dataDict: Dict, mapList: List):
         return reduce(operator.getitem, mapList, dataDict)
 
-    def setInDict(dataDict:Dict, mapList:List, value:Any):
+    def setInDict(dataDict: Dict, mapList: List, value: Any):
         getFromDict(dataDict, mapList[:-1])[mapList[-1]] = value
 
-    def convert_string_value(value:Any):
+    def convert_string_value(value: Any):
         if value in ("false", "False"):
             value = False
         elif value in ("true", "True"):

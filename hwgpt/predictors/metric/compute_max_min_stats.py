@@ -1,4 +1,4 @@
-from predictors.metric.net import Net
+from hwgpt.predictors.metric.net import Net
 from hwgpt.model.gpt.utils import sample_config_max, sample_config_min
 from lib.utils import search_spaces, convert_config_to_one_hot
 import torch
@@ -30,13 +30,13 @@ if __name__ == "__main__":
     )
     net.eval()
     out_list = []
-    max_arch = sample_config_max(search_spaces["s"])
+    max_arch = sample_config_max(search_spaces[args.search_space])
     max_arch_feature_map = convert_config_to_one_hot(max_arch, args.search_space)
     max_arch_feature_map = max_arch_feature_map.unsqueeze(0).cuda()
     out = net(max_arch_feature_map)
     out_list.append(out.item())
-    min_arch = sample_config_min(search_spaces["s"])
-    min_arch_feature_map = convert_config_to_one_hot(min_arch, search_spaces["s"])
+    min_arch = sample_config_min(search_spaces[args.search_space])
+    min_arch_feature_map = convert_config_to_one_hot(min_arch, args.search_space)
     min_arch_feature_map = min_arch_feature_map.unsqueeze(0).cuda()
     out = net(min_arch_feature_map)
     out_list.append(out.item())
