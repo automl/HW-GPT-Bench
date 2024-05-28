@@ -312,8 +312,7 @@ def predict_hw_surrogate(
             return energy
         energy = energy[0, quantile]
     else:
-        device = "cuda" if torch.cuda.is_available() else "cpu"
-        energy = surrogate(arch.to(device).unsqueze(0)).item()
+        energy = surrogate(torch.tensor(arch).cuda())  # .item()
     return energy
 
 
@@ -332,7 +331,7 @@ def get_ppl_predictor_surrogate(search_space: str) -> Any:
         )
     elif search_space == "m":
         pred_path = (
-            "data_collection/gpt_datasets/predictor_ckpts/metrics/perplexity_m.pt"
+            "data_collection/gpt_datasets/predictor_ckpts/metric/perplexity_m.pt"
         )
     else:
         pred_path = (

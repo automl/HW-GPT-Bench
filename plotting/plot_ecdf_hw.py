@@ -67,9 +67,12 @@ class ECDFPlotterHW:
                 self.surrogate,
                 self.surrogate_type,
                 return_all=True,
-            )[0]
+            )
+            if "quantile" in self.surrogate_type:
+                predictions_surrogate = predictions_surrogate[0]
+            # print(predictions_surrogate)
             for pred in predictions_surrogate:
-                predictions.append((arch, pred))
+                predictions.append((arch, pred.item()))
         return predictions
 
     def stratify_by_dim(self) -> Dict:
@@ -94,6 +97,7 @@ class ECDFPlotterHW:
             i = 0
             for choice in self.stratified_results[dim]:
                 plt.grid(linestyle="--")
+                # print(self.stratified_results[dim][choice])
                 plt.ecdf(
                     self.stratified_results[dim][choice],
                     label=choice,
@@ -132,7 +136,7 @@ class ECDFPlotterHW:
 
 
 types = ["median"]
-models = ("conformal_quantile", "mlp", "quantile")
+models = ("mlp", "quantile")
 metrics = ("latencies", "energies", "float16_memory", "bfloat16_memory")
 search_space_choices = ("m", "s", "l")
 devices = (
