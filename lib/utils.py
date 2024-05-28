@@ -257,6 +257,7 @@ def get_hw_predictor_surrogate(
     )
     model_path = base_path + metric + "_" + type + "_" + search_space + "_" + device
     print(model_path)
+    device = "cuda" if torch.cuda.is_available() else "cpu"
     if surrogate_type == "conformal_quantile":
         surrogate_path = model_path + ".pkl"
         with open(surrogate_path, "rb") as f:
@@ -266,9 +267,9 @@ def get_hw_predictor_surrogate(
         with open(surrogate_path, "rb") as f:
             predictor = pickle.load(f)
     elif surrogate_type == "mlp":
-        predictor = Nethw(max_layers, False, 256, 256).cuda()
+        predictor = Nethw(max_layers, False, 256, 256).to(device)
         path = model_path + ".pth"
-        predictor.load_state_dict(torch.load(path))
+        predictor.load_state_dict(torch.load(path, map_location=device))
     return predictor
 
 
@@ -283,13 +284,14 @@ def predict_hw_surrogate(
         energy = surrogate.predict(arch).results_stacked
         if return_quantiles:
             return surrogate.predict(arch)
-        quantile = np.random.randint(low=0, high=31, size=1)
+        quantile = np.random.randint(low=0, high=9, size=1)
         # print(energy.shape)
         if return_all:
             return energy
         energy = energy[0, quantile]
     else:
-        energy = surrogate(arch.cuda().unsqueze(0)).item()
+        device = "cuda" if torch.cuda.is_available() else "cpu"
+        energy = surrogate(arch.to(device).unsqueze(0)).item()
     return energy
 
 
@@ -300,14 +302,15 @@ def get_ppl_predictor_surrogate(search_space: str) -> Any:
         max_layers = 24
     elif search_space == "l":
         max_layers = 36
-    ppl_predictor = Net(max_layers, 128).cuda()
+    device = "cuda" if torch.cuda.is_available() else "cpu"
+    ppl_predictor = Net(max_layers, 128).to(device)
     if search_space == "s":
-        pred_path = "ppl_predictor_ckpts/perplexity_s.pt"
+        pred_path = "data_collection/gpt_datasets/predictor_ckpts/metric/perplexity_s.pt"
     elif search_space == "m":
-        pred_path = "ppl_predictor_ckpts/perplexity_m.pt"
+        pred_path = "data_collection/gpt_datasets/predictor_ckpts/metrics/perplexity_m.pt"
     else:
-        pred_path = "ppl_predictor_ckpts/perplexity_l.pt"
-    ppl_predictor.load_state_dict(torch.load(pred_path))
+        pred_path = "data_collection/gpt_datasets/predictor_ckpts/metric/perplexity_l.pt"
+    ppl_predictor.load_state_dict(torch.load(pred_path, map_location=device))
     return ppl_predictor
 
 
