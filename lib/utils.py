@@ -284,11 +284,11 @@ def get_ppl_predictor_surrogate(search_space):
         max_layers = 36
     ppl_predictor = Net(max_layers, 128).cuda()
     if search_space == "s":
-        pred_path = "ppl_predictor_ckpts/perplexity_s.pt"
+        pred_path = "data_collection/gpt_datasets/predictor_ckpts/metric/perplexity_s.pt"
     elif search_space == "m":
-        pred_path = "ppl_predictor_ckpts/perplexity_m.pt"
+        pred_path = "data_collection/gpt_datasets/predictor_ckpts/metric/perplexity_m.pt"
     else:
-        pred_path = "ppl_predictor_ckpts/perplexity_l.pt"
+        pred_path = "data_collection/gpt_datasets/predictor_ckpts/metric/perplexity_l.pt"
     ppl_predictor.load_state_dict(torch.load(pred_path))
     return ppl_predictor
 
