@@ -4,9 +4,11 @@ on:
   push:
     branches:
       - main
+      - arber
   pull_request:
     branches:
       - main
+      - arber
 
 jobs:
   format:
