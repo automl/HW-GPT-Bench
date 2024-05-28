@@ -36,5 +36,9 @@ jobs:
       run: |
         git config --global user.name 'github-actions'
         git config --global user.email 'github-actions@github.com'
-        git diff --exit-code || git add . && git commit -m 'Automatically format code with black' && git push
-
+        if [ -n "$(git status --porcelain)" ]; then
+          git add .
+          git commit -m 'Automatically format code with black'
+          git push
+        else
+          echo "No changes to commit"
