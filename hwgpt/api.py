@@ -148,10 +148,7 @@ class HWGPTBenchAPI:
             hw_metric,
         )
         predictions_hw = predict_hw_surrogate(
-            [arch_feature],
-            surrogate,
-            surrogate_type,
-            return_all=return_all_quantiles
+            [arch_feature], surrogate, surrogate_type, return_all=return_all_quantiles
         )[0]
         return predictions_hw
 
