@@ -86,11 +86,11 @@ if __name__ == "__main__":
     sample_config["sample_n_layer"] = args.num_layers
     sample_config["sample_embed_dim"] = args.embed_dim
     sample_config["sample_bias"] = args.bias
-    sample_config[f"sample_n_head"] = []
-    sample_config[f"sample_mlp_ratio"] = []
+    sample_config["sample_n_head"] = []
+    sample_config["sample_mlp_ratio"] = []
     for i in range(max_layers):
-        sample_config[f"sample_n_head"].append(getattr(args, f"num_heads_{i}"))
-        sample_config[f"sample_mlp_ratio"].append(getattr(args, f"mlp_ratio_{i}"))
+        sample_config["sample_n_head"].append(getattr(args, f"num_heads_{i}"))
+        sample_config["sample_mlp_ratio"].append(getattr(args, f"mlp_ratio_{i}"))
     objective(
         sampled_config=sample_config,
         search_space=args.search_space,

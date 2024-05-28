@@ -197,7 +197,7 @@ if __name__ == "__main__":
         idx = trial_df["perplexity"].idxmin()
         runtime_traj.append(float(trial_df.st_tuner_time.iloc[-1]))
         perplexity.append(trial_df["perplexity"].values)
-        energy.append(trial_df["energy"].values)
+        energy.append(trial_df["hw_metric"].values)
         config = {}
         for hyper in config_space.keys():
             c = trial_df.iloc[0]["config_" + hyper]
@@ -208,12 +208,12 @@ if __name__ == "__main__":
         "configs": configs,
         "runtime_traj": runtime_traj,
         "perplexity": perplexity,
-        "energy": energy,
+        "hw_metric": energy,
     }
 
     os.makedirs("results_correct", exist_ok=True)
     save_path = (
-        f"results_correct/"
+        "results_gpt_baselines_2d/"
         + args.experiment_tag
         + "_"
         + args.method
