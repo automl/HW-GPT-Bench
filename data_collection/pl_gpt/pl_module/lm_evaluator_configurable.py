@@ -1,10 +1,11 @@
 from collections import defaultdict
 import pytorch_lightning as pl
 import torch
-from gpt.model import GPT
-from gpt.utils import *
-from pl_gpt.utils.metriclogger import MetricLogger
+from hwgpt.model.gpt.model import GPT
+from hwgpt.model.gpt.utils import sample_config
+from data_collection.pl_gpt.utils.metriclogger import MetricLogger
 import torch.distributed as dist
+from typing import List
 
 
 class LanguageModelEvaluator(pl.LightningModule):

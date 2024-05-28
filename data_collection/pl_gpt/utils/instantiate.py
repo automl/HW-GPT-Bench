@@ -1,7 +1,7 @@
 from typing import Dict, List
 import importlib
 import inspect
-from pl_gpt.utils.configuration import Config, SimpleNestedNamespace
+from data_collection.pl_gpt.utils.configuration import Config, SimpleNestedNamespace
 
 
 def get_class(target: str):

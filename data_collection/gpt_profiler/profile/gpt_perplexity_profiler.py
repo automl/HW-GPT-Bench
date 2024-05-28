@@ -3,8 +3,8 @@ import pickle
 from data_collection.pl_gpt.pl_module.lm_evaluator_configurable import (
     LanguageModelEvaluator,
 )
-from pl_gpt.data.lm_datamodule_nas import PlArrowFileModule
-from pl_gpt.utils.instantiate import instantiate
+from data_collection.pl_gpt.data.lm_datamodule_nas import PlArrowFileModule
+from data_collection.pl_gpt.utils.instantiate import instantiate
 import pytorch_lightning as pl
 import os
 import logging

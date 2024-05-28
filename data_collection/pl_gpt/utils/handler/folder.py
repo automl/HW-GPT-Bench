@@ -1,6 +1,6 @@
 import pathlib
 
-from pl_gpt.utils.handler.base_handler import Handler
+from data_collection.pl_gpt.utils.handler.base_handler import Handler
 
 """
 Handle the location, new folders and experiments sub-folder structure.
