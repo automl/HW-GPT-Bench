@@ -33,9 +33,9 @@ jobs:
 
     - name: Check for changes
       run: |
-        git config --global user.name 'github-actions'
-        git config --global user.email 'github-actions@github.com'
         if [ -n "$(git status --porcelain)" ]; then
+          git config --global user.name 'github-actions'
+          git config --global user.email 'github-actions@github.com'
           git add .
           git commit -m 'Automatically format code with black'
           git push
