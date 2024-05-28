@@ -8,7 +8,9 @@ class Net(nn.Module):
     The base model for MAML (Meta-SGD) for meta-NAS-predictor.
     """
 
-    def __init__(self, num_layers, hw_embed_on, hw_embed_dim, layer_size):
+    def __init__(
+        self, num_layers: int, hw_embed_on: bool, hw_embed_dim: int, layer_size: int
+    ) -> None:
         super(Net, self).__init__()
         self.layer_size = layer_size
         self.hw_embed_on = hw_embed_on
@@ -29,7 +31,7 @@ class Net(nn.Module):
         self.add_module("fc5", nn.Linear(hfeat, 1))
         self.relu = nn.ReLU(inplace=True)
 
-    def forward(self, x, hw_embed=None):
+    def forward(self, x: torch.Tensor, hw_embed: torch.Tensor = None):
         if self.hw_embed_on:
             hw_embed = hw_embed.repeat(len(x), 1)
         out = self.relu(self.fc1(x))

@@ -3,9 +3,10 @@ import matplotlib.pyplot as plt
 import seaborn as sns
 import numpy as np
 import scipy.stats as stats_scipy
+from typing import Dict, List, Tuple
 
 
-def calculate_correlation_matrix(all_dict):
+def calculate_correlation_matrix(all_dict: Dict) -> Tuple[np.ndarray, List]:
     corr_mat = np.zeros((len(all_dict), len(all_dict)))
     keys = list(all_dict.keys())
     for i in range(len(keys)):
@@ -15,7 +16,7 @@ def calculate_correlation_matrix(all_dict):
     return corr_mat, keys
 
 
-def plot_correlation_matrix(corr_mat, keys, filename):
+def plot_correlation_matrix(corr_mat: np.ndarray, keys: List, filename: str):
     plt.figure(figsize=(20, 20))
     sns.heatmap(corr_mat, annot=True, xticklabels=keys, yticklabels=keys)
     plt.savefig(filename)

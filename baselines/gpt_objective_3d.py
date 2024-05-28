@@ -18,11 +18,18 @@ from lib.utils import (
     search_spaces,
 )
 
+from typing import List, Dict, Any
 
 report = Reporter()
 
 
-def objective(sampled_config, device_list, search_space, surrogate_type, objectives):
+def objective(
+    sampled_config: Dict[str, Any],
+    device_list: List[str],
+    search_space: str,
+    surrogate_type: str,
+    objectives: List[str],
+) -> Reporter:
     max_layers = get_max_min_stats(search_space)["max_layers"]
     arch_feature_map = get_arch_feature_map(sampled_config, search_space)
     arch_feature_map_ppl_predictor = convert_config_to_one_hot(
@@ -74,7 +81,7 @@ if __name__ == "__main__":
     parser.add_argument("--objective_2", type=str, default="latency")
     args = parser.parse_known_args()[0]
     search_space = search_spaces[args.search_space]
-    max_layers = max(search_spaces["n_layer_choices"])
+    max_layers = max(search_space["n_layer_choices"])
     for i in range(max_layers):
         parser.add_argument(f"--num_heads_{i}", type=int, default=12)
         parser.add_argument(f"--mlp_ratio_{i}", type=int, default=4)

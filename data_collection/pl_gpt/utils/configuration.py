@@ -134,8 +134,8 @@ if __name__ == "__main__":
 
     print(type(config.deepspeed.allgather_bucket_size))
     print(config)
-    from gpt.model import GPT
-    from gpt.utils import *
+    from hwgpt.model.gpt.model import GPT
+    from hwgpt.model.gpt.utils import sample_config
 
     sample_embed_dim = config.model.embed_choices
     sample_n_head = config.model.head_choices

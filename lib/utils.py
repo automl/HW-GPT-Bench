@@ -3,6 +3,8 @@ import torch
 from hwgpt.predictors.hwmetric.net import Net as Nethw
 from hwgpt.predictors.metric.net import Net
 import numpy as np
+from typing import Any, Dict, Tuple, List
+from hwgpt.model.gpt.utils import sample_config_max, sample_config_min
 
 metrics_map = {
     "energies": "Energy (Wh)",
@@ -53,7 +55,23 @@ choice_arch_config_map = {
 }
 
 
-def convert_arch_to_str(arch, scale):
+def get_max_min_true_metric(api, metric=str) -> Dict[str, float]:
+    max_config = sample_config_max(search_spaces[api.search_space_name])
+    min_config = sample_config_min(search_spaces[api.search_space_name])
+    if metric == "flops":
+        api.set_arch(max_config)
+        max_metric = api.get_flops()
+        api.set_arch(min_config)
+        min_metric = api.get_flops()
+    else:
+        api.set_arch(max_config)
+        max_metric = api.get_params()
+        api.set_arch(min_config)
+        min_metric = api.get_params()
+    return {"max": max_metric, "min": min_metric}
+
+
+def convert_arch_to_str(arch: Dict[str, Any], scale):
     str_mlp = ""
     str_heads = ""
     for i in range(arch["sample_n_layer"]):
@@ -76,9 +94,8 @@ def convert_arch_to_str(arch, scale):
     return name
 
 
-def convert_str_to_arch(arch_str):
+def convert_str_to_arch(arch_str: str) -> Dict[str, Any]:
     arch_parts = arch_str.split("-")
-    scale = arch_parts[1]
     num_layers = arch_parts[2]
     embed_dim = arch_parts[3]
     mlp_ratios = arch_parts[4 : (4 + int(num_layers))]
@@ -96,7 +113,7 @@ def convert_str_to_arch(arch_str):
     return sampled_arch
 
 
-def get_max_min_stats(search_space):
+def get_max_min_stats(search_space: str) -> Dict[str, int]:
     search_space_max_min = {}
     space = search_spaces[search_space]
     search_space_max_min["max_layers"] = max(space["n_layer_choices"])
@@ -111,7 +128,7 @@ def get_max_min_stats(search_space):
     return search_space_max_min
 
 
-def normalize_arch_feature_map(feature_map, search_space):
+def normalize_arch_feature_map(feature_map: List, search_space: str) -> List:
     search_space_max_min = get_max_min_stats(search_space)
     feature_map[0] = (feature_map[0] - search_space_max_min["min_embed"]) / (
         search_space_max_min["max_embed"] - search_space_max_min["min_embed"]
@@ -138,7 +155,7 @@ def normalize_arch_feature_map(feature_map, search_space):
     return feature_map
 
 
-def get_arch_feature_map(arch, scale):
+def get_arch_feature_map(arch: Dict[str, Any], scale: str) -> List:
     if scale == "s":
         layer_choices = [10, 11, 12]
     elif scale == "m":
@@ -163,8 +180,13 @@ def get_arch_feature_map(arch, scale):
     return arch_feature_map
 
 
-def normalize_ppl(ppl, scale):
-    with open("ppl_predictor_ckpts/max_min_stats_" + str(scale) + ".pkl", "rb") as f:
+def normalize_ppl(ppl: float, scale: str) -> float:
+    with open(
+        "data_collection/gpt_datasets/predictor_ckpts/metric/max_min_stats_"
+        + str(scale)
+        + ".pkl",
+        "rb",
+    ) as f:
         max_min_stats = pickle.load(f)
     max_ppl = max_min_stats["max"]
     min_ppl = max_min_stats["min"]
@@ -172,7 +194,7 @@ def normalize_ppl(ppl, scale):
     return ppl
 
 
-def normalize_energy(energy, device, scale):
+def normalize_energy(energy: float, device: str, scale: str) -> float:
     with open(
         "hwmetric_predictor_ckpts/max_min_stats_energy_"
         + device
@@ -187,7 +209,7 @@ def normalize_energy(energy, device, scale):
     return energy
 
 
-def normalize_latency(latency, device, scale):
+def normalize_latency(latency: float, device: str, scale: str) -> float:
     with open(
         "hwmetric_predictor_ckpts/max_min_stats_latency_"
         + device
@@ -204,7 +226,12 @@ def normalize_latency(latency, device, scale):
     return latency
 
 
-def normalize_objectives(metric_values, objectives_list, devices, search_space):
+def normalize_objectives(
+    metric_values: List,
+    objectives_list: List[str],
+    devices: List[str],
+    search_space: str,
+) -> float:
     metric_values_normalized = []
     for i, objective in enumerate(objectives_list):
         if objective == "latency":
@@ -221,8 +248,12 @@ def normalize_objectives(metric_values, objectives_list, devices, search_space):
 
 
 def get_all_hw_surrogates(
-    max_layers, search_space, objectives, devices, surrogate_type
-):
+    max_layers: int,
+    search_space: str,
+    objectives: List[str],
+    devices: List[str],
+    surrogate_type: str,
+) -> List[Any]:
     all_surrogates = []
     for i, objective in enumerate(objectives):
         all_surrogates.append(
@@ -234,8 +265,13 @@ def get_all_hw_surrogates(
 
 
 def get_hw_predictor_surrogate(
-    max_layers, search_space, device, surrogate_type, type="quantile", metric="energy"
-):
+    max_layers: int,
+    search_space: str,
+    device: str,
+    surrogate_type: str,
+    type: str = "quantile",
+    metric: str = "energies",
+) -> Any:
     base_path = (
         "data_collection/gpt_datasets/predictor_ckpts/hwmetric/"
         + str(surrogate_type)
@@ -243,6 +279,7 @@ def get_hw_predictor_surrogate(
     )
     model_path = base_path + metric + "_" + type + "_" + search_space + "_" + device
     print(model_path)
+    device = "cuda" if torch.cuda.is_available() else "cpu"
     if surrogate_type == "conformal_quantile":
         surrogate_path = model_path + ".pkl"
         with open(surrogate_path, "rb") as f:
@@ -252,20 +289,24 @@ def get_hw_predictor_surrogate(
         with open(surrogate_path, "rb") as f:
             predictor = pickle.load(f)
     elif surrogate_type == "mlp":
-        predictor = Nethw(max_layers, False, 128, 128).cuda()
+        predictor = Nethw(max_layers, False, 256, 256).to(device)
         path = model_path + ".pth"
-        predictor.load_state_dict(torch.load(path))
+        predictor.load_state_dict(torch.load(path, map_location=device))
     return predictor
 
 
 def predict_hw_surrogate(
-    arch, surrogate, surrogate_type, return_all=False, return_quantiles=False
-):
+    arch: np.array,
+    surrogate: Any,
+    surrogate_type: str,
+    return_all: bool = False,
+    return_quantiles: bool = False,
+) -> float:
     if surrogate_type == "conformal_quantile" or surrogate_type == "quantile":
         energy = surrogate.predict(arch).results_stacked
         if return_quantiles:
             return surrogate.predict(arch)
-        quantile = np.random.randint(low=0, high=31, size=1)
+        quantile = np.random.randint(low=0, high=9, size=1)
         # print(energy.shape)
         if return_all:
             return energy
@@ -275,14 +316,15 @@ def predict_hw_surrogate(
     return energy
 
 
-def get_ppl_predictor_surrogate(search_space):
+def get_ppl_predictor_surrogate(search_space: str) -> Any:
     if search_space == "s":
         max_layers = 12
     elif search_space == "m":
         max_layers = 24
     elif search_space == "l":
         max_layers = 36
-    ppl_predictor = Net(max_layers, 128).cuda()
+    device = "cuda" if torch.cuda.is_available() else "cpu"
+    ppl_predictor = Net(max_layers, 128).to(device)
     if search_space == "s":
         pred_path = (
             "data_collection/gpt_datasets/predictor_ckpts/metric/perplexity_s.pt"
@@ -295,11 +337,13 @@ def get_ppl_predictor_surrogate(search_space):
         pred_path = (
             "data_collection/gpt_datasets/predictor_ckpts/metric/perplexity_l.pt"
         )
-    ppl_predictor.load_state_dict(torch.load(pred_path))
+    ppl_predictor.load_state_dict(torch.load(pred_path, map_location=device))
     return ppl_predictor
 
 
-def convert_config_to_one_hot(config, search_space):
+def convert_config_to_one_hot(
+    config: Dict[str, Any], search_space: str
+) -> torch.Tensor:
     choices_dict = search_spaces[search_space]
     one_hot_embed = torch.zeros(len(choices_dict["embed_dim_choices"]))
     one_hot_layer = torch.zeros(len(choices_dict["n_layer_choices"]))

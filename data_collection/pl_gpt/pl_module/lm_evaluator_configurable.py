@@ -3,9 +3,25 @@ import pytorch_lightning as pl
 import torch
 from hwgpt.model.gpt.model import GPT
 from hwgpt.model.gpt.utils import sample_config
-from data_collection.pl_gpt.utils.metriclogger import MetricLogger
-import torch.distributed as dist
+import os
+import sys
+import socket
+import argparse
+import collections
+import yaml
+
+# os.environ['TORCH_DISTRIBUTED_DEBUG'] = 'DETAIL'
+# os.environ['CUDA_LAUNCH_BLOCKING'] = '1'
+import random
+import logging
+import torch.cuda
+import numpy as np
+
+from data_collection.pl_gpt.data.lm_datamodule_nas import PlArrowFileModule
 from typing import List
+from data_collection.pl_gpt.utils.configuration import Config
+from data_collection.pl_gpt.utils.instantiate import instantiate
+from data_collection.pl_gpt.utils.folder_manager import get_experiment_folder
 
 
 class LanguageModelEvaluator(pl.LightningModule):
@@ -91,7 +107,7 @@ class LanguageModelEvaluator(pl.LightningModule):
 
         if dataloader_idx == 0:
             self.log(
-                f"val/loss",
+                "val/loss",
                 loss,
                 on_step=False,
                 on_epoch=True,
@@ -175,23 +191,18 @@ def bold(msg):
 if __name__ == "__main__":
     from functools import reduce  # forward compatibility for Python 3
     import operator
-    import os, sys, socket
-    import argparse, collections, yaml
 
     # os.environ['TORCH_DISTRIBUTED_DEBUG'] = 'DETAIL'
     # os.environ['CUDA_LAUNCH_BLOCKING'] = '1'
     import random
     import logging
-    import torch.cuda
-    import pytorch_lightning as pl
     import numpy as np
 
-    from pl_gpt.data.lm_datamodule_nas import PlArrowFileModule
-    from pl_gpt.pl_module.lm_trainer_configurable import LanguageModelTrainer
+    from data_collection.pl_gpt.data.lm_datamodule_nas import PlArrowFileModule
 
-    from pl_gpt.utils.configuration import Config
-    from pl_gpt.utils.instantiate import instantiate
-    from pl_gpt.utils.folder_manager import get_experiment_folder
+    from data_collection.pl_gpt.utils.configuration import Config
+    from data_collection.pl_gpt.utils.instantiate import instantiate
+    from data_collection.pl_gpt.utils.folder_manager import get_experiment_folder
 
     def update(d, u):
         for k, v in u.items():
@@ -215,10 +226,10 @@ if __name__ == "__main__":
         else:
             try:
                 value = int(value)
-            except:
+            except Exception:
                 try:
                     value = float(value)
-                except:
+                except Exception:
                     pass
         return value
 
@@ -257,23 +268,6 @@ if __name__ == "__main__":
             raise UserWarning(f"argument unknown: {arg}")
 
     cfg = Config(config_dict=config_dict)
-
-    import os, sys, socket
-    import argparse, collections, yaml
-
-    # os.environ['TORCH_DISTRIBUTED_DEBUG'] = 'DETAIL'
-    # os.environ['CUDA_LAUNCH_BLOCKING'] = '1'
-    import random
-    import logging
-    import torch.cuda
-    import pytorch_lightning as pl
-    import numpy as np
-
-    from pl_gpt.data.lm_datamodule_nas import PlArrowFileModule
-
-    from pl_gpt.utils.configuration import Config
-    from pl_gpt.utils.instantiate import instantiate
-    from pl_gpt.utils.folder_manager import get_experiment_folder
 
     torch.backends.cudnn.deterministic = True
     torch.backends.cudnn.benchmark = False

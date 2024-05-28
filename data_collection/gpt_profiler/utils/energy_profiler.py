@@ -5,13 +5,18 @@ import numpy as np
 
 @GPUTracer(mode="normal", gpu_num=(0,), profiling_interval=0.00001, verbose=False)
 @torch.no_grad()
-def profile_metrics(dtype, inp, model):
+def profile_metrics(dtype: torch.dtype, inp: torch.Tensor, model: torch.nn.Module):
     with torch.amp.autocast(device_type="cuda", dtype=dtype):
         model(inp)
 
 
 def compute_carbon_emissions(
-    model, input, n=10, use_gpu=True, use_cpu=True, gpu_dtype=torch.bfloat16
+    model: torch.nn.Module,
+    input: torch.Tensor,
+    n: int = 10,
+    use_gpu: bool = True,
+    use_cpu: bool = True,
+    gpu_dtype: torch.dtype = torch.bfloat16,
 ):
 
     mean_co2_cpu = None
@@ -34,7 +39,7 @@ def compute_carbon_emissions(
     while len(emissions_gpu) < 50:
         results = profile_metrics(dtype=gpu_dtype, inp=input, model=model)
         # print(results[1])
-        if results[1] != None:
+        if results[1] is not None:
             emissions_gpu.append(results[1]["Average Power"])
             energy_gpu.append(results[1]["Energy Consumption"])
     mean_co2_gpu = np.mean(emissions_gpu)

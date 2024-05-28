@@ -1,11 +1,13 @@
 from hwgpt.model.gpt_base.model import GPT
-from hwgpt.model.gpt.utils import *
+from hwgpt.model.gpt.utils import sample_config
 import pickle
 from data_collection.gpt_profiler.utils.measure_memory_usage import (
     compute_memory_consumed,
 )
+from typing import Any
 import os
 import torch
+import argparse
 
 
 class GPTMemProfiler:
@@ -15,15 +17,15 @@ class GPTMemProfiler:
 
     def __init__(
         self,
-        args,
-        cfg_model,
-        batch_size=8,
-        num_archs_to_evaluate=10000,
-        num_evals=10,
-        save_path="latency_a100/",
-        resume_path="none",
-        search_space="s",
-    ):
+        args: argparse.Namespace,
+        cfg_model: Any,
+        batch_size: int = 8,
+        num_archs_to_evaluate: int = 10000,
+        num_evals: int = 10,
+        save_path: str = "latency_a100/",
+        resume_path: str = "none",
+        search_space: str = "s",
+    ) -> None:
         super().__init__()
         # build choices dict
         self.args = args
@@ -145,7 +147,7 @@ class GPTMemProfiler:
 
 
 if __name__ == "__main__":
-    from pl_gpt.utils.configuration import Config
+    from data_collection.pl_gpt.utils.configuration import Config
     import argparse
 
     parser = argparse.ArgumentParser(description="GPT Profiler")

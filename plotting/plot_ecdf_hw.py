@@ -11,6 +11,7 @@ from lib.utils import (
 from hwgpt.model.gpt.utils import sample_config
 import matplotlib.pyplot as plt
 import matplotlib
+from typing import List, Dict
 
 matplotlib.use("Agg")
 plt.rcParams["axes.grid"] = True
@@ -22,13 +23,13 @@ plt.rcParams["figure.autolayout"] = True
 class ECDFPlotterHW:
     def __init__(
         self,
-        device="a40",
-        metric="energies",
-        type="median",
-        surrogate="conformal_quantile",
-        search_space="s",
-        num_archs=50000,
-    ):
+        device: str = "a40",
+        metric: str = "energies",
+        type: str = "median",
+        surrogate: str = "conformal_quantile",
+        search_space: str = "s",
+        num_archs: int = 50000,
+    ) -> None:
         self.device = device
         self.metric = metric
         self.type = type
@@ -54,7 +55,7 @@ class ECDFPlotterHW:
         self.colors = ["r", "b", "g"]
         self.plot()
 
-    def compute_predictions(self):
+    def compute_predictions(self) -> List:
         predictions = []
         for arch in self.sampled_archs:
             arch_feature = get_arch_feature_map(arch, self.search_space_str)
@@ -74,7 +75,7 @@ class ECDFPlotterHW:
                 predictions.append((arch, pred.item()))
         return predictions
 
-    def stratify_by_dim(self):
+    def stratify_by_dim(self) -> Dict:
         stratified_results = {}
         for dim in self.search_space.keys():
             if dim not in self.exclude_keys:
@@ -127,7 +128,7 @@ class ECDFPlotterHW:
             plt.clf()
             plt.close()
 
-    def sample_archs(self, n=10000):
+    def sample_archs(self, n=10000) -> List:
         sampled_archs = []
         for i in range(n):
             sampled_archs.append(sample_config(self.search_space, seed=i))

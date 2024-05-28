@@ -15,9 +15,12 @@ from hwgpt.predictors.hwmetric.conformal.surrogate.quantile_regression_model imp
 from hwgpt.predictors.hwmetric.conformal.surrogate.symmetric_conformalized_quantile_regression_model import (
     SymmetricConformalizedGradientBoostingQuantileRegressor,
 )
+from typing import List, Tuple
+
+import argparse
 
 
-def get_model_and_datasets(args):
+def get_model_and_datasets(args: argparse.Namespace):
     train_dataset = HWDataset(
         mode="train",
         device_name=args.device,
@@ -36,7 +39,7 @@ def get_model_and_datasets(args):
     return model, train_dataset, test_dataset
 
 
-def get_model(args):
+def get_model(args: argparse.Namespace):
     if args.model == "conformal_quantile":
         model = SymmetricConformalizedGradientBoostingQuantileRegressor(
             quantiles=args.num_quantiles
@@ -82,10 +85,9 @@ class HWDataset(torch.utils.data.Dataset):
         self.archs_test = self.archs_all[8000:]
         self.load_data()
 
-    def load_data(self):
-        self.load_data()
-
-    def process_arch_device(self, arch, metric, arch_features):
+    def process_arch_device(
+        self, arch: str, metric: str, arch_features: List
+    ) -> Tuple[List, List]:
         arch_config = convert_str_to_arch(arch)
         feature = get_arch_feature_map(arch_config, self.search_space)
         feature = normalize_arch_feature_map(feature, self.search_space)
@@ -141,7 +143,7 @@ class HWDataset(torch.utils.data.Dataset):
         else:
             return self.arch_features_test.shape[0]
 
-    def __getitem__(self, idx):
+    def __getitem__(self, idx) -> Tuple[torch.Tensor, torch.Tensor]:
         "Generates one sample of data"
         # Select sample
         if self.mode == "train":

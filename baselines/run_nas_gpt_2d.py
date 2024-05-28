@@ -13,7 +13,7 @@ from syne_tune.optimizer.baselines import (
     EHVI,
 )
 from syne_tune import Tuner, StoppingCriterion
-from syne_tune.config_space import randint, uniform, loguniform, choice
+from syne_tune.config_space import choice
 from baselines.local_search import LS
 from syne_tune.optimizer.schedulers.multiobjective.linear_scalarizer import (
     LinearScalarizedScheduler,

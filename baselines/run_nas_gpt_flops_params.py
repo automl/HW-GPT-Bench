@@ -13,7 +13,7 @@ from syne_tune.optimizer.baselines import (
     EHVI,
 )
 from syne_tune import Tuner, StoppingCriterion
-from syne_tune.config_space import randint, uniform, loguniform, choice
+from syne_tune.config_space import choice
 from baselines.local_search import LS
 from syne_tune.optimizer.schedulers.multiobjective.linear_scalarizer import (
     LinearScalarizedScheduler,
@@ -67,35 +67,14 @@ if __name__ == "__main__":
         type=str,
         default="mogpt",
     )
-    parser.add_argument(
-        "--max_num_layers",
-        type=int,
-        default=12,
-    )
-    parser.add_argument(
-        "--device_1",
-        type=str,
-        default="rtx2080",
-    )
-    parser.add_argument(
-        "--device_2",
-        type=str,
-        default="a6000",
-    )
-    parser.add_argument("--objective_1", type=str, default="energy")
-    parser.add_argument("--objective_2", type=str, deafult="latency")
     parser.add_argument("--search_space", type=str, default="s")
-    parser.add_argument("--surrogate_type", type=str, default="conformal_quantile")
+    parser.add_argument("--objective", type=str, default="energy")
     args, _ = parser.parse_known_args()
     search_space = search_spaces[args.search_space]
     max_layers = max(search_spaces["n_layer_choices"])
     config_space = {
         "search_space": args.search_space,
-        "device_1": args.device_1,
-        "device_2": args.device_2,
-        "objective_1": args.objective_1,
-        "objective_2": args.objective_2,
-        "surrogate_type": args.surrogate_type,
+        "objective": args.objective,
         "num_layers": choice([10, 11, 12]),
         "embed_dim": choice([768, 384, 192]),
         "bias": choice([True, False]),
@@ -108,11 +87,11 @@ if __name__ == "__main__":
     # - `mode` and `metric` must match what is reported in the training script
     # - Metrics need to be reported after each epoch, `resource_attr` must match
     #   what is reported in the training script
-    train_file = "gpt_objective_3d.py"
+    train_file = "gpt_objective_flops_params.py"
     entry_point = Path(__file__).parent / train_file
     max_resource_level = 1  # Maximum number of training epochs
     mode = "min"
-    metrics = ["perplexity", "hw_metric_1", "hw_metric_2"]
+    metrics = ["perplexity", "hw_metric"]
     resource_attr = "epoch"
     max_resource_attr = "epochs"
 
@@ -140,12 +119,12 @@ if __name__ == "__main__":
     )
     method_kwargs_multi = dict(
         metric=metrics,
-        mode=["min", "min", "min"],
+        mode=["min", "min"],
         random_seed=args.random_seed,
         max_resource_attr=max_resource_attr,
         search_options={"num_init_random": 8},
     )
-    method_kwargs_moasha = dict(metrics=metrics, mode=["min", "min", "min"])
+    method_kwargs_moasha = dict(metrics=metrics, mode=["min", "min"])
     sch_type = "promotion" if args.method.endswith("PROM") else "stopping"
     if args.method == "RS":
         scheduler = RandomSearch(config_space, **method_kwargs_single)
@@ -181,7 +160,7 @@ if __name__ == "__main__":
 
     # Stopping criterion: We stop after `args.max_wallclock_time` seconds
     # [5]
-    stop_criterion = StoppingCriterion(max_num_evaluations=3000)
+    stop_criterion = StoppingCriterion(max_num_trials_finished=200)
 
     tuner = Tuner(
         trial_backend=trial_backend,
@@ -204,7 +183,6 @@ if __name__ == "__main__":
     configs = []
     runtime_traj = []
     energy = []
-    latency = []
     perplexity = []
     print(df.head())
     for trial, trial_df in df.groupby("trial_id"):
@@ -212,7 +190,6 @@ if __name__ == "__main__":
         runtime_traj.append(float(trial_df.st_tuner_time.iloc[-1]))
         perplexity.append(trial_df["perplexity"].values)
         energy.append(trial_df["energy"].values)
-        latency.append(trial_df["latency"].values)
         config = {}
         for hyper in config_space.keys():
             c = trial_df.iloc[0]["config_" + hyper]
@@ -224,19 +201,16 @@ if __name__ == "__main__":
         "runtime_traj": runtime_traj,
         "perplexity": perplexity,
         "energy": energy,
-        "latency": latency,
     }
 
-    os.makedirs("results", exist_ok=True)
+    os.makedirs("results_correct", exist_ok=True)
     save_path = (
-        "results/"
+        "results_correct/"
         + args.experiment_tag
         + "_"
         + args.method
         + "_"
-        + args.device_latency
-        + "_"
-        + args.device_energy
+        + args.device
         + ".pickle"
     )
     with open(save_path, "wb") as f:
