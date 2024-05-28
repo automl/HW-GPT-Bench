@@ -154,7 +154,7 @@ class GPTProfilerPPL:
             arch_config["sample_bias_flag"],
             arch_config["sample_layer_indices"],
         )
-        
+
     def return_metrics(self, arch_config: Dict[str, Any]) -> Dict[str, Any]:
         self.trainer_pl.set_sample_config(arch_config)
         self.trainer.validate(self.trainer_pl, self.data_module.val_nas_dataloader())
@@ -162,7 +162,7 @@ class GPTProfilerPPL:
         metrics_dict["accuracy"] = self.trainer_pl.current_metrics["acc"]
         metrics_dict["perplexity"] = self.trainer_pl.current_metrics["ppl"]
         return metrics_dict
-    
+
     def compute_metrics(self, arch_config: Dict[str, Any]) -> None:
         self.trainer_pl.set_sample_config(arch_config)
         self.trainer.validate(self.trainer_pl, self.data_module.val_nas_dataloader())

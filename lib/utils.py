@@ -305,11 +305,17 @@ def get_ppl_predictor_surrogate(search_space: str) -> Any:
     device = "cuda" if torch.cuda.is_available() else "cpu"
     ppl_predictor = Net(max_layers, 128).to(device)
     if search_space == "s":
-        pred_path = "data_collection/gpt_datasets/predictor_ckpts/metric/perplexity_s.pt"
+        pred_path = (
+            "data_collection/gpt_datasets/predictor_ckpts/metric/perplexity_s.pt"
+        )
     elif search_space == "m":
-        pred_path = "data_collection/gpt_datasets/predictor_ckpts/metrics/perplexity_m.pt"
+        pred_path = (
+            "data_collection/gpt_datasets/predictor_ckpts/metrics/perplexity_m.pt"
+        )
     else:
-        pred_path = "data_collection/gpt_datasets/predictor_ckpts/metric/perplexity_l.pt"
+        pred_path = (
+            "data_collection/gpt_datasets/predictor_ckpts/metric/perplexity_l.pt"
+        )
     ppl_predictor.load_state_dict(torch.load(pred_path, map_location=device))
     return ppl_predictor
 
