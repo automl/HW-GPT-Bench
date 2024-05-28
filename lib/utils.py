@@ -5,6 +5,7 @@ from hwgpt.predictors.metric.net import Net
 import numpy as np
 from typing import Any, Dict, Tuple, List
 from hwgpt.model.gpt.utils import sample_config_max, sample_config_min
+
 metrics_map = {
     "energies": "Energy (Wh)",
     "latencies": "Latency (ms)",
@@ -53,6 +54,7 @@ choice_arch_config_map = {
     "bias_choices": "sample_bias",
 }
 
+
 def get_max_min_true_metric(api, metric=str) -> Dict[str, float]:
     max_config = sample_config_max(search_spaces[api.search_space_name])
     min_config = sample_config_min(search_spaces[api.search_space_name])
@@ -66,7 +68,8 @@ def get_max_min_true_metric(api, metric=str) -> Dict[str, float]:
         max_metric = api.get_params()
         api.set_arch(min_config)
         min_metric = api.get_params()
-    return {"max":max_metric, "min":min_metric}
+    return {"max": max_metric, "min": min_metric}
+
 
 def convert_arch_to_str(arch: Dict[str, Any], scale):
     str_mlp = ""
@@ -178,7 +181,12 @@ def get_arch_feature_map(arch: Dict[str, Any], scale: str) -> List:
 
 
 def normalize_ppl(ppl: float, scale: str) -> float:
-    with open("data_collection/gpt_datasets/predictor_ckpts/metric/max_min_stats_" + str(scale) + ".pkl", "rb") as f:
+    with open(
+        "data_collection/gpt_datasets/predictor_ckpts/metric/max_min_stats_"
+        + str(scale)
+        + ".pkl",
+        "rb",
+    ) as f:
         max_min_stats = pickle.load(f)
     max_ppl = max_min_stats["max"]
     min_ppl = max_min_stats["min"]

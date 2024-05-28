@@ -1,8 +1,6 @@
 from syne_tune import Reporter
 from syne_tune import Reporter
-from lib.utils import (
-    search_spaces, get_max_min_true_metric, normalize_ppl
-)
+from lib.utils import search_spaces, get_max_min_true_metric, normalize_ppl
 from hwgpt.api import HWGPTBenchAPI
 
 report = Reporter()
@@ -23,7 +21,7 @@ def objective(sampled_config, search_space, objective):
     max_min_metric = get_max_min_true_metric(api, objective)
     hw_metric_norm = (hw_metric - max_min_metric["min"]) / (
         max_min_metric["max"] - max_min_metric["min"]
-    ) 
+    )
     report(perplexity=perplexity, hw_metric=hw_metric_norm)
 
 
