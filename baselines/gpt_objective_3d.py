@@ -62,9 +62,11 @@ def objective(
     )
     ppl = perplexity.item()
     ppl_norm = normalize_ppl(ppl, search_space)
-    #print(hw_metric_1_norm, hw_metric_2_norm, ppl_norm)
+    # print(hw_metric_1_norm, hw_metric_2_norm, ppl_norm)
     report(
-        perplexity=ppl_norm, hw_metric_1=hw_metric_1_norm.item(), hw_metric_2=hw_metric_2_norm.item()
+        perplexity=ppl_norm,
+        hw_metric_1=hw_metric_1_norm.item(),
+        hw_metric_2=hw_metric_2_norm.item(),
     )
 
 
@@ -114,5 +116,4 @@ if __name__ == "__main__":
         type=args.type,
         device_list=[args.device_1, args.device_2],
         objectives=[args.objective_1, args.objective_2],
-
     )

@@ -4,7 +4,7 @@ from lib.utils import (
     get_arch_feature_map,
     search_spaces,
     normalize_arch_feature_map,
-    get_hw_predictor_surrogate
+    get_hw_predictor_surrogate,
 )
 from hwgpt.model.gpt.utils import sample_config_max, sample_config_min, sample_config
 import argparse
@@ -51,7 +51,14 @@ if __name__ == "__main__":
     base_path = "data_collection/gpt_datasets/predictor_ckpts/hwmetric/"
     model = get_model(args)
     search_space = search_spaces[args.search_space]
-    model = get_hw_predictor_surrogate(max(search_space["n_layer_choices"]), args.search_space, args.device, args.model, args.type, args.metric)
+    model = get_hw_predictor_surrogate(
+        max(search_space["n_layer_choices"]),
+        args.search_space,
+        args.device,
+        args.model,
+        args.type,
+        args.metric,
+    )
     max_config = sample_config_max(search_space)
     min_config = sample_config_min(search_space)
 

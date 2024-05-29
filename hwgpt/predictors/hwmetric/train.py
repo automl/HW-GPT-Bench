@@ -152,13 +152,7 @@ if __name__ == "__main__":
             + "/"
         )
         if "memory" in args.metric:
-            model_path = (
-                base_path
-                + args.metric
-                + "_"
-                + args.search_space
-                + ".pth"
-            )
+            model_path = base_path + args.metric + "_" + args.search_space + ".pth"
         else:
             model_path = (
                 base_path
