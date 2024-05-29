@@ -57,7 +57,7 @@ def objective(
         hw_metric_norm = normalize_latency(
             hw_metric, device, surrogate_type, type, search_space, objective
         )
-    report(perplexity=ppl_norm, hw_metric=hw_metric_norm)
+    report(perplexity=ppl_norm, hw_metric=hw_metric_norm.item())
 
 
 if __name__ == "__main__":

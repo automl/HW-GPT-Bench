@@ -134,7 +134,8 @@ class HWGPTBenchAPI:
         device: str,
         surrogate_type: str = "conformal_quantile",
         data_type: str = "quantile",
-        return_all_quantiles: bool = True,
+        return_all: bool = True,
+        return_all_quantiles: bool = False,
     ) -> Any:
         arch_feature = get_arch_feature_map(self.config, self.search_space_name)
         arch_feature = normalize_arch_feature_map(arch_feature, self.search_space_name)
@@ -148,8 +149,14 @@ class HWGPTBenchAPI:
             hw_metric,
         )
         predictions_hw = predict_hw_surrogate(
-            [arch_feature], surrogate, surrogate_type, return_all=return_all_quantiles
-        )[0]
+            [arch_feature],
+            surrogate,
+            surrogate_type,
+            return_all=return_all,
+            return_quantiles=return_all_quantiles,
+        )
+        if not return_all_quantiles:
+            return predictions_hw[0]
         return predictions_hw
 
     def eval_supernet_surrogate(self) -> Dict[str, float]:

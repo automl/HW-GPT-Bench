@@ -71,27 +71,15 @@ def get_max_min_true_metric(api, metric=str) -> Dict[str, float]:
     return {"max": max_metric, "min": min_metric}
 
 
-def convert_arch_to_str(arch: Dict[str, Any], scale):
+def convert_arch_to_str(arch:Dict[str,Any],scale:str)->str:
     str_mlp = ""
     str_heads = ""
     for i in range(arch["sample_n_layer"]):
-        str_mlp = str_mlp + str(arch["sample_mlp_ratio"][i])
-        str_heads = str_heads + str(arch["sample_n_head"][i])
-    name = (
-        "gpt-"
-        + str(scale)
-        + "-"
-        + str(arch["sample_n_layer"])
-        + "-"
-        + str(arch["sample_embed_dim"])
-        + "-"
-        + str_mlp
-        + "-"
-        + str_heads
-        + "-"
-        + str(arch["sample_bias"])
-    )
-    return name
+        str_mlp = str_mlp+str(arch["sample_mlp_ratio"][i])+"-"
+        str_heads = str_heads+str(arch["sample_n_head"][i])+"-"
+    name = "gpt-"+str(scale)+"-"+str(arch["sample_n_layer"])+'-'+str(arch["sample_embed_dim"])+'-'+str_mlp+str_heads+str(arch["sample_bias"])
+    print(name)
+    return name 
 
 
 def convert_str_to_arch(arch_str: str) -> Dict[str, Any]:
