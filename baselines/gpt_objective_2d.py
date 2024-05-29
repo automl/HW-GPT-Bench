@@ -15,6 +15,7 @@ from lib.utils import (
     search_spaces,
 )
 from typing import Dict, Any
+import torch
 
 report = Reporter()
 
@@ -24,6 +25,7 @@ def objective(
     device: str,
     search_space: str,
     surrogate_type: str,
+    type: str,
     objective: str,
 ) -> Reporter:
     max_layers = get_max_min_stats(search_space)["max_layers"]
@@ -34,22 +36,28 @@ def objective(
     arch_feature_map_predictor = normalize_arch_feature_map(
         arch_feature_map, search_space
     )
-
+    device_run = "cuda" if torch.cuda.is_available() else "cpu"
     ppl_predictor = get_ppl_predictor_surrogate(search_space)
-    perplexity = ppl_predictor(arch_feature_map_ppl_predictor.cuda().unsqueeze(0))
+    perplexity = ppl_predictor(
+        arch_feature_map_ppl_predictor.to(device_run).unsqueeze(0)
+    )
     hw_predictor = get_hw_predictor_surrogate(
-        max_layers, search_space, device, surrogate_type, objective
+        max_layers, search_space, device, surrogate_type, type, objective
     )
     hw_metric = predict_hw_surrogate(
         [arch_feature_map_predictor], hw_predictor, surrogate_type
     )
     ppl = perplexity.item()
     ppl_norm = normalize_ppl(ppl, search_space)
-    if objective == "energy":
-        hw_metric_norm = normalize_energy(hw_metric, device, search_space)
-    elif objective == "latency":
-        hw_metric_norm = normalize_latency(hw_metric, device, search_space)
-    report(perplexity=ppl_norm, hw_metric=hw_metric_norm)
+    if objective == "energies":
+        hw_metric_norm = normalize_energy(
+            hw_metric, device, surrogate_type, type, search_space, objective
+        )
+    elif objective == "latencies":
+        hw_metric_norm = normalize_latency(
+            hw_metric, device, surrogate_type, type, search_space, objective
+        )
+    report(perplexity=ppl_norm, hw_metric=hw_metric_norm.item())
 
 
 if __name__ == "__main__":
@@ -61,12 +69,13 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument("--epochs", type=int, default=100)
     parser.add_argument("--surrogate_type", type=str, default="conformal_quantile")
+    parser.add_argument("--type", type=str, default="quantile")
     parser.add_argument("--search_space", type=str, default="s")
-    parser.add_argument("--device", type=str, default="P100")
+    parser.add_argument("--device", type=str, default="v100")
     parser.add_argument("--num_layers", type=int, default=12)
     parser.add_argument("--embed_dim", type=int, default=768)
     parser.add_argument("--bias", type=bool, default=True)
-    parser.add_argument("--objective", type=str, default="energy")
+    parser.add_argument("--objective", type=str, default="energies")
     args = parser.parse_known_args()[0]
     search_space = search_spaces[args.search_space]
     max_layers = max(search_space["n_layer_choices"])
@@ -90,6 +99,7 @@ if __name__ == "__main__":
         sampled_config=sample_config,
         search_space=args.search_space,
         surrogate_type=args.surrogate_type,
+        type=args.type,
         device=args.device,
         objective=args.objective,
     )

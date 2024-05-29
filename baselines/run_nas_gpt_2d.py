@@ -70,15 +70,17 @@ if __name__ == "__main__":
     parser.add_argument(
         "--device",
         type=str,
-        default="P100",
+        default="v100",
     )
     parser.add_argument("--search_space", type=str, default="s")
     parser.add_argument("--surrogate_type", type=str, default="conformal_quantile")
-    parser.add_argument("--objective", type=str, default="energy")
+    parser.add_argument("--type", type=str, default="quantile")
+    parser.add_argument("--objective", type=str, default="energies")
     args, _ = parser.parse_known_args()
     search_space = search_spaces[args.search_space]
-    max_layers = max(search_spaces["n_layer_choices"])
+    max_layers = max(search_space["n_layer_choices"])
     config_space = {
+        "type": args.type,
         "search_space": args.search_space,
         "surrogate_type": args.surrogate_type,
         "objective": args.objective,
@@ -168,7 +170,7 @@ if __name__ == "__main__":
 
     # Stopping criterion: We stop after `args.max_wallclock_time` seconds
     # [5]
-    stop_criterion = StoppingCriterion(max_num_trials_finished=200)
+    stop_criterion = StoppingCriterion(max_num_trials_finished=50)
 
     tuner = Tuner(
         trial_backend=trial_backend,
@@ -211,7 +213,7 @@ if __name__ == "__main__":
         "hw_metric": energy,
     }
 
-    os.makedirs("results_correct", exist_ok=True)
+    os.makedirs("results_gpt_baselines_2d", exist_ok=True)
     save_path = (
         "results_gpt_baselines_2d/"
         + args.experiment_tag
@@ -219,6 +221,14 @@ if __name__ == "__main__":
         + args.method
         + "_"
         + args.device
+        + "_"
+        + args.search_space
+        + "_"
+        + args.objective
+        + "_"
+        + args.surrogate_type
+        + "_"
+        + str(args.type)
         + ".pickle"
     )
     with open(save_path, "wb") as f:

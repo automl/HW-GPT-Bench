@@ -71,27 +71,15 @@ def get_max_min_true_metric(api, metric=str) -> Dict[str, float]:
     return {"max": max_metric, "min": min_metric}
 
 
-def convert_arch_to_str(arch: Dict[str, Any], scale):
+def convert_arch_to_str(arch:Dict[str,Any],scale:str)->str:
     str_mlp = ""
     str_heads = ""
     for i in range(arch["sample_n_layer"]):
-        str_mlp = str_mlp + str(arch["sample_mlp_ratio"][i])
-        str_heads = str_heads + str(arch["sample_n_head"][i])
-    name = (
-        "gpt-"
-        + str(scale)
-        + "-"
-        + str(arch["sample_n_layer"])
-        + "-"
-        + str(arch["sample_embed_dim"])
-        + "-"
-        + str_mlp
-        + "-"
-        + str_heads
-        + "-"
-        + str(arch["sample_bias"])
-    )
-    return name
+        str_mlp = str_mlp+str(arch["sample_mlp_ratio"][i])+"-"
+        str_heads = str_heads+str(arch["sample_n_head"][i])+"-"
+    name = "gpt-"+str(scale)+"-"+str(arch["sample_n_layer"])+'-'+str(arch["sample_embed_dim"])+'-'+str_mlp+str_heads+str(arch["sample_bias"])
+    print(name)
+    return name 
 
 
 def convert_str_to_arch(arch_str: str) -> Dict[str, Any]:
@@ -194,13 +182,26 @@ def normalize_ppl(ppl: float, scale: str) -> float:
     return ppl
 
 
-def normalize_energy(energy: float, device: str, scale: str) -> float:
-    with open(
-        "hwmetric_predictor_ckpts/max_min_stats_energy_"
-        + device
+def normalize_energy(energy: float, device: str, surrogate:str, data_type:str, scale: str, metric:str) -> float:
+    base_path = (
+        "data_collection/gpt_datasets/predictor_ckpts/hwmetric/" + str(surrogate) + "/"
+    )
+    model_path = (
+        base_path
+        + "stats_max_min_"
+        + str(metric)
+        +"_"
+        + scale
         + "_"
-        + str(scale)
+        + surrogate
+        + "_"
+        + data_type
+        + "_"
+        + device
         + ".pkl"
+    )
+    with open(
+        model_path,"rb"
     ) as f:
         max_min_stats = pickle.load(f)
         max_energy = max_min_stats["max"]
@@ -209,13 +210,24 @@ def normalize_energy(energy: float, device: str, scale: str) -> float:
     return energy
 
 
-def normalize_latency(latency: float, device: str, scale: str) -> float:
-    with open(
-        "hwmetric_predictor_ckpts/max_min_stats_latency_"
-        + device
+def normalize_latency(latency: float, device: str, surrogate:str, data_type:str, scale: str, metric:str) -> float:
+    base_path = "data_collection/gpt_datasets/predictor_ckpts/hwmetric/"
+    model_path = (
+        base_path
+        + "stats_max_min_"
+        + str(metric)
+        +"_"
+        + scale
         + "_"
-        + str(scale)
+        + surrogate
+        + "_"
+        + data_type
+        + "_"
+        + device
         + ".pkl"
+    )
+    with open(
+        model_path,"rb"
     ) as f:
         max_min_stats = pickle.load(f)
         max_latency = max_min_stats["max"]
