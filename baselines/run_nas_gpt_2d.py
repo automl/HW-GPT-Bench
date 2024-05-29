@@ -70,14 +70,14 @@ if __name__ == "__main__":
     parser.add_argument(
         "--device",
         type=str,
-        default="P100",
+        default="v100",
     )
     parser.add_argument("--search_space", type=str, default="s")
     parser.add_argument("--surrogate_type", type=str, default="conformal_quantile")
-    parser.add_argument("--objective", type=str, default="energy")
+    parser.add_argument("--objective", type=str, default="energies")
     args, _ = parser.parse_known_args()
     search_space = search_spaces[args.search_space]
-    max_layers = max(search_spaces["n_layer_choices"])
+    max_layers = max(search_space["n_layer_choices"])
     config_space = {
         "search_space": args.search_space,
         "surrogate_type": args.surrogate_type,
