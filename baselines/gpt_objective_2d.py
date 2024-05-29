@@ -16,6 +16,7 @@ from lib.utils import (
 )
 from typing import Dict, Any
 import torch
+
 report = Reporter()
 
 
@@ -24,7 +25,7 @@ def objective(
     device: str,
     search_space: str,
     surrogate_type: str,
-    type:str,
+    type: str,
     objective: str,
 ) -> Reporter:
     max_layers = get_max_min_stats(search_space)["max_layers"]
@@ -37,7 +38,9 @@ def objective(
     )
     device_run = "cuda" if torch.cuda.is_available() else "cpu"
     ppl_predictor = get_ppl_predictor_surrogate(search_space)
-    perplexity = ppl_predictor(arch_feature_map_ppl_predictor.to(device_run).unsqueeze(0))
+    perplexity = ppl_predictor(
+        arch_feature_map_ppl_predictor.to(device_run).unsqueeze(0)
+    )
     hw_predictor = get_hw_predictor_surrogate(
         max_layers, search_space, device, surrogate_type, type, objective
     )
@@ -47,9 +50,13 @@ def objective(
     ppl = perplexity.item()
     ppl_norm = normalize_ppl(ppl, search_space)
     if objective == "energies":
-        hw_metric_norm = normalize_energy(hw_metric, device, surrogate_type, type, search_space, objective)
+        hw_metric_norm = normalize_energy(
+            hw_metric, device, surrogate_type, type, search_space, objective
+        )
     elif objective == "latencies":
-        hw_metric_norm = normalize_latency(hw_metric, device, surrogate_type, type, search_space, objective)
+        hw_metric_norm = normalize_latency(
+            hw_metric, device, surrogate_type, type, search_space, objective
+        )
     report(perplexity=ppl_norm, hw_metric=hw_metric_norm)
 
 

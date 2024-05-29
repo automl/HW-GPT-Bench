@@ -52,14 +52,21 @@ if __name__ == "__main__":
         "data_collection/gpt_datasets/predictor_ckpts/hwmetric/" + str(args.model) + "/"
     )
     model_path = (
-        base_path + args.metric +"_"+str(args.type) + "_" + args.search_space + "_" + args.device + ".pkl"
+        base_path
+        + args.metric
+        + "_"
+        + str(args.type)
+        + "_"
+        + args.search_space
+        + "_"
+        + args.device
+        + ".pkl"
     )
     with open(model_path, "rb") as f:
         model = pickle.load(f)
     max_config = sample_config_max(search_space)
     min_config = sample_config_min(search_space)
-        
-    
+
     max_feature = normalize_arch_feature_map(
         get_arch_feature_map(max_config, args.search_space), args.search_space
     )
@@ -67,7 +74,7 @@ if __name__ == "__main__":
         get_arch_feature_map(min_config, args.search_space), args.search_space
     )
     lats_max = max(
-        predict_hw_surrogate([max_feature], model, args.model,return_all=True)[0]
+        predict_hw_surrogate([max_feature], model, args.model, return_all=True)[0]
     )
     lats_min = min(
         predict_hw_surrogate([min_feature], model, args.model, return_all=True)[0]
