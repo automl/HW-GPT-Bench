@@ -151,17 +151,26 @@ if __name__ == "__main__":
             + str(args.model)
             + "/"
         )
-        model_path = (
-            base_path
-            + args.metric
-            + "_"
-            + args.type
-            + "_"
-            + args.search_space
-            + "_"
-            + args.device
-            + ".pth"
-        )
+        if "memory" in args.metric:
+            model_path = (
+                base_path
+                + args.metric
+                + "_"
+                + args.search_space
+                + ".pth"
+            )
+        else:
+            model_path = (
+                base_path
+                + args.metric
+                + "_"
+                + args.type
+                + "_"
+                + args.search_space
+                + "_"
+                + args.device
+                + ".pth"
+            )
         for epoch in range(1, args.epochs + 1):
             train(model, device, train_loader, optimizer, epoch)
             test(model, device, test_loader)

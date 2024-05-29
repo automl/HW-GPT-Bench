@@ -71,6 +71,6 @@ class HWQQPlot:
 if __name__ == "__main__":
     plot = HWQQPlot("s")
     hw_quantiles, actual_quantiles = plot.plot_q_q(
-        "energies", "a100", "conformal_quantile", "quantile"
+        "energies", "a100", "conformal_quantile", "median"
     )
     print(hw_quantiles, actual_quantiles)

@@ -13,6 +13,7 @@ from lib.utils import (
     normalize_latency,
     normalize_ppl,
     search_spaces,
+    normalize_memory
 )
 from typing import Dict, Any
 import torch
@@ -57,6 +58,8 @@ def objective(
         hw_metric_norm = normalize_latency(
             hw_metric, device, surrogate_type, type, search_space, objective
         )
+    elif "memory" in objective:
+        hw_metric_norm = normalize_memory(memory=hw_metric,scale=search_space,metric=objective)
     report(perplexity=ppl_norm, hw_metric=hw_metric_norm.item())
 
 

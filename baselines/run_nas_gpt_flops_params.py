@@ -68,20 +68,20 @@ if __name__ == "__main__":
         default="mogpt",
     )
     parser.add_argument("--search_space", type=str, default="s")
-    parser.add_argument("--objective", type=str, default="energy")
+    parser.add_argument("--objective", type=str, default="flops")
     args, _ = parser.parse_known_args()
     search_space = search_spaces[args.search_space]
-    max_layers = max(search_spaces["n_layer_choices"])
+    max_layers = max(search_space["n_layer_choices"])
     config_space = {
         "search_space": args.search_space,
         "objective": args.objective,
-        "num_layers": choice([10, 11, 12]),
-        "embed_dim": choice([768, 384, 192]),
-        "bias": choice([True, False]),
+        "num_layers": choice(search_space["n_layer_choices"]),
+        "embed_dim": choice(search_space["embed_dim_choices"]),
+        "bias": choice(search_space["bias_choices"]),
     }
     for i in range(max_layers):
-        config_space[f"mlp_ratio_{i}"] = choice([2, 3, 4])
-        config_space[f"num_heads_{i}"] = choice([4, 8, 12])
+        config_space[f"mlp_ratio_{i}"] = choice(search_space["mlp_ratio_choices"])
+        config_space[f"num_heads_{i}"] = choice(search_space["n_head_choices"])
 
     # Here, we specify the training script we want to tune
     # - `mode` and `metric` must match what is reported in the training script
@@ -160,7 +160,7 @@ if __name__ == "__main__":
 
     # Stopping criterion: We stop after `args.max_wallclock_time` seconds
     # [5]
-    stop_criterion = StoppingCriterion(max_num_trials_finished=200)
+    stop_criterion = StoppingCriterion(max_num_trials_finished=50)
 
     tuner = Tuner(
         trial_backend=trial_backend,
@@ -189,7 +189,7 @@ if __name__ == "__main__":
         idx = trial_df["perplexity"].idxmin()
         runtime_traj.append(float(trial_df.st_tuner_time.iloc[-1]))
         perplexity.append(trial_df["perplexity"].values)
-        energy.append(trial_df["energy"].values)
+        energy.append(trial_df["hw_metric"].values)
         config = {}
         for hyper in config_space.keys():
             c = trial_df.iloc[0]["config_" + hyper]
@@ -200,18 +200,17 @@ if __name__ == "__main__":
         "configs": configs,
         "runtime_traj": runtime_traj,
         "perplexity": perplexity,
-        "energy": energy,
+        "hw_metric": energy,
     }
 
-    os.makedirs("results_correct", exist_ok=True)
+    search_space_path = "results_gpt_baselines_2d_" + str(args.search_space)
+    os.makedirs(search_space_path, exist_ok=True)
+    method_path = "results_gpt_baselines_2d/" + args.method + "/"
+    os.makedirs(method_path, exist_ok=True)
+    objectiv_path = method_path + args.objective + "/"
+    os.makedirs(objectiv_path, exist_ok=True)
     save_path = (
-        "results_correct/"
-        + args.experiment_tag
-        + "_"
-        + args.method
-        + "_"
-        + args.device
-        + ".pickle"
+        objectiv_path + args.experiment_tag + "_" + str(args.random_seed) + ".pickle"
     )
     with open(save_path, "wb") as f:
         pickle.dump(results, f)

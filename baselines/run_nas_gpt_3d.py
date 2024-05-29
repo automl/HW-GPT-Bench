@@ -86,6 +86,7 @@ if __name__ == "__main__":
     parser.add_argument("--objective_2", type=str, deafult="latency")
     parser.add_argument("--search_space", type=str, default="s")
     parser.add_argument("--surrogate_type", type=str, default="conformal_quantile")
+    parser.add_argument("--type", type=str, default="quantile")
     args, _ = parser.parse_known_args()
     search_space = search_spaces[args.search_space]
     max_layers = max(search_spaces["n_layer_choices"])
@@ -96,13 +97,13 @@ if __name__ == "__main__":
         "objective_1": args.objective_1,
         "objective_2": args.objective_2,
         "surrogate_type": args.surrogate_type,
-        "num_layers": choice([10, 11, 12]),
-        "embed_dim": choice([768, 384, 192]),
+        "num_layers": choice(search_space["n_layer_choices"]),
+        "embed_dim": choice(search_space["embed_dim_choices"]),
         "bias": choice([True, False]),
     }
     for i in range(max_layers):
-        config_space[f"mlp_ratio_{i}"] = choice([2, 3, 4])
-        config_space[f"num_heads_{i}"] = choice([4, 8, 12])
+        config_space[f"mlp_ratio_{i}"] = choice(search_space["mlp_ratio_choices"])
+        config_space[f"num_heads_{i}"] = choice(search_space["n_head_choices"])
 
     # Here, we specify the training script we want to tune
     # - `mode` and `metric` must match what is reported in the training script
@@ -211,8 +212,8 @@ if __name__ == "__main__":
         idx = trial_df["perplexity"].idxmin()
         runtime_traj.append(float(trial_df.st_tuner_time.iloc[-1]))
         perplexity.append(trial_df["perplexity"].values)
-        energy.append(trial_df["energy"].values)
-        latency.append(trial_df["latency"].values)
+        energy.append(trial_df["hw_metric_1"].values)
+        latency.append(trial_df["hw_metric_2"].values)
         config = {}
         for hyper in config_space.keys():
             c = trial_df.iloc[0]["config_" + hyper]
@@ -223,20 +224,30 @@ if __name__ == "__main__":
         "configs": configs,
         "runtime_traj": runtime_traj,
         "perplexity": perplexity,
-        "energy": energy,
-        "latency": latency,
+        "hw_metric_1": energy,
+        "hw_metric_2": latency,
     }
-
-    os.makedirs("results", exist_ok=True)
+    search_space_path = "results_gpt_baselines_3d_" + str(args.search_space)
+    os.makedirs(search_space_path, exist_ok=True)
+    method_path = search_space_path + "/" + args.method + "/"
+    os.makedirs(method_path, exist_ok=True)
+    objectiv_path = method_path + args.objective_1 + "_" + args.objective_2 + "/"
+    os.makedirs(objectiv_path, exist_ok=True)
     save_path = (
-        "results/"
+        objectiv_path
         + args.experiment_tag
         + "_"
         + args.method
         + "_"
-        + args.device_latency
+        + args.surrogate_type
         + "_"
-        + args.device_energy
+        + args.type
+        + "_"
+        + args.device_1
+        + "_"
+        + args.device_2
+        + "_"
+        + str(args.random_seed)
         + ".pickle"
     )
     with open(save_path, "wb") as f:

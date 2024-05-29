@@ -54,6 +54,13 @@ choice_arch_config_map = {
     "bias_choices": "sample_bias",
 }
 
+def get_configspace(search_space: str) -> Dict[str, List[int]]:
+    return search_spaces[search_space]
+
+def denormalize_true_metric(metric:str, api:Any, metric_val:float) -> float:
+    max_min_metric = get_max_min_true_metric(api, metric)
+    metric_denorm = metric_val * (max_min_metric["max"] - max_min_metric["min"]) + max_min_metric["min"]
+    return metric_denorm
 
 def get_max_min_true_metric(api, metric=str) -> Dict[str, float]:
     max_config = sample_config_max(search_spaces[api.search_space_name])
@@ -167,92 +174,309 @@ def get_arch_feature_map(arch: Dict[str, Any], scale: str) -> List:
     # print(len(arch_feature_map))
     return arch_feature_map
 
-
-def normalize_ppl(ppl: float, scale: str) -> float:
-    with open(
-        "data_collection/gpt_datasets/predictor_ckpts/metric/max_min_stats_"
-        + str(scale)
-        + ".pkl",
-        "rb",
-    ) as f:
-        max_min_stats = pickle.load(f)
-    max_ppl = max_min_stats["max"]
-    min_ppl = max_min_stats["min"]
-    ppl = (ppl - min_ppl) / (max_ppl - min_ppl)
+def denormalize_ppl(ppl: float, scale: str, method: str="mean-std") -> float:
+    if method == "mean-std":
+        with open(
+            "data_collection/gpt_datasets/predictor_ckpts/metric/mean_std_"
+            + "perplexity_"
+            + str(scale)
+            + ".pkl",
+            "rb",
+        ) as f:
+            mean_std_stats = pickle.load(f)
+        mean_ppl = mean_std_stats["mean"]
+        std_ppl = mean_std_stats["std"]
+        ppl = ppl * std_ppl + mean_ppl
+    elif method == "max-min":
+        with open(
+            "data_collection/gpt_datasets/predictor_ckpts/metric/max_min_stats_"
+            + "perplexity_"
+            + str(scale)
+            + ".pkl",
+            "rb",
+        ) as f:
+            max_min_stats = pickle.load(f)
+        max_ppl = max_min_stats["max"]
+        min_ppl = max_min_stats["min"]
+        ppl = ppl * (max_ppl - min_ppl) + min_ppl
     return ppl
 
+def normalize_ppl(ppl: float, scale: str, method: str="mean-std") -> float:
+    if method == "mean-std":
+        with open(
+            "data_collection/gpt_datasets/predictor_ckpts/metric/mean_std_"
+            + "perplexity_"
+            + str(scale)
+            + ".pkl",
+            "rb",
+        ) as f:
+            mean_std_stats = pickle.load(f)
+        mean_ppl = mean_std_stats["mean"]
+        std_ppl = mean_std_stats["std"]
+        ppl = (ppl - mean_ppl) / std_ppl
+    elif method == "max-min":
+        with open(
+            "data_collection/gpt_datasets/predictor_ckpts/metric/max_min_stats_"
+            + "perplexity_"
+            + str(scale)
+            + ".pkl",
+            "rb",
+        ) as f:
+            max_min_stats = pickle.load(f)
+        max_ppl = max_min_stats["max"]
+        min_ppl = max_min_stats["min"]
+        ppl = (ppl - min_ppl) / (max_ppl - min_ppl)
+    return ppl
 
-def normalize_energy(energy: float, device: str, surrogate:str, data_type:str, scale: str, metric:str) -> float:
+def denormalize_energy(energy: float, device: str, surrogate:str, data_type:str, scale: str, metric:str, method="mean-std") -> float:
     base_path = (
         "data_collection/gpt_datasets/predictor_ckpts/hwmetric/" + str(surrogate) + "/"
     )
-    model_path = (
-        base_path
-        + "stats_max_min_"
-        + str(metric)
-        +"_"
-        + scale
-        + "_"
-        + surrogate
-        + "_"
-        + data_type
-        + "_"
-        + device
-        + ".pkl"
-    )
-    with open(
-        model_path,"rb"
-    ) as f:
-        max_min_stats = pickle.load(f)
-        max_energy = max_min_stats["max"]
-        min_energy = max_min_stats["min"]
-        energy = (energy - min_energy) / (max_energy - min_energy)
+    if method == "mean-std":
+        model_path = (
+            base_path
+            + "stats_mean_std_"
+            + str(metric)
+            +"_"
+            + scale
+            + "_"
+            + surrogate
+            + "_"
+            + data_type
+            + "_"
+            + device
+            + ".pkl"
+        )
+        with open(
+            model_path,"rb"
+        ) as f:
+            mean_std_stats = pickle.load(f)
+            mean_energy = mean_std_stats["mean"]
+            std_energy = mean_std_stats["std"]
+            energy = energy * std_energy + mean_energy
+    elif method == "max-min":
+        model_path = (
+            base_path
+            + "stats_max_min_"
+            + str(metric)
+            +"_"
+            + scale
+            + "_"
+            + surrogate
+            + "_"
+            + data_type
+            + "_"
+            + device
+            + ".pkl"
+        )
+        with open(
+            model_path,"rb"
+        ) as f:
+            max_min_stats = pickle.load(f)
+            max_energy = max_min_stats["max"]
+            min_energy = max_min_stats["min"]
+            energy = energy * (max_energy - min_energy) + min_energy
     return energy
 
 
-def normalize_latency(latency: float, device: str, surrogate:str, data_type:str, scale: str, metric:str) -> float:
-    base_path = "data_collection/gpt_datasets/predictor_ckpts/hwmetric/"
-    model_path = (
-        base_path
-        + "stats_max_min_"
-        + str(metric)
-        +"_"
-        + scale
-        + "_"
-        + surrogate
-        + "_"
-        + data_type
-        + "_"
-        + device
-        + ".pkl"
+def normalize_energy(energy: float, device: str, surrogate:str, data_type:str, scale: str, metric:str, method="mean-std") -> float:
+    base_path = (
+        "data_collection/gpt_datasets/predictor_ckpts/hwmetric/" + str(surrogate) + "/"
     )
-    with open(
-        model_path,"rb"
-    ) as f:
-        max_min_stats = pickle.load(f)
-        max_latency = max_min_stats["max"]
-        min_latency = max_min_stats["min"]
-        # print(max_latency, min_latency)
-        latency = (latency - min_latency) / (max_latency - min_latency)
-    # print(latency)
+    if method == "mean-std":
+        model_path = (
+            base_path
+            + "stats_mean_std_"
+            + str(metric)
+            +"_"
+            + scale
+            + "_"
+            + surrogate
+            + "_"
+            + data_type
+            + "_"
+            + device
+            + ".pkl"
+        )
+        with open(
+            model_path,"rb"
+        ) as f:
+            mean_std_stats = pickle.load(f)
+            mean_energy = mean_std_stats["mean"]
+            std_energy = mean_std_stats["std"]
+            energy = (energy - mean_energy) / std_energy
+    elif method == "max-min":
+        model_path = (
+            base_path
+            + "stats_max_min_"
+            + str(metric)
+            +"_"
+            + scale
+            + "_"
+            + surrogate
+            + "_"
+            + data_type
+            + "_"
+            + device
+            + ".pkl"
+        )
+        with open(
+            model_path,"rb"
+        ) as f:
+            max_min_stats = pickle.load(f)
+            max_energy = max_min_stats["max"]
+            min_energy = max_min_stats["min"]
+            energy = (energy - min_energy) / (max_energy - min_energy)
+    return energy
+
+def denormalize_latency(latency: float, device: str, surrogate:str, data_type:str, scale: str, metric:str, method:str="mean-std") -> float:
+    base_path = "data_collection/gpt_datasets/predictor_ckpts/hwmetric/"  + str(surrogate) + "/"
+    if method == "mean-std":
+        model_path = (
+            base_path
+            + "stats_mean_std_"
+            + str(metric)
+            +"_"
+            + scale
+            + "_"
+            + surrogate
+            + "_"
+            + data_type
+            + "_"
+            + device
+            + ".pkl"
+        )
+        with open(
+            model_path,"rb"
+        ) as f:
+            mean_std_stats = pickle.load(f)
+            mean_latency = mean_std_stats["mean"]
+            std_latency = mean_std_stats["std"]
+            latency = latency * std_latency + mean_latency
+    else:
+        model_path = (
+            base_path
+            + "stats_max_min_"
+            + str(metric)
+            +"_"
+            + scale
+            + "_"
+            + surrogate
+            + "_"
+            + data_type
+            + "_"
+            + device
+            + ".pkl"
+        )
+        with open(
+            model_path,"rb"
+        ) as f:
+            max_min_stats = pickle.load(f)
+            max_latency = max_min_stats["max"]
+            min_latency = max_min_stats["min"]
+            latency = latency * (max_latency - min_latency) + min_latency
     return latency
 
+def normalize_latency(latency: float, device: str, surrogate:str, data_type:str, scale: str, metric:str, method:str="mean-std") -> float:
+    base_path = "data_collection/gpt_datasets/predictor_ckpts/hwmetric/"  + str(surrogate) + "/"
+    if method == "mean-std":
+        model_path = (
+            base_path
+            + "stats_mean_std_"
+            + str(metric)
+            +"_"
+            + scale
+            + "_"
+            + surrogate
+            + "_"
+            + data_type
+            + "_"
+            + device
+            + ".pkl"
+        )
+        with open(
+            model_path,"rb"
+        ) as f:
+            mean_std_stats = pickle.load(f)
+            mean_latency = mean_std_stats["mean"]
+            std_latency = mean_std_stats["std"]
+            latency = (latency - mean_latency) / std_latency
+    else:
+        model_path = (
+            base_path
+            + "stats_max_min_"
+            + str(metric)
+            +"_"
+            + scale
+            + "_"
+            + surrogate
+            + "_"
+            + data_type
+            + "_"
+            + device
+            + ".pkl"
+        )
+        with open(
+            model_path,"rb"
+        ) as f:
+            max_min_stats = pickle.load(f)
+            max_latency = max_min_stats["max"]
+            min_latency = max_min_stats["min"]
+            # print(max_latency, min_latency)
+            latency = (latency - min_latency) / (max_latency - min_latency)
+        # print(latency)
+    return latency
+
+def normalize_memory(memory: float, scale: str, metric:str, method:str="mean-std") -> float:
+    if method == "mean-std":
+        with open(
+            "data_collection/gpt_datasets/predictor_ckpts/hwmetric/stats_mean_std_"
+            + str(metric)
+            + "_"
+            + str(scale)
+            + ".pkl",
+            "rb",
+        ) as f:
+            mean_std_stats = pickle.load(f)
+        mean_memory = mean_std_stats["mean"]
+        std_memory = mean_std_stats["std"]
+        memory = (memory - mean_memory) / std_memory
+    elif method == "max-min":
+        with open(
+            "data_collection/gpt_datasets/predictor_ckpts/hwmetric/stats_max_min_"
+            + str(metric)
+            + "_"
+            + str(scale)
+            + ".pkl",
+            "rb",
+        ) as f:
+            max_min_stats = pickle.load(f)
+        max_memory = max_min_stats["max"]
+        min_memory = max_min_stats["min"]
+        memory = (memory - min_memory) / (max_memory - min_memory)
+    return memory
+    
 
 def normalize_objectives(
     metric_values: List,
     objectives_list: List[str],
     devices: List[str],
     search_space: str,
+    surrogate: str,
+    data_type: str,
 ) -> float:
     metric_values_normalized = []
     for i, objective in enumerate(objectives_list):
-        if objective == "latency":
+        if objective == "latencies":
             metric_values_normalized.append(
-                normalize_latency(metric_values[i], devices[i], search_space)
+                normalize_latency(metric_values[i], devices[i], surrogate[i], data_type, search_space, "latencies"))
+        elif objective == "energies":
+            metric_values_normalized.append(
+                normalize_energy(metric_values[i], devices[i], surrogate[i], data_type, search_space, "energies")
             )
-        elif objective == "energy":
+        elif "memory" in objective:
             metric_values_normalized.append(
-                normalize_energy(metric_values[i], devices[i], search_space)
+                normalize_memory(metric_values[i], search_space, objective)
             )
         else:
             raise ValueError("Metric nor supported")
@@ -264,13 +488,14 @@ def get_all_hw_surrogates(
     search_space: str,
     objectives: List[str],
     devices: List[str],
-    surrogate_type: str,
+    surrogate_types: List[str],
+    type: str = "quantile",
 ) -> List[Any]:
     all_surrogates = []
     for i, objective in enumerate(objectives):
         all_surrogates.append(
             get_hw_predictor_surrogate(
-                max_layers, search_space, devices[i], surrogate_type, objectives[i]
+                max_layers, search_space, devices[i], surrogate_types[i], type, objectives[i]
             )
         )
     return all_surrogates
@@ -285,12 +510,17 @@ def get_hw_predictor_surrogate(
     metric: str = "energies",
 ) -> Any:
     base_path = (
-        "data_collection/gpt_datasets/predictor_ckpts/hwmetric/"
-        + str(surrogate_type)
-        + "/"
-    )
-    model_path = base_path + metric + "_" + type + "_" + search_space + "_" + device
-    print(model_path)
+    "data_collection/gpt_datasets/predictor_ckpts/hwmetric/"
+    + str(surrogate_type)
+    + "/")
+    if "memory" in metric:
+        # set surrogate type to mlp
+
+        model_path = base_path + metric + "_" + search_space
+    else:
+        model_path = base_path + metric + "_" + type + "_" + search_space + "_" + device
+    #print(model_path)
+
     device = "cuda" if torch.cuda.is_available() else "cpu"
     if surrogate_type == "conformal_quantile":
         surrogate_path = model_path + ".pkl"
@@ -301,7 +531,7 @@ def get_hw_predictor_surrogate(
         with open(surrogate_path, "rb") as f:
             predictor = pickle.load(f)
     elif surrogate_type == "mlp":
-        predictor = Nethw(max_layers, False, 256, 256).to(device)
+        predictor = Nethw(max_layers, False, 128, 128).to(device)
         path = model_path + ".pth"
         predictor.load_state_dict(torch.load(path, map_location=device))
     return predictor
