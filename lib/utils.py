@@ -230,7 +230,7 @@ def normalize_ppl(ppl: float, scale: str, method: str="mean-std") -> float:
 
 def denormalize_energy(energy: float, device: str, surrogate:str, data_type:str, scale: str, metric:str, method="mean-std") -> float:
     base_path = (
-        "data_collection/gpt_datasets/predictor_ckpts/hwmetric/" + str(surrogate) + "/"
+        "data_collection/gpt_datasets/predictor_ckpts/hwmetric/" 
     )
     if method == "mean-std":
         model_path = (
@@ -281,7 +281,7 @@ def denormalize_energy(energy: float, device: str, surrogate:str, data_type:str,
 
 def normalize_energy(energy: float, device: str, surrogate:str, data_type:str, scale: str, metric:str, method="mean-std") -> float:
     base_path = (
-        "data_collection/gpt_datasets/predictor_ckpts/hwmetric/" + str(surrogate) + "/"
+        "data_collection/gpt_datasets/predictor_ckpts/hwmetric/"
     )
     if method == "mean-std":
         model_path = (
