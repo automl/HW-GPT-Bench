@@ -1,0 +1,133 @@
+cpu-bind=MASK - dlcgpu22, task  0  0 [1892]: mask 0xf0000000f set
+INFO:syne_tune.optimizer.schedulers.scheduler_searcher:Master random_seed = 1516219482
+DEBUG:syne_tune.optimizer.schedulers.searchers.utils.default_arguments:scheduler_options: Key 'mode': Imputing default value min
+INFO:syne_tune.optimizer.schedulers.scheduler_searcher:max_resource_level = 1, as inferred from config_space
+DEBUG:syne_tune.optimizer.schedulers.searchers.utils.default_arguments:search_options: Key 'opt_skip_init_length': Imputing default value 150
+search_options: Key 'opt_skip_period': Imputing default value 1
+search_options: Key 'opt_maxiter': Imputing default value 50
+search_options: Key 'opt_nstarts': Imputing default value 2
+search_options: Key 'opt_warmstart': Imputing default value False
+search_options: Key 'opt_verbose': Imputing default value False
+search_options: Key 'opt_debug_writer': Imputing default value False
+search_options: Key 'num_fantasy_samples': Imputing default value 20
+search_options: Key 'num_init_candidates': Imputing default value 250
+search_options: Key 'initial_scoring': Imputing default value thompson_indep
+search_options: Key 'skip_local_optimization': Imputing default value False
+search_options: Key 'debug_log': Imputing default value False
+search_options: Key 'cost_attr': Imputing default value elapsed_time
+search_options: Key 'normalize_targets': Imputing default value True
+search_options: Key 'allow_duplicates': Imputing default value False
+search_options: Key 'input_warping': Imputing default value False
+search_options: Key 'boxcox_transform': Imputing default value False
+search_options: Key 'max_size_top_fraction': Imputing default value 0.25
+search_options: Key 'gp_base_kernel': Imputing default value matern52-ard
+search_options: Key 'acq_function': Imputing default value ei
+search_options: Key 'max_size_data_for_model': Imputing default value 500
+INFO:syne_tune.optimizer.schedulers.scheduler_searcher:Master random_seed = 253547187
+DEBUG:syne_tune.optimizer.schedulers.searchers.utils.default_arguments:scheduler_options: Key 'mode': Imputing default value min
+INFO:syne_tune.optimizer.schedulers.scheduler_searcher:max_resource_level = 1, as inferred from config_space
+DEBUG:syne_tune.optimizer.schedulers.searchers.utils.default_arguments:search_options: Key 'opt_skip_init_length': Imputing default value 150
+search_options: Key 'opt_skip_period': Imputing default value 1
+search_options: Key 'opt_maxiter': Imputing default value 50
+search_options: Key 'opt_nstarts': Imputing default value 2
+search_options: Key 'opt_warmstart': Imputing default value False
+search_options: Key 'opt_verbose': Imputing default value False
+search_options: Key 'opt_debug_writer': Imputing default value False
+search_options: Key 'num_fantasy_samples': Imputing default value 20
+search_options: Key 'num_init_candidates': Imputing default value 250
+search_options: Key 'initial_scoring': Imputing default value thompson_indep
+search_options: Key 'skip_local_optimization': Imputing default value False
+search_options: Key 'debug_log': Imputing default value False
+search_options: Key 'cost_attr': Imputing default value elapsed_time
+search_options: Key 'normalize_targets': Imputing default value True
+search_options: Key 'allow_duplicates': Imputing default value False
+search_options: Key 'input_warping': Imputing default value False
+search_options: Key 'boxcox_transform': Imputing default value False
+search_options: Key 'max_size_top_fraction': Imputing default value 0.25
+search_options: Key 'gp_base_kernel': Imputing default value matern52-ard
+search_options: Key 'acq_function': Imputing default value ei
+search_options: Key 'max_size_data_for_model': Imputing default value 500
+INFO:syne_tune.optimizer.schedulers.scheduler_searcher:Master random_seed = 9004
+INFO:syne_tune.optimizer.schedulers.scheduler_searcher:max_resource_level = 1, as inferred from config_space
+INFO:syne_tune.tuner:results of trials will be saved on /home/sukthank/syne-tune/mogpt-2024-05-30-12-04-20-930
+INFO:syne_tune.backend.local_backend:Detected 1 GPUs
+DEBUG:syne_tune.backend.local_backend:scheduling 0, /work/dlclarge2/sukthank-hw-llm-bench/arxiv/HW-Aware-LLM-Bench/baselines/gpt_objective_2d.py, {'type': 'quantile', 'search_space': 'm', 'surrogate_type': 'conformal_quantile', 'objective': 'energies', 'device': 'a100', 'num_layers': 22, 'embed_dim': 256, 'bias': True, 'mlp_ratio_0': 2, 'num_heads_0': 8, 'mlp_ratio_1': 2, 'num_heads_1': 8, 'mlp_ratio_2': 2, 'num_heads_2': 8, 'mlp_ratio_3': 2, 'num_heads_3': 8, 'mlp_ratio_4': 2, 'num_heads_4': 8, 'mlp_ratio_5': 2, 'num_heads_5': 8, 'mlp_ratio_6': 2, 'num_heads_6': 8, 'mlp_ratio_7': 2, 'num_heads_7': 8, 'mlp_ratio_8': 2, 'num_heads_8': 8, 'mlp_ratio_9': 2, 'num_heads_9': 8, 'mlp_ratio_10': 2, 'num_heads_10': 8, 'mlp_ratio_11': 2, 'num_heads_11': 8, 'mlp_ratio_12': 2, 'num_heads_12': 8, 'mlp_ratio_13': 2, 'num_heads_13': 8, 'mlp_ratio_14': 2, 'num_heads_14': 8, 'mlp_ratio_15': 2, 'num_heads_15': 8, 'mlp_ratio_16': 2, 'num_heads_16': 8, 'mlp_ratio_17': 2, 'num_heads_17': 8, 'mlp_ratio_18': 2, 'num_heads_18': 8, 'mlp_ratio_19': 2, 'num_heads_19': 8, 'mlp_ratio_20': 2, 'num_heads_20': 8, 'mlp_ratio_21': 2, 'num_heads_21': 8, 'mlp_ratio_22': 2, 'num_heads_22': 8, 'mlp_ratio_23': 2, 'num_heads_23': 8, 'epochs': 1, 'dataset_path': './'}, logging into /home/sukthank/syne-tune/mogpt-2024-05-30-12-04-20-930/0
+INFO:syne_tune.backend.local_backend:running subprocess with command: /home/sukthank/anaconda3/envs/hwllm/bin/python /work/dlclarge2/sukthank-hw-llm-bench/arxiv/HW-Aware-LLM-Bench/baselines/gpt_objective_2d.py --type quantile --search_space m --surrogate_type conformal_quantile --objective energies --device a100 --num_layers 22 --embed_dim 256 --bias True --mlp_ratio_0 2 --num_heads_0 8 --mlp_ratio_1 2 --num_heads_1 8 --mlp_ratio_2 2 --num_heads_2 8 --mlp_ratio_3 2 --num_heads_3 8 --mlp_ratio_4 2 --num_heads_4 8 --mlp_ratio_5 2 --num_heads_5 8 --mlp_ratio_6 2 --num_heads_6 8 --mlp_ratio_7 2 --num_heads_7 8 --mlp_ratio_8 2 --num_heads_8 8 --mlp_ratio_9 2 --num_heads_9 8 --mlp_ratio_10 2 --num_heads_10 8 --mlp_ratio_11 2 --num_heads_11 8 --mlp_ratio_12 2 --num_heads_12 8 --mlp_ratio_13 2 --num_heads_13 8 --mlp_ratio_14 2 --num_heads_14 8 --mlp_ratio_15 2 --num_heads_15 8 --mlp_ratio_16 2 --num_heads_16 8 --mlp_ratio_17 2 --num_heads_17 8 --mlp_ratio_18 2 --num_heads_18 8 --mlp_ratio_19 2 --num_heads_19 8 --mlp_ratio_20 2 --num_heads_20 8 --mlp_ratio_21 2 --num_heads_21 8 --mlp_ratio_22 2 --num_heads_22 8 --mlp_ratio_23 2 --num_heads_23 8 --epochs 1 --dataset_path ./ --st_checkpoint_dir /home/sukthank/syne-tune/mogpt-2024-05-30-12-04-20-930/0/checkpoints
+INFO:syne_tune.tuner:(trial 0) - scheduled config {'type': 'quantile', 'search_space': 'm', 'surrogate_type': 'conformal_quantile', 'objective': 'energies', 'device': 'a100', 'num_layers': 22, 'embed_dim': 256, 'bias': True, 'mlp_ratio_0': 2, 'num_heads_0': 8, 'mlp_ratio_1': 2, 'num_heads_1': 8, 'mlp_ratio_2': 2, 'num_heads_2': 8, 'mlp_ratio_3': 2, 'num_heads_3': 8, 'mlp_ratio_4': 2, 'num_heads_4': 8, 'mlp_ratio_5': 2, 'num_heads_5': 8, 'mlp_ratio_6': 2, 'num_heads_6': 8, 'mlp_ratio_7': 2, 'num_heads_7': 8, 'mlp_ratio_8': 2, 'num_heads_8': 8, 'mlp_ratio_9': 2, 'num_heads_9': 8, 'mlp_ratio_10': 2, 'num_heads_10': 8, 'mlp_ratio_11': 2, 'num_heads_11': 8, 'mlp_ratio_12': 2, 'num_heads_12': 8, 'mlp_ratio_13': 2, 'num_heads_13': 8, 'mlp_ratio_14': 2, 'num_heads_14': 8, 'mlp_ratio_15': 2, 'num_heads_15': 8, 'mlp_ratio_16': 2, 'num_heads_16': 8, 'mlp_ratio_17': 2, 'num_heads_17': 8, 'mlp_ratio_18': 2, 'num_heads_18': 8, 'mlp_ratio_19': 2, 'num_heads_19': 8, 'mlp_ratio_20': 2, 'num_heads_20': 8, 'mlp_ratio_21': 2, 'num_heads_21': 8, 'mlp_ratio_22': 2, 'num_heads_22': 8, 'mlp_ratio_23': 2, 'num_heads_23': 8, 'epochs': 1, 'dataset_path': './'}
+DEBUG:syne_tune.tuner:1 of 1 workers are busy, wait for 5.0 seconds
+DEBUG:syne_tune.tuner:1 of 1 workers are busy, wait for 5.0 seconds
+DEBUG:syne_tune.tuner:1 of 1 workers are busy, wait for 5.0 seconds
+DEBUG:syne_tune.tuner:1 of 1 workers are busy, wait for 5.0 seconds
+DEBUG:syne_tune.tuner:1 of 1 workers are busy, wait for 5.0 seconds
+INFO:syne_tune.tuner:Trial trial_id 0 failed.
+DEBUG:syne_tune.backend.local_backend:scheduling 1, /work/dlclarge2/sukthank-hw-llm-bench/arxiv/HW-Aware-LLM-Bench/baselines/gpt_objective_2d.py, {'type': 'quantile', 'search_space': 'm', 'surrogate_type': 'conformal_quantile', 'objective': 'energies', 'device': 'a100', 'num_layers': 22, 'embed_dim': 1024, 'bias': False, 'mlp_ratio_0': 3, 'num_heads_0': 16, 'mlp_ratio_1': 4, 'num_heads_1': 8, 'mlp_ratio_2': 4, 'num_heads_2': 8, 'mlp_ratio_3': 4, 'num_heads_3': 16, 'mlp_ratio_4': 3, 'num_heads_4': 8, 'mlp_ratio_5': 3, 'num_heads_5': 8, 'mlp_ratio_6': 2, 'num_heads_6': 16, 'mlp_ratio_7': 2, 'num_heads_7': 12, 'mlp_ratio_8': 4, 'num_heads_8': 16, 'mlp_ratio_9': 2, 'num_heads_9': 16, 'mlp_ratio_10': 3, 'num_heads_10': 12, 'mlp_ratio_11': 3, 'num_heads_11': 12, 'mlp_ratio_12': 3, 'num_heads_12': 8, 'mlp_ratio_13': 3, 'num_heads_13': 12, 'mlp_ratio_14': 2, 'num_heads_14': 12, 'mlp_ratio_15': 3, 'num_heads_15': 16, 'mlp_ratio_16': 3, 'num_heads_16': 16, 'mlp_ratio_17': 3, 'num_heads_17': 16, 'mlp_ratio_18': 4, 'num_heads_18': 8, 'mlp_ratio_19': 4, 'num_heads_19': 12, 'mlp_ratio_20': 2, 'num_heads_20': 8, 'mlp_ratio_21': 2, 'num_heads_21': 12, 'mlp_ratio_22': 3, 'num_heads_22': 16, 'mlp_ratio_23': 3, 'num_heads_23': 16, 'epochs': 1, 'dataset_path': './'}, logging into /home/sukthank/syne-tune/mogpt-2024-05-30-12-04-20-930/1
+INFO:syne_tune.backend.local_backend:running subprocess with command: /home/sukthank/anaconda3/envs/hwllm/bin/python /work/dlclarge2/sukthank-hw-llm-bench/arxiv/HW-Aware-LLM-Bench/baselines/gpt_objective_2d.py --type quantile --search_space m --surrogate_type conformal_quantile --objective energies --device a100 --num_layers 22 --embed_dim 1024 --bias False --mlp_ratio_0 3 --num_heads_0 16 --mlp_ratio_1 4 --num_heads_1 8 --mlp_ratio_2 4 --num_heads_2 8 --mlp_ratio_3 4 --num_heads_3 16 --mlp_ratio_4 3 --num_heads_4 8 --mlp_ratio_5 3 --num_heads_5 8 --mlp_ratio_6 2 --num_heads_6 16 --mlp_ratio_7 2 --num_heads_7 12 --mlp_ratio_8 4 --num_heads_8 16 --mlp_ratio_9 2 --num_heads_9 16 --mlp_ratio_10 3 --num_heads_10 12 --mlp_ratio_11 3 --num_heads_11 12 --mlp_ratio_12 3 --num_heads_12 8 --mlp_ratio_13 3 --num_heads_13 12 --mlp_ratio_14 2 --num_heads_14 12 --mlp_ratio_15 3 --num_heads_15 16 --mlp_ratio_16 3 --num_heads_16 16 --mlp_ratio_17 3 --num_heads_17 16 --mlp_ratio_18 4 --num_heads_18 8 --mlp_ratio_19 4 --num_heads_19 12 --mlp_ratio_20 2 --num_heads_20 8 --mlp_ratio_21 2 --num_heads_21 12 --mlp_ratio_22 3 --num_heads_22 16 --mlp_ratio_23 3 --num_heads_23 16 --epochs 1 --dataset_path ./ --st_checkpoint_dir /home/sukthank/syne-tune/mogpt-2024-05-30-12-04-20-930/1/checkpoints
+INFO:syne_tune.tuner:(trial 1) - scheduled config {'type': 'quantile', 'search_space': 'm', 'surrogate_type': 'conformal_quantile', 'objective': 'energies', 'device': 'a100', 'num_layers': 22, 'embed_dim': 1024, 'bias': False, 'mlp_ratio_0': 3, 'num_heads_0': 16, 'mlp_ratio_1': 4, 'num_heads_1': 8, 'mlp_ratio_2': 4, 'num_heads_2': 8, 'mlp_ratio_3': 4, 'num_heads_3': 16, 'mlp_ratio_4': 3, 'num_heads_4': 8, 'mlp_ratio_5': 3, 'num_heads_5': 8, 'mlp_ratio_6': 2, 'num_heads_6': 16, 'mlp_ratio_7': 2, 'num_heads_7': 12, 'mlp_ratio_8': 4, 'num_heads_8': 16, 'mlp_ratio_9': 2, 'num_heads_9': 16, 'mlp_ratio_10': 3, 'num_heads_10': 12, 'mlp_ratio_11': 3, 'num_heads_11': 12, 'mlp_ratio_12': 3, 'num_heads_12': 8, 'mlp_ratio_13': 3, 'num_heads_13': 12, 'mlp_ratio_14': 2, 'num_heads_14': 12, 'mlp_ratio_15': 3, 'num_heads_15': 16, 'mlp_ratio_16': 3, 'num_heads_16': 16, 'mlp_ratio_17': 3, 'num_heads_17': 16, 'mlp_ratio_18': 4, 'num_heads_18': 8, 'mlp_ratio_19': 4, 'num_heads_19': 12, 'mlp_ratio_20': 2, 'num_heads_20': 8, 'mlp_ratio_21': 2, 'num_heads_21': 12, 'mlp_ratio_22': 3, 'num_heads_22': 16, 'mlp_ratio_23': 3, 'num_heads_23': 16, 'epochs': 1, 'dataset_path': './'}
+DEBUG:syne_tune.tuner:1 of 1 workers are busy, wait for 5.0 seconds
+DEBUG:syne_tune.tuner:1 of 1 workers are busy, wait for 5.0 seconds
+INFO:syne_tune.tuner:tuning status (last metric is reported)
+ trial_id     status  iter     type search_space     surrogate_type objective device  num_layers  embed_dim  bias  mlp_ratio_0  num_heads_0  mlp_ratio_1  num_heads_1  mlp_ratio_2  num_heads_2  mlp_ratio_3  num_heads_3  mlp_ratio_4  num_heads_4  mlp_ratio_5  num_heads_5  mlp_ratio_6  num_heads_6  mlp_ratio_7  num_heads_7  mlp_ratio_8  num_heads_8  mlp_ratio_9  num_heads_9  mlp_ratio_10  num_heads_10  mlp_ratio_11  num_heads_11  mlp_ratio_12  num_heads_12  mlp_ratio_13  num_heads_13  mlp_ratio_14  num_heads_14  mlp_ratio_15  num_heads_15  mlp_ratio_16  num_heads_16  mlp_ratio_17  num_heads_17  mlp_ratio_18  num_heads_18  mlp_ratio_19  num_heads_19  mlp_ratio_20  num_heads_20  mlp_ratio_21  num_heads_21  mlp_ratio_22  num_heads_22  mlp_ratio_23  num_heads_23  epochs dataset_path
+        0     Failed     0 quantile            m conformal_quantile  energies   a100          22        256  True            2            8            2            8            2            8            2            8            2            8            2            8            2            8            2            8            2            8            2            8             2             8             2             8             2             8             2             8             2             8             2             8             2             8             2             8             2             8             2             8             2             8             2             8             2             8             2             8       1           ./
+        1 InProgress     0 quantile            m conformal_quantile  energies   a100          22       1024 False            3           16            4            8            4            8            4           16            3            8            3            8            2           16            2           12            4           16            2           16             3            12             3            12             3             8             3            12             2            12             3            16             3            16             3            16             4             8             4            12             2             8             2            12             3            16             3            16       1           ./
+1 trials running, 1 finished (0 until the end), 35.14s wallclock-time
+
+DEBUG:syne_tune.tuner:1 of 1 workers are busy, wait for 5.0 seconds
+DEBUG:syne_tune.tuner:1 of 1 workers are busy, wait for 5.0 seconds
+DEBUG:syne_tune.tuner:1 of 1 workers are busy, wait for 5.0 seconds
+INFO:syne_tune.tuner:Trial trial_id 1 failed.
+DEBUG:syne_tune.backend.local_backend:scheduling 2, /work/dlclarge2/sukthank-hw-llm-bench/arxiv/HW-Aware-LLM-Bench/baselines/gpt_objective_2d.py, {'type': 'quantile', 'search_space': 'm', 'surrogate_type': 'conformal_quantile', 'objective': 'energies', 'device': 'a100', 'num_layers': 24, 'embed_dim': 512, 'bias': False, 'mlp_ratio_0': 3, 'num_heads_0': 12, 'mlp_ratio_1': 3, 'num_heads_1': 16, 'mlp_ratio_2': 4, 'num_heads_2': 8, 'mlp_ratio_3': 3, 'num_heads_3': 16, 'mlp_ratio_4': 4, 'num_heads_4': 12, 'mlp_ratio_5': 3, 'num_heads_5': 12, 'mlp_ratio_6': 3, 'num_heads_6': 12, 'mlp_ratio_7': 3, 'num_heads_7': 16, 'mlp_ratio_8': 4, 'num_heads_8': 8, 'mlp_ratio_9': 2, 'num_heads_9': 12, 'mlp_ratio_10': 4, 'num_heads_10': 16, 'mlp_ratio_11': 3, 'num_heads_11': 12, 'mlp_ratio_12': 2, 'num_heads_12': 8, 'mlp_ratio_13': 3, 'num_heads_13': 8, 'mlp_ratio_14': 2, 'num_heads_14': 8, 'mlp_ratio_15': 4, 'num_heads_15': 12, 'mlp_ratio_16': 2, 'num_heads_16': 8, 'mlp_ratio_17': 4, 'num_heads_17': 16, 'mlp_ratio_18': 3, 'num_heads_18': 16, 'mlp_ratio_19': 3, 'num_heads_19': 12, 'mlp_ratio_20': 3, 'num_heads_20': 12, 'mlp_ratio_21': 4, 'num_heads_21': 8, 'mlp_ratio_22': 2, 'num_heads_22': 12, 'mlp_ratio_23': 2, 'num_heads_23': 12, 'epochs': 1, 'dataset_path': './'}, logging into /home/sukthank/syne-tune/mogpt-2024-05-30-12-04-20-930/2
+INFO:syne_tune.backend.local_backend:running subprocess with command: /home/sukthank/anaconda3/envs/hwllm/bin/python /work/dlclarge2/sukthank-hw-llm-bench/arxiv/HW-Aware-LLM-Bench/baselines/gpt_objective_2d.py --type quantile --search_space m --surrogate_type conformal_quantile --objective energies --device a100 --num_layers 24 --embed_dim 512 --bias False --mlp_ratio_0 3 --num_heads_0 12 --mlp_ratio_1 3 --num_heads_1 16 --mlp_ratio_2 4 --num_heads_2 8 --mlp_ratio_3 3 --num_heads_3 16 --mlp_ratio_4 4 --num_heads_4 12 --mlp_ratio_5 3 --num_heads_5 12 --mlp_ratio_6 3 --num_heads_6 12 --mlp_ratio_7 3 --num_heads_7 16 --mlp_ratio_8 4 --num_heads_8 8 --mlp_ratio_9 2 --num_heads_9 12 --mlp_ratio_10 4 --num_heads_10 16 --mlp_ratio_11 3 --num_heads_11 12 --mlp_ratio_12 2 --num_heads_12 8 --mlp_ratio_13 3 --num_heads_13 8 --mlp_ratio_14 2 --num_heads_14 8 --mlp_ratio_15 4 --num_heads_15 12 --mlp_ratio_16 2 --num_heads_16 8 --mlp_ratio_17 4 --num_heads_17 16 --mlp_ratio_18 3 --num_heads_18 16 --mlp_ratio_19 3 --num_heads_19 12 --mlp_ratio_20 3 --num_heads_20 12 --mlp_ratio_21 4 --num_heads_21 8 --mlp_ratio_22 2 --num_heads_22 12 --mlp_ratio_23 2 --num_heads_23 12 --epochs 1 --dataset_path ./ --st_checkpoint_dir /home/sukthank/syne-tune/mogpt-2024-05-30-12-04-20-930/2/checkpoints
+INFO:syne_tune.tuner:(trial 2) - scheduled config {'type': 'quantile', 'search_space': 'm', 'surrogate_type': 'conformal_quantile', 'objective': 'energies', 'device': 'a100', 'num_layers': 24, 'embed_dim': 512, 'bias': False, 'mlp_ratio_0': 3, 'num_heads_0': 12, 'mlp_ratio_1': 3, 'num_heads_1': 16, 'mlp_ratio_2': 4, 'num_heads_2': 8, 'mlp_ratio_3': 3, 'num_heads_3': 16, 'mlp_ratio_4': 4, 'num_heads_4': 12, 'mlp_ratio_5': 3, 'num_heads_5': 12, 'mlp_ratio_6': 3, 'num_heads_6': 12, 'mlp_ratio_7': 3, 'num_heads_7': 16, 'mlp_ratio_8': 4, 'num_heads_8': 8, 'mlp_ratio_9': 2, 'num_heads_9': 12, 'mlp_ratio_10': 4, 'num_heads_10': 16, 'mlp_ratio_11': 3, 'num_heads_11': 12, 'mlp_ratio_12': 2, 'num_heads_12': 8, 'mlp_ratio_13': 3, 'num_heads_13': 8, 'mlp_ratio_14': 2, 'num_heads_14': 8, 'mlp_ratio_15': 4, 'num_heads_15': 12, 'mlp_ratio_16': 2, 'num_heads_16': 8, 'mlp_ratio_17': 4, 'num_heads_17': 16, 'mlp_ratio_18': 3, 'num_heads_18': 16, 'mlp_ratio_19': 3, 'num_heads_19': 12, 'mlp_ratio_20': 3, 'num_heads_20': 12, 'mlp_ratio_21': 4, 'num_heads_21': 8, 'mlp_ratio_22': 2, 'num_heads_22': 12, 'mlp_ratio_23': 2, 'num_heads_23': 12, 'epochs': 1, 'dataset_path': './'}
+DEBUG:syne_tune.tuner:saving tuner in /home/sukthank/syne-tune/mogpt-2024-05-30-12-04-20-930/tuner.dill
+INFO:syne_tune.tuner:Stopping trials that may still be running.
+ERROR:syne_tune.tuner:Stopped as 1 failures were reached
+ERROR:syne_tune.tuner:showing log of first failure
+ERROR:syne_tune.tuner:sagemaker.config INFO - Not applying SDK defaults from location: /etc/xdg/sagemaker/config.yaml
+sagemaker.config INFO - Not applying SDK defaults from location: /home/sukthank/.config/sagemaker/config.yaml
+sagemaker.config INFO - Not applying SDK defaults from location: /etc/xdg/sagemaker/config.yaml
+sagemaker.config INFO - Not applying SDK defaults from location: /home/sukthank/.config/sagemaker/config.yaml
+sagemaker.config INFO - Not applying SDK defaults from location: /etc/xdg/sagemaker/config.yaml
+sagemaker.config INFO - Not applying SDK defaults from location: /home/sukthank/.config/sagemaker/config.yaml
+{'epochs': 1, 'surrogate_type': 'conformal_quantile', 'type': 'quantile', 'search_space': 'm', 'device': 'a100', 'num_layers': 22, 'embed_dim': 1024, 'bias': True, 'objective': 'energies', 'num_heads_0': 12, 'mlp_ratio_0': 2, 'num_heads_1': 8, 'mlp_ratio_1': 4, 'num_heads_2': 8, 'mlp_ratio_2': 4, 'num_heads_3': 12, 'mlp_ratio_3': 3, 'num_heads_4': 12, 'mlp_ratio_4': 4, 'num_heads_5': 8, 'mlp_ratio_5': 2, 'num_heads_6': 12, 'mlp_ratio_6': 4, 'num_heads_7': 16, 'mlp_ratio_7': 2, 'num_heads_8': 12, 'mlp_ratio_8': 4, 'num_heads_9': 8, 'mlp_ratio_9': 4, 'num_heads_10': 8, 'mlp_ratio_10': 3, 'num_heads_11': 12, 'mlp_ratio_11': 3, 'num_heads_12': 16, 'mlp_ratio_12': 3, 'num_heads_13': 16, 'mlp_ratio_13': 2, 'num_heads_14': 8, 'mlp_ratio_14': 4, 'num_heads_15': 12, 'mlp_ratio_15': 2, 'num_heads_16': 8, 'mlp_ratio_16': 4, 'num_heads_17': 12, 'mlp_ratio_17': 4, 'num_heads_18': 8, 'mlp_ratio_18': 3, 'num_heads_19': 16, 'mlp_ratio_19': 4, 'num_heads_20': 12, 'mlp_ratio_20': 4, 'num_heads_21': 8, 'mlp_ratio_21': 4, 'num_heads_22': 16, 'mlp_ratio_22': 4, 'num_heads_23': 16, 'mlp_ratio_23': 2}
+{'epochs': 1, 'surrogate_type': 'conformal_quantile', 'type': 'quantile', 'search_space': 'm', 'device': 'a100', 'num_layers': 22, 'embed_dim': 256, 'bias': True, 'objective': 'energies', 'num_heads_0': 8, 'mlp_ratio_0': 2, 'num_heads_1': 8, 'mlp_ratio_1': 2, 'num_heads_2': 8, 'mlp_ratio_2': 2, 'num_heads_3': 8, 'mlp_ratio_3': 2, 'num_heads_4': 8, 'mlp_ratio_4': 2, 'num_heads_5': 8, 'mlp_ratio_5': 2, 'num_heads_6': 8, 'mlp_ratio_6': 2, 'num_heads_7': 8, 'mlp_ratio_7': 2, 'num_heads_8': 8, 'mlp_ratio_8': 2, 'num_heads_9': 8, 'mlp_ratio_9': 2, 'num_heads_10': 8, 'mlp_ratio_10': 2, 'num_heads_11': 8, 'mlp_ratio_11': 2, 'num_heads_12': 8, 'mlp_ratio_12': 2, 'num_heads_13': 8, 'mlp_ratio_13': 2, 'num_heads_14': 8, 'mlp_ratio_14': 2, 'num_heads_15': 8, 'mlp_ratio_15': 2, 'num_heads_16': 8, 'mlp_ratio_16': 2, 'num_heads_17': 8, 'mlp_ratio_17': 2, 'num_heads_18': 8, 'mlp_ratio_18': 2, 'num_heads_19': 8, 'mlp_ratio_19': 2, 'num_heads_20': 8, 'mlp_ratio_20': 2, 'num_heads_21': 8, 'mlp_ratio_21': 2, 'num_heads_22': 8, 'mlp_ratio_22': 2, 'num_heads_23': 8, 'mlp_ratio_23': 2}
+{'epochs': 1, 'surrogate_type': 'conformal_quantile', 'type': 'quantile', 'search_space': 'm', 'device': 'a100', 'num_layers': 22, 'embed_dim': 256, 'bias': True, 'objective': 'energies', 'num_heads_0': 8, 'mlp_ratio_0': 2, 'num_heads_1': 8, 'mlp_ratio_1': 2, 'num_heads_2': 8, 'mlp_ratio_2': 2, 'num_heads_3': 8, 'mlp_ratio_3': 2, 'num_heads_4': 8, 'mlp_ratio_4': 2, 'num_heads_5': 8, 'mlp_ratio_5': 2, 'num_heads_6': 8, 'mlp_ratio_6': 2, 'num_heads_7': 8, 'mlp_ratio_7': 2, 'num_heads_8': 8, 'mlp_ratio_8': 2, 'num_heads_9': 8, 'mlp_ratio_9': 2, 'num_heads_10': 8, 'mlp_ratio_10': 2, 'num_heads_11': 8, 'mlp_ratio_11': 2, 'num_heads_12': 8, 'mlp_ratio_12': 2, 'num_heads_13': 8, 'mlp_ratio_13': 2, 'num_heads_14': 8, 'mlp_ratio_14': 2, 'num_heads_15': 8, 'mlp_ratio_15': 2, 'num_heads_16': 8, 'mlp_ratio_16': 2, 'num_heads_17': 8, 'mlp_ratio_17': 2, 'num_heads_18': 8, 'mlp_ratio_18': 2, 'num_heads_19': 8, 'mlp_ratio_19': 2, 'num_heads_20': 8, 'mlp_ratio_20': 2, 'num_heads_21': 8, 'mlp_ratio_21': 2, 'num_heads_22': 8, 'mlp_ratio_22': 2, 'num_heads_23': 8, 'mlp_ratio_23': 2}
+
+ERROR:syne_tune.tuner:Traceback (most recent call last):
+  File "/work/dlclarge2/sukthank-hw-llm-bench/arxiv/HW-Aware-LLM-Bench/baselines/gpt_objective_2d.py", line 103, in <module>
+    objective(
+  File "/work/dlclarge2/sukthank-hw-llm-bench/arxiv/HW-Aware-LLM-Bench/baselines/gpt_objective_2d.py", line 54, in objective
+    hw_metric_norm = normalize_energy(
+                     ^^^^^^^^^^^^^^^^^
+  File "/work/dlclarge2/sukthank-hw-llm-bench/arxiv/HW-Aware-LLM-Bench/lib/utils.py", line 301, in normalize_energy
+    with open(
+         ^^^^^
+FileNotFoundError: [Errno 2] No such file or directory: 'data_collection/gpt_datasets/predictor_ckpts/hwmetric/conformal_quantile/stats_mean_std_energies_m_conformal_quantile_quantile_a100.pkl'
+Traceback (most recent call last):
+  File "/work/dlclarge2/sukthank-hw-llm-bench/arxiv/HW-Aware-LLM-Bench/baselines/gpt_objective_2d.py", line 103, in <module>
+    objective(
+  File "/work/dlclarge2/sukthank-hw-llm-bench/arxiv/HW-Aware-LLM-Bench/baselines/gpt_objective_2d.py", line 54, in objective
+    hw_metric_norm = normalize_energy(
+                     ^^^^^^^^^^^^^^^^^
+  File "/work/dlclarge2/sukthank-hw-llm-bench/arxiv/HW-Aware-LLM-Bench/lib/utils.py", line 301, in normalize_energy
+    with open(
+         ^^^^^
+FileNotFoundError: [Errno 2] No such file or directory: 'data_collection/gpt_datasets/predictor_ckpts/hwmetric/conformal_quantile/stats_mean_std_energies_m_conformal_quantile_quantile_a100.pkl'
+Traceback (most recent call last):
+  File "/work/dlclarge2/sukthank-hw-llm-bench/arxiv/HW-Aware-LLM-Bench/baselines/gpt_objective_2d.py", line 103, in <module>
+    objective(
+  File "/work/dlclarge2/sukthank-hw-llm-bench/arxiv/HW-Aware-LLM-Bench/baselines/gpt_objective_2d.py", line 54, in objective
+    hw_metric_norm = normalize_energy(
+                     ^^^^^^^^^^^^^^^^^
+  File "/work/dlclarge2/sukthank-hw-llm-bench/arxiv/HW-Aware-LLM-Bench/lib/utils.py", line 301, in normalize_energy
+    with open(
+         ^^^^^
+FileNotFoundError: [Errno 2] No such file or directory: 'data_collection/gpt_datasets/predictor_ckpts/hwmetric/conformal_quantile/stats_mean_std_energies_m_conformal_quantile_quantile_a100.pkl'
+
+Traceback (most recent call last):
+  File "/work/dlclarge2/sukthank-hw-llm-bench/arxiv/HW-Aware-LLM-Bench/baselines/run_nas_gpt_2d.py", line 188, in <module>
+    tuner.run()
+  File "/home/sukthank/anaconda3/envs/hwllm/lib/python3.11/site-packages/syne_tune/tuner.py", line 370, in run
+    self._handle_failure(done_trials_statuses=done_trials_statuses)
+  File "/home/sukthank/anaconda3/envs/hwllm/lib/python3.11/site-packages/syne_tune/tuner.py", line 549, in _handle_failure
+    raise ValueError(f"Trial - {trial_id} failed")
+ValueError: Trial - 0 failed

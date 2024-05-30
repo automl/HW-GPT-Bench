@@ -182,7 +182,7 @@ if __name__ == "__main__":
 
     # Stopping criterion: We stop after `args.max_wallclock_time` seconds
     # [5]
-    stop_criterion = StoppingCriterion(max_num_evaluations=3000)
+    stop_criterion = StoppingCriterion(max_num_evaluations=10)
 
     tuner = Tuner(
         trial_backend=trial_backend,

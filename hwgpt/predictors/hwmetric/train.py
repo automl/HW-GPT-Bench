@@ -109,6 +109,7 @@ if __name__ == "__main__":
     )
     args = parser.parse_args()
     torch.manual_seed(args.seed)
+    print(args)
     model, train_dataset, test_dataset = get_model_and_datasets(args)
 
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
@@ -151,7 +152,7 @@ if __name__ == "__main__":
             + str(args.model)
             + "/"
         )
-        if "memory" in args.metric:
+        if "memory" in args.metric or "flops" in args.metric or "params" in args.metric:
             model_path = base_path + args.metric + "_" + args.search_space + ".pth"
         else:
             model_path = (

@@ -60,7 +60,7 @@ if __name__ == "__main__":
     parser.add_argument(
         "--max_wallclock_time",
         type=int,
-        default=200,
+        default=79200,
     )
     parser.add_argument(
         "--experiment_tag",
@@ -170,7 +170,7 @@ if __name__ == "__main__":
 
     # Stopping criterion: We stop after `args.max_wallclock_time` seconds
     # [5]
-    stop_criterion = StoppingCriterion(max_num_trials_finished=10)
+    stop_criterion = StoppingCriterion(max_wallclock_time=args.max_wallclock_time)
 
     tuner = Tuner(
         trial_backend=trial_backend,
@@ -218,18 +218,31 @@ if __name__ == "__main__":
     os.makedirs(method_path, exist_ok=True)
     objectiv_path = method_path + args.objective + "/"
     os.makedirs(objectiv_path, exist_ok=True)
-    save_path = (
-        objectiv_path
-        + args.experiment_tag
-        + "_"
-        + args.device
-        + "_"
-        + args.surrogate_type
-        + "_"
-        + str(args.type)
-        + "_"
-        + str(args.random_seed)
-        + ".pickle"
-    )
+    if (
+        "memory" in args.objective
+        or "params" in args.objective
+        or "flops" in args.objective
+    ):
+        save_path = (
+            objectiv_path
+            + args.experiment_tag
+            + "_"
+            + args.surrogate_type
+            + "_"
+            + str(args.random_seed)
+            + ".pickle"
+        )
+    else:
+        save_path = (
+            objectiv_path
+            + args.experiment_tag
+            + "_"
+            + args.device
+            + "_"
+            + args.surrogate_type
+            + "_"
+            + str(args.random_seed)
+            + ".pickle"
+        )
     with open(save_path, "wb") as f:
         pickle.dump(results, f)

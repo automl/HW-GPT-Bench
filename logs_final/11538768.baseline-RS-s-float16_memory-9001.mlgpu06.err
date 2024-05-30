@@ -1,0 +1,2 @@
+cpu-bind=MASK - mlgpu06, task  0  0 [2799]: mask 0x3000 set
+slurmstepd-mlgpu06: error: *** JOB 11538768 ON mlgpu06 CANCELLED AT 2024-05-30T14:12:06 ***

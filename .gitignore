@@ -6,6 +6,7 @@ logs/
 *png
 *pdf
 results*/
+logs_final/
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[cod]

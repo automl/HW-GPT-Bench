@@ -1,0 +1,70 @@
+cpu-bind=MASK - dlcgpu47, task  0  0 [3454]: mask 0xf0000000f set
+INFO:syne_tune.tuner:results of trials will be saved on /home/sukthank/syne-tune/mogpt-2024-05-30-12-06-19-827
+INFO:syne_tune.backend.local_backend:Detected 1 GPUs
+DEBUG:syne_tune.backend.local_backend:scheduling 0, /work/dlclarge2/sukthank-hw-llm-bench/arxiv/HW-Aware-LLM-Bench/baselines/gpt_objective_2d.py, {'type': 'quantile', 'search_space': 's', 'surrogate_type': 'conformal_quantile', 'objective': 'energies', 'device': 'a40', 'num_layers': 12, 'embed_dim': 768, 'bias': False, 'mlp_ratio_0': 4, 'num_heads_0': 12, 'mlp_ratio_1': 4, 'num_heads_1': 8, 'mlp_ratio_2': 2, 'num_heads_2': 8, 'mlp_ratio_3': 2, 'num_heads_3': 4, 'mlp_ratio_4': 4, 'num_heads_4': 12, 'mlp_ratio_5': 4, 'num_heads_5': 8, 'mlp_ratio_6': 2, 'num_heads_6': 4, 'mlp_ratio_7': 3, 'num_heads_7': 12, 'mlp_ratio_8': 3, 'num_heads_8': 12, 'mlp_ratio_9': 4, 'num_heads_9': 12, 'mlp_ratio_10': 4, 'num_heads_10': 8, 'mlp_ratio_11': 4, 'num_heads_11': 8, 'epochs': 1, 'dataset_path': './'}, logging into /home/sukthank/syne-tune/mogpt-2024-05-30-12-06-19-827/0
+INFO:syne_tune.backend.local_backend:running subprocess with command: /home/sukthank/anaconda3/envs/hwllm/bin/python /work/dlclarge2/sukthank-hw-llm-bench/arxiv/HW-Aware-LLM-Bench/baselines/gpt_objective_2d.py --type quantile --search_space s --surrogate_type conformal_quantile --objective energies --device a40 --num_layers 12 --embed_dim 768 --bias False --mlp_ratio_0 4 --num_heads_0 12 --mlp_ratio_1 4 --num_heads_1 8 --mlp_ratio_2 2 --num_heads_2 8 --mlp_ratio_3 2 --num_heads_3 4 --mlp_ratio_4 4 --num_heads_4 12 --mlp_ratio_5 4 --num_heads_5 8 --mlp_ratio_6 2 --num_heads_6 4 --mlp_ratio_7 3 --num_heads_7 12 --mlp_ratio_8 3 --num_heads_8 12 --mlp_ratio_9 4 --num_heads_9 12 --mlp_ratio_10 4 --num_heads_10 8 --mlp_ratio_11 4 --num_heads_11 8 --epochs 1 --dataset_path ./ --st_checkpoint_dir /home/sukthank/syne-tune/mogpt-2024-05-30-12-06-19-827/0/checkpoints
+INFO:syne_tune.tuner:(trial 0) - scheduled config {'type': 'quantile', 'search_space': 's', 'surrogate_type': 'conformal_quantile', 'objective': 'energies', 'device': 'a40', 'num_layers': 12, 'embed_dim': 768, 'bias': False, 'mlp_ratio_0': 4, 'num_heads_0': 12, 'mlp_ratio_1': 4, 'num_heads_1': 8, 'mlp_ratio_2': 2, 'num_heads_2': 8, 'mlp_ratio_3': 2, 'num_heads_3': 4, 'mlp_ratio_4': 4, 'num_heads_4': 12, 'mlp_ratio_5': 4, 'num_heads_5': 8, 'mlp_ratio_6': 2, 'num_heads_6': 4, 'mlp_ratio_7': 3, 'num_heads_7': 12, 'mlp_ratio_8': 3, 'num_heads_8': 12, 'mlp_ratio_9': 4, 'num_heads_9': 12, 'mlp_ratio_10': 4, 'num_heads_10': 8, 'mlp_ratio_11': 4, 'num_heads_11': 8, 'epochs': 1, 'dataset_path': './'}
+DEBUG:syne_tune.tuner:1 of 1 workers are busy, wait for 5.0 seconds
+DEBUG:syne_tune.tuner:1 of 1 workers are busy, wait for 5.0 seconds
+DEBUG:syne_tune.tuner:1 of 1 workers are busy, wait for 5.0 seconds
+DEBUG:syne_tune.tuner:1 of 1 workers are busy, wait for 5.0 seconds
+DEBUG:syne_tune.tuner:1 of 1 workers are busy, wait for 5.0 seconds
+INFO:syne_tune.tuner:Trial trial_id 0 failed.
+DEBUG:syne_tune.backend.local_backend:scheduling 1, /work/dlclarge2/sukthank-hw-llm-bench/arxiv/HW-Aware-LLM-Bench/baselines/gpt_objective_2d.py, {'type': 'quantile', 'search_space': 's', 'surrogate_type': 'conformal_quantile', 'objective': 'energies', 'device': 'a40', 'num_layers': 10, 'embed_dim': 192, 'bias': True, 'mlp_ratio_0': 2, 'num_heads_0': 8, 'mlp_ratio_1': 4, 'num_heads_1': 8, 'mlp_ratio_2': 3, 'num_heads_2': 8, 'mlp_ratio_3': 4, 'num_heads_3': 4, 'mlp_ratio_4': 2, 'num_heads_4': 12, 'mlp_ratio_5': 2, 'num_heads_5': 4, 'mlp_ratio_6': 2, 'num_heads_6': 12, 'mlp_ratio_7': 4, 'num_heads_7': 12, 'mlp_ratio_8': 3, 'num_heads_8': 12, 'mlp_ratio_9': 3, 'num_heads_9': 8, 'mlp_ratio_10': 3, 'num_heads_10': 12, 'mlp_ratio_11': 2, 'num_heads_11': 4, 'epochs': 1, 'dataset_path': './'}, logging into /home/sukthank/syne-tune/mogpt-2024-05-30-12-06-19-827/1
+INFO:syne_tune.backend.local_backend:running subprocess with command: /home/sukthank/anaconda3/envs/hwllm/bin/python /work/dlclarge2/sukthank-hw-llm-bench/arxiv/HW-Aware-LLM-Bench/baselines/gpt_objective_2d.py --type quantile --search_space s --surrogate_type conformal_quantile --objective energies --device a40 --num_layers 10 --embed_dim 192 --bias True --mlp_ratio_0 2 --num_heads_0 8 --mlp_ratio_1 4 --num_heads_1 8 --mlp_ratio_2 3 --num_heads_2 8 --mlp_ratio_3 4 --num_heads_3 4 --mlp_ratio_4 2 --num_heads_4 12 --mlp_ratio_5 2 --num_heads_5 4 --mlp_ratio_6 2 --num_heads_6 12 --mlp_ratio_7 4 --num_heads_7 12 --mlp_ratio_8 3 --num_heads_8 12 --mlp_ratio_9 3 --num_heads_9 8 --mlp_ratio_10 3 --num_heads_10 12 --mlp_ratio_11 2 --num_heads_11 4 --epochs 1 --dataset_path ./ --st_checkpoint_dir /home/sukthank/syne-tune/mogpt-2024-05-30-12-06-19-827/1/checkpoints
+INFO:syne_tune.tuner:(trial 1) - scheduled config {'type': 'quantile', 'search_space': 's', 'surrogate_type': 'conformal_quantile', 'objective': 'energies', 'device': 'a40', 'num_layers': 10, 'embed_dim': 192, 'bias': True, 'mlp_ratio_0': 2, 'num_heads_0': 8, 'mlp_ratio_1': 4, 'num_heads_1': 8, 'mlp_ratio_2': 3, 'num_heads_2': 8, 'mlp_ratio_3': 4, 'num_heads_3': 4, 'mlp_ratio_4': 2, 'num_heads_4': 12, 'mlp_ratio_5': 2, 'num_heads_5': 4, 'mlp_ratio_6': 2, 'num_heads_6': 12, 'mlp_ratio_7': 4, 'num_heads_7': 12, 'mlp_ratio_8': 3, 'num_heads_8': 12, 'mlp_ratio_9': 3, 'num_heads_9': 8, 'mlp_ratio_10': 3, 'num_heads_10': 12, 'mlp_ratio_11': 2, 'num_heads_11': 4, 'epochs': 1, 'dataset_path': './'}
+DEBUG:syne_tune.tuner:1 of 1 workers are busy, wait for 5.0 seconds
+DEBUG:syne_tune.tuner:1 of 1 workers are busy, wait for 5.0 seconds
+INFO:syne_tune.tuner:tuning status (last metric is reported)
+ trial_id     status  iter     type search_space     surrogate_type objective device  num_layers  embed_dim  bias  mlp_ratio_0  num_heads_0  mlp_ratio_1  num_heads_1  mlp_ratio_2  num_heads_2  mlp_ratio_3  num_heads_3  mlp_ratio_4  num_heads_4  mlp_ratio_5  num_heads_5  mlp_ratio_6  num_heads_6  mlp_ratio_7  num_heads_7  mlp_ratio_8  num_heads_8  mlp_ratio_9  num_heads_9  mlp_ratio_10  num_heads_10  mlp_ratio_11  num_heads_11  epochs dataset_path
+        0     Failed     0 quantile            s conformal_quantile  energies    a40          12        768 False            4           12            4            8            2            8            2            4            4           12            4            8            2            4            3           12            3           12            4           12             4             8             4             8       1           ./
+        1 InProgress     0 quantile            s conformal_quantile  energies    a40          10        192  True            2            8            4            8            3            8            4            4            2           12            2            4            2           12            4           12            3           12            3            8             3            12             2             4       1           ./
+1 trials running, 1 finished (0 until the end), 35.14s wallclock-time
+
+DEBUG:syne_tune.tuner:1 of 1 workers are busy, wait for 5.0 seconds
+DEBUG:syne_tune.tuner:1 of 1 workers are busy, wait for 5.0 seconds
+DEBUG:syne_tune.tuner:1 of 1 workers are busy, wait for 5.0 seconds
+INFO:syne_tune.tuner:Trial trial_id 1 failed.
+DEBUG:syne_tune.backend.local_backend:scheduling 2, /work/dlclarge2/sukthank-hw-llm-bench/arxiv/HW-Aware-LLM-Bench/baselines/gpt_objective_2d.py, {'type': 'quantile', 'search_space': 's', 'surrogate_type': 'conformal_quantile', 'objective': 'energies', 'device': 'a40', 'num_layers': 12, 'embed_dim': 384, 'bias': True, 'mlp_ratio_0': 3, 'num_heads_0': 4, 'mlp_ratio_1': 3, 'num_heads_1': 12, 'mlp_ratio_2': 4, 'num_heads_2': 12, 'mlp_ratio_3': 4, 'num_heads_3': 12, 'mlp_ratio_4': 4, 'num_heads_4': 4, 'mlp_ratio_5': 4, 'num_heads_5': 8, 'mlp_ratio_6': 4, 'num_heads_6': 12, 'mlp_ratio_7': 4, 'num_heads_7': 8, 'mlp_ratio_8': 4, 'num_heads_8': 4, 'mlp_ratio_9': 2, 'num_heads_9': 12, 'mlp_ratio_10': 4, 'num_heads_10': 12, 'mlp_ratio_11': 3, 'num_heads_11': 12, 'epochs': 1, 'dataset_path': './'}, logging into /home/sukthank/syne-tune/mogpt-2024-05-30-12-06-19-827/2
+INFO:syne_tune.backend.local_backend:running subprocess with command: /home/sukthank/anaconda3/envs/hwllm/bin/python /work/dlclarge2/sukthank-hw-llm-bench/arxiv/HW-Aware-LLM-Bench/baselines/gpt_objective_2d.py --type quantile --search_space s --surrogate_type conformal_quantile --objective energies --device a40 --num_layers 12 --embed_dim 384 --bias True --mlp_ratio_0 3 --num_heads_0 4 --mlp_ratio_1 3 --num_heads_1 12 --mlp_ratio_2 4 --num_heads_2 12 --mlp_ratio_3 4 --num_heads_3 12 --mlp_ratio_4 4 --num_heads_4 4 --mlp_ratio_5 4 --num_heads_5 8 --mlp_ratio_6 4 --num_heads_6 12 --mlp_ratio_7 4 --num_heads_7 8 --mlp_ratio_8 4 --num_heads_8 4 --mlp_ratio_9 2 --num_heads_9 12 --mlp_ratio_10 4 --num_heads_10 12 --mlp_ratio_11 3 --num_heads_11 12 --epochs 1 --dataset_path ./ --st_checkpoint_dir /home/sukthank/syne-tune/mogpt-2024-05-30-12-06-19-827/2/checkpoints
+INFO:syne_tune.tuner:(trial 2) - scheduled config {'type': 'quantile', 'search_space': 's', 'surrogate_type': 'conformal_quantile', 'objective': 'energies', 'device': 'a40', 'num_layers': 12, 'embed_dim': 384, 'bias': True, 'mlp_ratio_0': 3, 'num_heads_0': 4, 'mlp_ratio_1': 3, 'num_heads_1': 12, 'mlp_ratio_2': 4, 'num_heads_2': 12, 'mlp_ratio_3': 4, 'num_heads_3': 12, 'mlp_ratio_4': 4, 'num_heads_4': 4, 'mlp_ratio_5': 4, 'num_heads_5': 8, 'mlp_ratio_6': 4, 'num_heads_6': 12, 'mlp_ratio_7': 4, 'num_heads_7': 8, 'mlp_ratio_8': 4, 'num_heads_8': 4, 'mlp_ratio_9': 2, 'num_heads_9': 12, 'mlp_ratio_10': 4, 'num_heads_10': 12, 'mlp_ratio_11': 3, 'num_heads_11': 12, 'epochs': 1, 'dataset_path': './'}
+DEBUG:syne_tune.tuner:saving tuner in /home/sukthank/syne-tune/mogpt-2024-05-30-12-06-19-827/tuner.dill
+INFO:syne_tune.tuner:Stopping trials that may still be running.
+ERROR:syne_tune.tuner:Stopped as 1 failures were reached
+ERROR:syne_tune.tuner:showing log of first failure
+ERROR:syne_tune.tuner:sagemaker.config INFO - Not applying SDK defaults from location: /etc/xdg/sagemaker/config.yaml
+sagemaker.config INFO - Not applying SDK defaults from location: /home/sukthank/.config/sagemaker/config.yaml
+sagemaker.config INFO - Not applying SDK defaults from location: /etc/xdg/sagemaker/config.yaml
+sagemaker.config INFO - Not applying SDK defaults from location: /home/sukthank/.config/sagemaker/config.yaml
+{'epochs': 1, 'surrogate_type': 'conformal_quantile', 'type': 'quantile', 'search_space': 's', 'device': 'a40', 'num_layers': 12, 'embed_dim': 768, 'bias': True, 'objective': 'energies', 'num_heads_0': 12, 'mlp_ratio_0': 4, 'num_heads_1': 8, 'mlp_ratio_1': 4, 'num_heads_2': 8, 'mlp_ratio_2': 2, 'num_heads_3': 4, 'mlp_ratio_3': 2, 'num_heads_4': 12, 'mlp_ratio_4': 4, 'num_heads_5': 8, 'mlp_ratio_5': 4, 'num_heads_6': 4, 'mlp_ratio_6': 2, 'num_heads_7': 12, 'mlp_ratio_7': 3, 'num_heads_8': 12, 'mlp_ratio_8': 3, 'num_heads_9': 12, 'mlp_ratio_9': 4, 'num_heads_10': 8, 'mlp_ratio_10': 4, 'num_heads_11': 8, 'mlp_ratio_11': 4}
+{'epochs': 1, 'surrogate_type': 'conformal_quantile', 'type': 'quantile', 'search_space': 's', 'device': 'a40', 'num_layers': 11, 'embed_dim': 384, 'bias': True, 'objective': 'energies', 'num_heads_0': 4, 'mlp_ratio_0': 2, 'num_heads_1': 4, 'mlp_ratio_1': 4, 'num_heads_2': 8, 'mlp_ratio_2': 2, 'num_heads_3': 12, 'mlp_ratio_3': 2, 'num_heads_4': 4, 'mlp_ratio_4': 2, 'num_heads_5': 8, 'mlp_ratio_5': 3, 'num_heads_6': 12, 'mlp_ratio_6': 4, 'num_heads_7': 4, 'mlp_ratio_7': 2, 'num_heads_8': 4, 'mlp_ratio_8': 3, 'num_heads_9': 4, 'mlp_ratio_9': 4, 'num_heads_10': 12, 'mlp_ratio_10': 2, 'num_heads_11': 8, 'mlp_ratio_11': 3}
+
+ERROR:syne_tune.tuner:Traceback (most recent call last):
+  File "/work/dlclarge2/sukthank-hw-llm-bench/arxiv/HW-Aware-LLM-Bench/baselines/gpt_objective_2d.py", line 103, in <module>
+    objective(
+  File "/work/dlclarge2/sukthank-hw-llm-bench/arxiv/HW-Aware-LLM-Bench/baselines/gpt_objective_2d.py", line 54, in objective
+    hw_metric_norm = normalize_energy(
+                     ^^^^^^^^^^^^^^^^^
+  File "/work/dlclarge2/sukthank-hw-llm-bench/arxiv/HW-Aware-LLM-Bench/lib/utils.py", line 301, in normalize_energy
+    with open(
+         ^^^^^
+FileNotFoundError: [Errno 2] No such file or directory: 'data_collection/gpt_datasets/predictor_ckpts/hwmetric/conformal_quantile/stats_mean_std_energies_s_conformal_quantile_quantile_a40.pkl'
+Traceback (most recent call last):
+  File "/work/dlclarge2/sukthank-hw-llm-bench/arxiv/HW-Aware-LLM-Bench/baselines/gpt_objective_2d.py", line 103, in <module>
+    objective(
+  File "/work/dlclarge2/sukthank-hw-llm-bench/arxiv/HW-Aware-LLM-Bench/baselines/gpt_objective_2d.py", line 54, in objective
+    hw_metric_norm = normalize_energy(
+                     ^^^^^^^^^^^^^^^^^
+  File "/work/dlclarge2/sukthank-hw-llm-bench/arxiv/HW-Aware-LLM-Bench/lib/utils.py", line 301, in normalize_energy
+    with open(
+         ^^^^^
+FileNotFoundError: [Errno 2] No such file or directory: 'data_collection/gpt_datasets/predictor_ckpts/hwmetric/conformal_quantile/stats_mean_std_energies_s_conformal_quantile_quantile_a40.pkl'
+
+Traceback (most recent call last):
+  File "/work/dlclarge2/sukthank-hw-llm-bench/arxiv/HW-Aware-LLM-Bench/baselines/run_nas_gpt_2d.py", line 188, in <module>
+    tuner.run()
+  File "/home/sukthank/anaconda3/envs/hwllm/lib/python3.11/site-packages/syne_tune/tuner.py", line 370, in run
+    self._handle_failure(done_trials_statuses=done_trials_statuses)
+  File "/home/sukthank/anaconda3/envs/hwllm/lib/python3.11/site-packages/syne_tune/tuner.py", line 549, in _handle_failure
+    raise ValueError(f"Trial - {trial_id} failed")
+ValueError: Trial - 0 failed

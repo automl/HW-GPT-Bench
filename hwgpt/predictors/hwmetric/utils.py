@@ -113,6 +113,12 @@ class HWDataset(torch.utils.data.Dataset):
         elif "memory" in self.metric:
             metric.append(self.arch_stats[arch][self.metric])
             arch_features.append(feature)
+        elif self.metric == "flops":
+            metric.append(self.arch_stats[arch][self.metric] / 10**12)
+            arch_features.append(feature)
+        elif self.metric == "params":
+            metric.append(self.arch_stats[arch][self.metric] / 10**6)
+            arch_features.append(feature)
         else:
             raise ValueError("Invalid metric")
 
@@ -164,7 +170,14 @@ if __name__ == "__main__":
         "cpu_amd_7452",
     ]
     models = ["s", "m", "l"]
-    metrics = ["energies", "latencies", "float16_memory", "bfloat16_memory"]
+    metrics = [
+        "energies",
+        "latencies",
+        "float16_memory",
+        "bfloat16_memory",
+        "flops",
+        "params",
+    ]
     type = "quantile"
     for device in devices_all:
         for model in models:

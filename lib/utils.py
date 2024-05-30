@@ -378,7 +378,7 @@ def denormalize_latency(latency: float, device: str, surrogate:str, data_type:st
     return latency
 
 def normalize_latency(latency: float, device: str, surrogate:str, data_type:str, scale: str, metric:str, method:str="mean-std") -> float:
-    base_path = "data_collection/gpt_datasets/predictor_ckpts/hwmetric/"  + str(surrogate) + "/"
+    base_path = "data_collection/gpt_datasets/predictor_ckpts/hwmetric/"
     if method == "mean-std":
         model_path = (
             base_path
@@ -513,7 +513,7 @@ def get_hw_predictor_surrogate(
     "data_collection/gpt_datasets/predictor_ckpts/hwmetric/"
     + str(surrogate_type)
     + "/")
-    if "memory" in metric:
+    if "memory" in metric or metric == "flops" or metric == "params":
         # set surrogate type to mlp
 
         model_path = base_path + metric + "_" + search_space

@@ -1,0 +1,2 @@
+cpu-bind=MASK - mlgpu08, task  0  0 [3230]: mask 0xc0000 set
+slurmstepd-mlgpu08: error: *** JOB 11537815 ON mlgpu08 CANCELLED AT 2024-05-30T14:11:46 ***
