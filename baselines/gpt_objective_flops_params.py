@@ -17,7 +17,9 @@ def objective(sampled_config, search_space, objective):
     else:
         raise ValueError("Invalid hw metric")
     perplexity = api.compute_predictions_ppl()
-    perplexity = normalize_ppl(perplexity, search_space)
+    # print(perplexity)
+    perplexity = normalize_ppl(perplexity, search_space, method="max-min")
+    # print(perplexity)
     max_min_metric = get_max_min_true_metric(api, objective)
     hw_metric_norm = (hw_metric - max_min_metric["min"]) / (
         max_min_metric["max"] - max_min_metric["min"]
@@ -42,7 +44,7 @@ if __name__ == "__main__":
     search_space = search_spaces[args.search_space]
     max_layers = max(search_space["n_layer_choices"])
     for i in range(max_layers):
-        parser.add_argument(f"--num_heads_{i}", type=int, default=12)
+        parser.add_argument(f"--num_heads_{i}", type=int, default=16)
         parser.add_argument(f"--mlp_ratio_{i}", type=int, default=4)
 
     args, _ = parser.parse_known_args()

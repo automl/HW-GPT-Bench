@@ -109,6 +109,7 @@ if __name__ == "__main__":
     )
     args = parser.parse_args()
     torch.manual_seed(args.seed)
+    print(args)
     model, train_dataset, test_dataset = get_model_and_datasets(args)
 
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
@@ -151,17 +152,20 @@ if __name__ == "__main__":
             + str(args.model)
             + "/"
         )
-        model_path = (
-            base_path
-            + args.metric
-            + "_"
-            + args.type
-            + "_"
-            + args.search_space
-            + "_"
-            + args.device
-            + ".pth"
-        )
+        if "memory" in args.metric or "flops" in args.metric or "params" in args.metric:
+            model_path = base_path + args.metric + "_" + args.search_space + ".pth"
+        else:
+            model_path = (
+                base_path
+                + args.metric
+                + "_"
+                + args.type
+                + "_"
+                + args.search_space
+                + "_"
+                + args.device
+                + ".pth"
+            )
         for epoch in range(1, args.epochs + 1):
             train(model, device, train_loader, optimizer, epoch)
             test(model, device, test_loader)
