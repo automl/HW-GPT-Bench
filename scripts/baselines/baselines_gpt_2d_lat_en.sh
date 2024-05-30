@@ -3,8 +3,8 @@
 #SBATCH -t 1-00:00:00 # time (D-HH:MM)
 #SBATCH --gres=gpu:1 # number of GPUs (per node)
 #SBATCH -c 8 # number of cores
-#SBATCH -o logs_final/%j.%x.%N.out # STDOUT  (the folder log has to be created prior to running or this won't work)
-#SBATCH -e logs_final/%j.%x.%N.err # STDERR  (the folder log has to be created prior to running or this won't work)
+#SBATCH -o logs/%j.%x.%N.out # STDOUT  (the folder log has to be created prior to running or this won't work)
+#SBATCH -e logs/%j.%x.%N.err # STDERR  (the folder log has to be created prior to running or this won't work)
 search_space=$1
 device=$2
 method=$3
