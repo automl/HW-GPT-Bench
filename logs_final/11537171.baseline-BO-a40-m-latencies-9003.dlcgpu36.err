@@ -1,5 +1,0 @@
-cpu-bind=MASK - dlcgpu36, task  0  0 [4226]: mask 0xf0000000f set
-Traceback (most recent call last):
-  File "/work/dlclarge2/sukthank-hw-llm-bench/arxiv/HW-Aware-LLM-Bench/baselines/run_nas_gpt_2d.py", line 169, in <module>
-    raise NotImplementedError(args.method)
-NotImplementedError: BO
