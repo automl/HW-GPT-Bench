@@ -5,7 +5,7 @@ from hwgpt.predictors.metric.net import Net
 import numpy as np
 from typing import Any, Dict, Tuple, List
 from hwgpt.model.gpt.utils import sample_config_max, sample_config_min
-
+from hwgpt.predictors.hwmetric.gaussian_mlp import GaussianNN
 metrics_map = {
     "energies": "Energy (Wh)",
     "latencies": "Latency (ms)",
@@ -534,8 +534,21 @@ def get_hw_predictor_surrogate(
         predictor = Nethw(max_layers, False, 128, 128).to(device)
         path = model_path + ".pth"
         predictor.load_state_dict(torch.load(path, map_location=device))
+    elif surrogate_type == "gaussianmlp":
+        predictor = GaussianNN(max_layers)
+        path = model_path + ".pth"
+        predictor.load_state_dict(torch.load(path, map_location=device))
+        
     return predictor
 
+def sample_from_gaussian(mean, logvar):
+    std = torch.sqrt(torch.exp(logvar))
+    output = []
+    for i in range(mean.shape[0]):
+        normal = torch.distributions.Normal(mean[i], std[i])
+        sample = normal.sample((1,))
+        output.append(sample)
+    return torch.tensor(output)
 
 def predict_hw_surrogate(
     arch: np.array,
@@ -544,6 +557,7 @@ def predict_hw_surrogate(
     return_all: bool = False,
     return_quantiles: bool = False,
 ) -> float:
+    device = "cuda" if torch.cuda.is_available() else "cpu"
     if surrogate_type == "conformal_quantile" or surrogate_type == "quantile":
         energy = surrogate.predict(arch).results_stacked
         if return_quantiles:
@@ -553,8 +567,19 @@ def predict_hw_surrogate(
         if return_all:
             return energy
         energy = energy[0, quantile]
-    else:
+    elif surrogate_type=="mlp":
         energy = surrogate(torch.tensor(arch).cuda())  # .item()
+    elif surrogate_type == "gaussianmlp":
+      if not return_all:
+        mean, logvar = surrogate(torch.tensor(arch).cuda())
+        energy = sample_from_gaussian(mean,logvar)
+        energy = torch.squeeze(energy).item()
+      else:
+          surrogate = surrogate.to(device)
+          mean, logvar = surrogate(torch.tensor(arch).cuda())
+          print(mean)
+          print(logvar)
+          return (mean.item(),torch.sqrt(torch.exp(logvar)).item())
     return energy
 
 

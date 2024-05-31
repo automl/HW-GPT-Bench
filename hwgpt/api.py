@@ -9,6 +9,8 @@ from lib.utils import (
     convert_config_to_one_hot,
     normalize_arch_feature_map,
     predict_hw_surrogate,
+    convert_arch_to_str,
+    convert_str_to_arch,
 )
 from hwgpt.api_utils import estimate_flops, num_parameters
 from hwgpt.model.gpt_base.model import GPT
@@ -16,6 +18,7 @@ from data_collection.pl_gpt.utils.configuration import Config
 from data_collection.gpt_profiler.profile.gpt_perplexity_profiler import GPTProfilerPPL
 from typing import Any, Dict
 from argparse import Namespace
+import pickle
 
 
 class HWGPTBenchAPI:
@@ -55,6 +58,13 @@ class HWGPTBenchAPI:
         self.surrogate_ppl = get_ppl_predictor_surrogate(self.search_space_name)
         self.on_device = "cuda" if torch.cuda.is_available() else "cpu"
         self.cfg_model = self.get_model_config()
+        gt_stats_path = (
+            "data_collection/gpt_datasets/gpt_"
+            + str(self.search_space_name)
+            + "/stats.pkl"
+        )
+        with open(gt_stats_path, "rb") as f:
+            self.gt_stats = pickle.load(f)
         if self.use_supernet_surrogate:
             self.gpt_ppl_profiler = GPTProfilerPPL(
                 self.prepare_args_for_ppl_profiler(), self.cfg_model
@@ -164,6 +174,34 @@ class HWGPTBenchAPI:
         results = self.gpt_ppl_profiler.return_metrics(self.config)
         return results
 
+    def get_gt_latencies(self, device: str, arch_str: str) -> list:
+        return self.gt_stats[arch_str][device]["latencies"]
+
+    def get_gt_energies(self, device: str, arch_str: str) -> list | float:
+        return self.gt_stats[arch_str][device]["energies"]
+
+    def get_gt_agnostic(self, arch_str: str, metric: str) -> float:
+        return self.gt_stats[arch_str][metric]
+
+    def query_gt_all_archs(self, metric: str, device: str = None):
+        metric_stats = {}
+        for arch in self.gt_stats:
+            if metric == "energies":
+                metric_stats[arch] = self.get_gt_energies(device, arch)
+            elif metric == "latencies":
+                metric_stats[arch] = self.get_gt_latencies(device, arch)
+            elif metric in [
+                "flops",
+                "params",
+                "bfloat16_memory",
+                "float16_memory",
+                "perplexity",
+            ]:
+                metric_stats[arch] = self.get_gt_agnostic(arch, metric)
+            else:
+                raise ValueError("Unsupported metric type")
+        return metric_stats
+
     def query(
         self,
         hw_surrogate_type: str = "conformal_quantile",
@@ -202,6 +240,43 @@ class HWGPTBenchAPI:
 
 # test
 if __name__ == "__main__":
-    api = HWGPTBenchAPI("s")
-    api.sample_random_arch()
-    print(api.query(hw_metric="latencies", device="a100"))
+    scales = ["s", "m", "l"]
+
+    devices = [
+        "a100",
+        "a40",
+        "h100",
+        "rtx2080",
+        "rtx3080",
+        "a6000",
+        "v100",
+        "P100",
+        "cpu_xeon_silver",
+        "cpu_xeon_gold",
+        "cpu_amd_7502",
+        "cpu_amd_7513",
+        "cpu_amd_7452",
+    ]
+    metrics = [
+        "energies",
+        "latencies",
+        "flops",
+        "params",
+        "bfloat16_memory",
+        "float16_memory",
+        "perplexity",
+    ]
+    for scale in scales:
+        api = HWGPTBenchAPI(scale)
+        for device in devices:
+            for metric in metrics:
+                # print(metric)
+                archs_device = api.query_gt_all_archs(metric, device)
+                # print(archs_device.keys())
+                arch = list(archs_device.keys())[0]
+                print(archs_device[arch])
+                print("Arch to config", convert_str_to_arch(arch))
+                print(
+                    "Arch config to str",
+                    convert_arch_to_str(convert_str_to_arch(arch), scale),
+                )

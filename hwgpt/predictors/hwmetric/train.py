@@ -71,6 +71,107 @@ def test(model: torch.nn.Module, device: str, test_loader: torch.utils.data.Data
     )
 
 
+def gaussian_nll_loss(mean, logvar, target):
+    var = torch.exp(logvar)
+    nll = 0.5 * (logvar + (target - mean) ** 2 / var)
+    return nll.mean()
+
+
+def sample_from_gaussian(mean, logvar):
+    std = torch.sqrt(torch.exp(logvar))
+    output = []
+    for i in range(mean.shape[0]):
+        normal = torch.distributions.Normal(mean[i], std[i])
+        sample = normal.sample((1,))
+        output.append(sample)
+    return torch.tensor(output)
+
+
+def train_gaussian(
+    model: torch.nn.Module,
+    device: str,
+    train_loader: torch.utils.data.DataLoader,
+    optimizer: torch.optim.Adam,
+    epoch: int,
+    log_interval: int = 10,
+):
+    model.train()
+    mse = nn.MSELoss()
+    for batch_idx, (data, target_mean, target_std) in enumerate(train_loader):
+        data, target_mean, target_std = (
+            data.to(device),
+            target_mean.to(device),
+            target_std.to(device),
+        )
+        data = data.float()
+        # print(data.shape)
+        # print(target.shape)
+        target_mean = target_mean.float()
+        target_std = target_std.float()
+        optimizer.zero_grad()
+        mean, logvar = model(data)
+        mean = torch.squeeze(mean)
+        logvar = torch.squeeze(logvar)
+        target_mean = torch.squeeze(target_mean) * 1000
+        target_std = torch.squeeze(target_std) * 1000
+
+        loss = mse(mean, target_mean) + mse(torch.exp(logvar), target_std**2)
+        loss.backward()
+        optimizer.step()
+        if batch_idx % log_interval == 0:
+            print(
+                "Train Epoch: {} [{}/{} ({:.0f}%)]\tLoss: {:.6f}".format(
+                    epoch,
+                    batch_idx * len(data),
+                    len(train_loader.dataset),
+                    100.0 * batch_idx / len(train_loader),
+                    loss.item(),
+                )
+            )
+
+
+def test_gaussian(
+    model: torch.nn.Module, device: str, test_loader: torch.utils.data.DataLoader
+):
+    model.eval()
+    test_loss = 0
+    mse = nn.MSELoss()
+    with torch.no_grad():
+        for data, target_mean, target_std in test_loader:
+            data, target_mean, target_std = (
+                data.to(device),
+                target_mean.to(device),
+                target_std.to(device),
+            )
+            data, target_mean, target_std = (
+                data.float(),
+                target_mean.float(),
+                target_std.float(),
+            )
+            target_mean = torch.squeeze(target_mean) * 1000
+            target_std = torch.squeeze(target_std) * 1000
+            mean, logvar = model(data)
+            mean = torch.squeeze(mean)
+            logvar = torch.squeeze(logvar)
+            # output = sample_from_gaussian(mean, logvar)
+            # print(output)
+            # out_test.append(torch.squeeze(output))
+            test_loss += mse(mean, target_mean) + mse(torch.exp(logvar), target_std**2)
+            # break
+    # final_target = torch.cat(test_target, dim=-1)
+    # final_out = torch.cat(out_test, dim=-1)
+    test_loss /= len(test_loader.dataset)
+    print(torch.sqrt(torch.exp(logvar)))
+    print(mean)
+    # print(final_target.shape)
+    # print(final_out.shape)
+    print("\nTest set: Average loss: {:.4f}\n".format(test_loss))
+    # print(
+    #    "Corr",
+    #    scipy.stats.kendalltau(final_target.cpu().numpy(), final_out.cpu().numpy())[0],
+    # )
+
+
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="PyTorch HW Metric Predictor")
     parser.add_argument("--device", type=str, default="a100", help="device name")
@@ -143,7 +244,7 @@ if __name__ == "__main__":
         )
         with open(model_path, "wb") as f:
             pickle.dump(model, f)
-    else:
+    elif args.model == "mlp":
         optimizer = optim.Adam(model.parameters(), lr=args.lr)
         model = model.to(device)
         device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
@@ -169,4 +270,32 @@ if __name__ == "__main__":
         for epoch in range(1, args.epochs + 1):
             train(model, device, train_loader, optimizer, epoch)
             test(model, device, test_loader)
+        torch.save(model.state_dict(), model_path)
+    elif args.model == "gaussianmlp":
+        optimizer = optim.Adam(model.parameters(), lr=args.lr)
+        model = model.to(device)
+        device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+        base_path = (
+            "data_collection/gpt_datasets/predictor_ckpts/hwmetric/"
+            + str(args.model)
+            + "/"
+        )
+        if "memory" in args.metric or "flops" in args.metric or "params" in args.metric:
+            model_path = base_path + args.metric + "_" + args.search_space + ".pth"
+        else:
+            model_path = (
+                base_path
+                + args.metric
+                + "_"
+                + args.type
+                + "_"
+                + args.search_space
+                + "_"
+                + args.device
+                + ".pth"
+            )
+        for epoch in range(1, args.epochs + 1):
+            train_gaussian(model, device, train_loader, optimizer, epoch)
+            if (epoch + 1) % 10 == 0:
+                test_gaussian(model, device, test_loader)
         torch.save(model.state_dict(), model_path)
