@@ -1,11 +1,13 @@
 # Logs
 experiments/*
+logs/*
 logs/
 *pdf
 *out
 *png
 *pdf
 results*/
+logs_final/*
 logs_final/
 # Byte-compiled / optimized / DLL files
 __pycache__/
