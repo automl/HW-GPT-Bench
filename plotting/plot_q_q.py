@@ -5,7 +5,8 @@ import numpy as np
 import matplotlib.pyplot as plt
 from lib.utils import convert_str_to_arch
 import random
-
+import statsmodels.api as sm
+import scipy.stats as stats
 plt.rcParams["axes.grid"] = True
 plt.rcParams["grid.linestyle"] = "dotted"
 plt.rcParams["font.size"] = 16
@@ -52,8 +53,8 @@ class HWQQPlot:
         hw_quantiles = self.get_hw_metrics(hw_metric, device, surrogate_type, data_type)
         actual_quantiles = self.get_actual_quantiles(
             hw_metric, device, hw_quantiles.quantiles
-        )
-        hw_quantiles = hw_quantiles.results_stacked[0]
+        )*1000
+        hw_quantiles = hw_quantiles.results_stacked[0]*1000
         print(hw_quantiles, actual_quantiles)
         plt.plot(hw_quantiles, actual_quantiles, marker="o", ls="")
         x = np.linspace(
@@ -65,12 +66,42 @@ class HWQQPlot:
         plt.ylabel("Actual Quantiles")
         plt.title(f"{hw_metric} Q-Q Plot")
         plt.savefig(f"{hw_metric}_{device}_{surrogate_type}_{data_type}_qq_plot.pdf")
+        plt.clf()
+        # q-q against gaussian
+        print(np.mean(actual_quantiles))
+        print(np.std(actual_quantiles))
+        sm.qqplot(actual_quantiles,line="45",loc=np.mean(actual_quantiles),scale=np.std(actual_quantiles))
+        plt.savefig(f"{hw_metric}_{device}_{surrogate_type}_{data_type}_qq_plot_gaussian.pdf")
+        plt.clf()
         return hw_quantiles, actual_quantiles
 
 
 if __name__ == "__main__":
     plot = HWQQPlot("s")
     hw_quantiles, actual_quantiles = plot.plot_q_q(
-        "energies", "a100", "conformal_quantile", "median"
+        "energies", "rtx3080", "conformal_quantile", "quantile"
+    )
+    hw_quantiles, actual_quantiles = plot.plot_q_q(
+        "energies", "rtx2080", "conformal_quantile", "quantile"
+    )
+    print(hw_quantiles, actual_quantiles)
+    hw_quantiles, actual_quantiles = plot.plot_q_q(
+        "energies", "a40", "conformal_quantile", "quantile"
+    )
+    hw_quantiles, actual_quantiles = plot.plot_q_q(
+        "energies", "a100", "conformal_quantile", "quantile"
+    )
+    hw_quantiles, actual_quantiles = plot.plot_q_q(
+        "energies", "a40", "conformal_quantile", "quantile"
+    )
+    print(hw_quantiles, actual_quantiles)
+    hw_quantiles, actual_quantiles = plot.plot_q_q(
+        "energies", "P100", "conformal_quantile", "quantile"
+    )
+    hw_quantiles, actual_quantiles = plot.plot_q_q(
+        "energies", "h100", "conformal_quantile", "quantile"
+    )
+    hw_quantiles, actual_quantiles = plot.plot_q_q(
+        "energies", "a6000", "conformal_quantile", "quantile"
     )
     print(hw_quantiles, actual_quantiles)
