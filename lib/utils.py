@@ -28,21 +28,21 @@ search_spaces = {
         "n_layer_choices": [10, 11, 12],
         "mlp_ratio_choices": [2, 3, 4],
         "n_head_choices": [4, 8, 12],
-        "bias_choices": [True, False],
+        "bias_choices": ["True", "False"],
     },
     "m": {
         "embed_dim_choices": [256, 512, 1024],
         "n_layer_choices": [22, 23, 24],
         "mlp_ratio_choices": [2, 3, 4],
         "n_head_choices": [8, 12, 16],
-        "bias_choices": [True, False],
+        "bias_choices": ["True", "False"],
     },
     "l": {
         "embed_dim_choices": [320, 640, 1280],
         "n_layer_choices": [34, 35, 36],
         "mlp_ratio_choices": [2, 3, 4],
         "n_head_choices": [8, 16, 20],
-        "bias_choices": [True, False],
+        "bias_choices": ["True", "False"],
     },
 }
 
@@ -84,8 +84,9 @@ def convert_arch_to_str(arch:Dict[str,Any],scale:str)->str:
     for i in range(arch["sample_n_layer"]):
         str_mlp = str_mlp+str(arch["sample_mlp_ratio"][i])+"-"
         str_heads = str_heads+str(arch["sample_n_head"][i])+"-"
-    name = "gpt-"+str(scale)+"-"+str(arch["sample_n_layer"])+'-'+str(arch["sample_embed_dim"])+'-'+str_mlp+str_heads+str(arch["sample_bias"])
-    print(name)
+    bias_str = arch["sample_bias"]
+    name = "gpt-"+str(scale)+"-"+str(arch["sample_n_layer"])+'-'+str(arch["sample_embed_dim"])+'-'+str_mlp+str_heads+bias_str
+    #print(name)
     return name 
 
 
@@ -99,7 +100,7 @@ def convert_str_to_arch(arch_str: str) -> Dict[str, Any]:
     sampled_arch = {}
     sampled_arch["sample_n_layer"] = int(num_layers)
     sampled_arch["sample_embed_dim"] = int(embed_dim)
-    sampled_arch["sample_bias"] = bool(bias)
+    sampled_arch["sample_bias"] = bias
     sampled_arch["sample_mlp_ratio"] = []
     sampled_arch["sample_n_head"] = []
     for i in range(len(mlp_ratios)):
@@ -132,7 +133,7 @@ def normalize_arch_feature_map(feature_map: List, search_space: str) -> List:
         search_space_max_min["max_layers"] - search_space_max_min["min_layers"]
     )
     for i in range(2, 2 + search_space_max_min["max_layers"]):
-        if feature_map[i] != 0:
+        if feature_map[i] != -1:
             feature_map[i] = (
                 feature_map[i] - search_space_max_min["min_mlp_ratio"]
             ) / (
@@ -143,7 +144,7 @@ def normalize_arch_feature_map(feature_map: List, search_space: str) -> List:
         2 + search_space_max_min["max_layers"],
         2 + 2 * search_space_max_min["max_layers"],
     ):
-        if feature_map[i] != 0:
+        if feature_map[i] != -1:
             feature_map[i] = (feature_map[i] - search_space_max_min["min_heads"]) / (
                 search_space_max_min["max_heads"] - search_space_max_min["min_heads"]
             )
@@ -163,11 +164,12 @@ def get_arch_feature_map(arch: Dict[str, Any], scale: str) -> List:
     arch_feature_map.append(arch["sample_n_layer"])
     arch_feature_map.extend(arch["sample_mlp_ratio"][0 : arch["sample_n_layer"]])
     for i in range(max(layer_choices) - arch["sample_n_layer"]):
-        arch_feature_map.append(0)
+        arch_feature_map.append(-1)
     arch_feature_map.extend(arch["sample_n_head"][0 : arch["sample_n_layer"]])
     for i in range(max(layer_choices) - arch["sample_n_layer"]):
-        arch_feature_map.append(0)
-    if arch["sample_bias"]:
+        arch_feature_map.append(-1)
+    #if bool(arch["sample_bias"]):
+    if arch["sample_bias"]=="True":
         arch_feature_map.append(1)
     else:
         arch_feature_map.append(0)
@@ -522,11 +524,7 @@ def get_hw_predictor_surrogate(
     #print(model_path)
 
     device = "cuda" if torch.cuda.is_available() else "cpu"
-    if surrogate_type == "conformal_quantile":
-        surrogate_path = model_path + ".pkl"
-        with open(surrogate_path, "rb") as f:
-            predictor = pickle.load(f)
-    elif surrogate_type == "quantile":
+    if surrogate_type in ["conformal_quantile", "quantile", "ensemble_xgb", "ensemble_lightgbm","ensemble_mix"]:
         surrogate_path = model_path + ".pkl"
         with open(surrogate_path, "rb") as f:
             predictor = pickle.load(f)
@@ -569,6 +567,12 @@ def predict_hw_surrogate(
         energy = energy[0, quantile]
     elif surrogate_type=="mlp":
         energy = surrogate(torch.tensor(arch).cuda())  # .item()
+    elif surrogate_type in ["ensemble_xgb", "ensemble_lightgbm","ensemble_mix"]:
+        mean, std, noisy_predictions = surrogate.predict(arch)
+        if not return_all:
+            return noisy_predictions
+        else:
+            return (mean,std)
     elif surrogate_type == "gaussianmlp":
       if not return_all:
         mean, logvar = surrogate(torch.tensor(arch).cuda())
