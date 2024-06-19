@@ -88,7 +88,6 @@ def convert_arch_to_str(arch:Dict[str,Any],scale:str)->str:
         str_heads = str_heads+str(arch["sample_n_head"][i])+"-"
     bias_str = arch["sample_bias"]
     name = "gpt-"+str(scale)+"-"+str(arch["sample_n_layer"])+'-'+str(arch["sample_embed_dim"])+'-'+str_mlp+str_heads+bias_str
-    #print(name)
     return name 
 
 
@@ -175,7 +174,6 @@ def get_arch_feature_map(arch: Dict[str, Any], scale: str) -> List:
         arch_feature_map.append(1)
     else:
         arch_feature_map.append(0)
-    # print(len(arch_feature_map))
     return arch_feature_map
 
 def denormalize_ppl(ppl: float, scale: str, method: str="mean-std") -> float:
@@ -394,9 +392,7 @@ def normalize_latency(latency: float, device: str, surrogate:str, data_type:str,
             max_min_stats = pickle.load(f)
             max_latency = max_min_stats["max"]
             min_latency = max_min_stats["min"]
-            # print(max_latency, min_latency)
             latency = (latency - min_latency) / (max_latency - min_latency)
-        # print(latency)
     return latency
 
 def normalize_memory(memory: float, scale: str, metric:str, method:str="mean-std") -> float:
@@ -484,12 +480,10 @@ def get_hw_predictor_surrogate(
     elif metric == "latencies":
         from hwgpt.predictors.hwmetric.models.autogluon.autogluon_gpu_latencies import get_and_load_model
         predictor = get_and_load_model(search_space, device)
-    #predictor.load(dir)
 
     return predictor
 
 def sample_from_gaussian(mean, std):
-    #print(std<0)
     return np.random.normal(mean, std)
 
 def predict_hw_surrogate_multiple(
@@ -498,7 +492,6 @@ def predict_hw_surrogate_multiple(
     metric: str = "energies",
     device: str = "cuda",
 ) -> float:
-    #print(arch)
     arch_features = []
     if metric == "energies" and "cpu" not in device:
         for i in range(len(arch[0])):
@@ -506,14 +499,11 @@ def predict_hw_surrogate_multiple(
     else:
         for i in range(len(arch[0])):
             arch_features.append("arch_feature_"+str(i))
-    #print(np.array([[a] for a in arch[0]]).reshape(1, -1))
     df = pd.DataFrame(arch, columns=arch_features)
-    #print(df)
     if "cpu" in device and "latencies" in metric:
         exp=False
     else:
         exp=True
-    #print(exp)
     hw_metric = surrogate.predict(df, exp=exp)
 
     mean = hw_metric["Target_Avg"]
@@ -531,7 +521,6 @@ def predict_hw_surrogate(
     metric: str = "energies",
     device: str = "cuda",
 ) -> float:
-    #print(arch)
     arch_features = []
     if metric == "energies" and "cpu" not in device:
         for i in range(len(arch[0])):
@@ -539,9 +528,7 @@ def predict_hw_surrogate(
     else:
         for i in range(len(arch[0])):
             arch_features.append("arch_feature_"+str(i))
-    print(np.array([[a] for a in arch[0]]).reshape(1, -1))
     df = pd.DataFrame(np.array([[a] for a in arch[0]]).reshape(1,-1), columns=arch_features)
-    #print(df)
     if "cpu" in device and "latencies" in metric:
         exp=False
     else:

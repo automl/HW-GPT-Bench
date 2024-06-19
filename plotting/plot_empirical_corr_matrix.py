@@ -15,10 +15,22 @@ def calculate_correlation_matrix(all_dict: Dict) -> Tuple[np.ndarray, List]:
             corr_mat[i, j] = round(corr, 2)
     return corr_mat, keys
 
+def get_min_corr_parts(corr_mat, keys, top_k=10):
+    # min 2*k elements
+    min_corr = np.min(corr_mat)
+    min_corr_parts = []
+    min_corr_key_pairs = []
+    for i in range(top_k):
+        min_corr_idx = np.unravel_index(np.argmin(corr_mat, axis=None), corr_mat.shape)
+        min_corr_parts.append(min_corr)
+        min_corr_key_pairs.append((keys[min_corr_idx[0]], keys[min_corr_idx[1]]))
+        corr_mat[min_corr_idx] = 1
+
+
 
 def plot_correlation_matrix(corr_mat: np.ndarray, keys: List, filename: str):
-    plt.figure(figsize=(20, 20))
-    sns.heatmap(corr_mat, annot=True, xticklabels=keys, yticklabels=keys)
+    plt.figure(figsize=(25, 25))
+    sns.clustermap(corr_mat, xticklabels=keys, yticklabels=keys,fmt='.2f',annot_kws={"size": 6}, annot=True)
     plt.savefig(filename)
 
 
@@ -71,7 +83,6 @@ def main():
             if metric in hw_agnostic:
                 corr_mat_lists[metric_map[i]] = []
                 for arch in arch_stats:
-                    # print(arch_stats[arch]["flops"])
                     if isinstance(arch_stats[arch][metric], list):
                         corr_mat_lists[metric_map[i]].append(
                             np.median(arch_stats[arch][metric])
@@ -97,6 +108,7 @@ def main():
                 cpu_dict[key] = corr_mat_lists[key]
         corr_mat_cpu, keys_cpu = calculate_correlation_matrix(cpu_dict)
         # update keys
+        
         plot_correlation_matrix(
             corr_mat_cpu, keys_cpu, "corr_matrix_cpu_" + ss + ".pdf"
         )
@@ -114,7 +126,7 @@ def main():
         keys = list(corr_mat_lists.keys())
         corr_mat, keys = calculate_correlation_matrix(corr_mat_lists)
         plot_correlation_matrix(corr_mat, keys, "corr_matrix_all_" + ss + ".pdf")
-
+        get_min_corr_parts(corr_mat, keys, top_k=10)
 
 if __name__ == "__main__":
     main()

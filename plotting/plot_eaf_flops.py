@@ -4,15 +4,15 @@ import numpy as np
 from plotting.eaf import get_empirical_attainment_surface, EmpiricalAttainmentFuncPlot
 import pickle
 from lib.utils import metrics_map
-from lib.utils_norm import denormalize_energy, denormalize_latency, denormalize_ppl, denormalize_memory
+from hwgpt.api import HWGPTBenchAPI
+from lib.utils_norm import denormalize_energy, denormalize_latency, denormalize_ppl, get_max_min_true_metric
 plt.rcParams["axes.grid"] = True
 plt.rcParams["grid.linestyle"] = "dotted"
-plt.rcParams["font.size"] = 14
+plt.rcParams["font.size"] = 16
 # plt tight layout
 plt.rcParams["figure.autolayout"] = True
-# se t size
-plt.rcParams["figure.figsize"] = (6, 6) 
-#plt.rcParams['bbox_inches'] = 'tight'
+
+
 class PlotEAF:
     def __init__(
         self,
@@ -21,14 +21,9 @@ class PlotEAF:
         search_space: str = "s",
     ):
         self.dim = dim
-        self.result_base_path = result_base_path+"_"+search_space+"_log/"
+        self.api = HWGPTBenchAPI(search_space)
+        self.result_base_path = result_base_path+"_"+search_space+"/"
         self.search_space = search_space
-        if self.search_space=="s":
-            self.mul_factor = 0.5
-        elif self.search_space=="m":
-            self.mul_factor = 1
-        else:
-            self.mul_factor = 4
         self.methods = ["RS", "MOREA", "LS", "NSGA2", "LSBO", "RSBO", "MOASHA", "EHVI"]
         self.device_metrics = ("latencies", "energies")
         self.device_agnostic = ("float16_memory", "bfloat16_memory", "flops", "params")
@@ -76,6 +71,7 @@ class PlotEAF:
     ):
         costs_all_seeds = []
         min_shape = 1000000000
+        max_hw, min_hw = get_max_min_true_metric(self.api,hw_metric)["max"],get_max_min_true_metric(self.api,hw_metric)["min"]
         for seed in self.seeds:
             if hw_metric in self.device_metrics:
                 results_path = (
@@ -100,29 +96,25 @@ class PlotEAF:
                 if denormalize:
                    perplexity.append(denormalize_ppl(min(ppl),self.search_space,method="max-min"))
                 else:
-                     perplexity.append(min(ppl))
+                    perplexity.append(min(ppl))
             hw_metric_arr = []
             for hw_metric_i in results["hw_metric"]:
                 if hw_metric == "energies":
                     if denormalize:
-                      hw_metric_arr.append(denormalize_energy(min(hw_metric_i),device=device,surrogate="",data_type="",scale=self.search_space,metric=hw_metric,method="max-min")*self.mul_factor)
+                      hw_metric_arr.append(denormalize_energy(min(hw_metric_i),device=device,surrogate="",data_type="",scale=self.search_space,metric=hw_metric,method="max-min"))
                     else:
                         hw_metric_arr.append(min(hw_metric_i))
                 elif hw_metric=="latencies":
                     if denormalize:
-                     hw_metric_arr.append(denormalize_latency(min(hw_metric_i),device=device,surrogate="",data_type="",scale=self.search_space,metric=hw_metric,method="max-min")*self.mul_factor)
+                       hw_metric_arr.append(denormalize_latency(min(hw_metric_i),device=device,surrogate="",data_type="",scale=self.search_space,metric=hw_metric,method="max-min"))
                     else:
                         hw_metric_arr.append(min(hw_metric_i))
-                else:
+                elif hw_metric =="flops":
                     if denormalize:
-                       hw_metric_arr.append(denormalize_memory(min(hw_metric_i),scale=self.search_space,metric=hw_metric)*self.mul_factor)
+                        hw_metric_arr.append(min(hw_metric_i)*(max_hw-min_hw)+min_hw)
                     else:
-                       hw_metric_arr.append(min(hw_metric_i))
-                    #hw_metric_arr.append(denormalize_memory(min(hw_metric_i),scale=self.search_space,metric=hw_metric))
-            costs = np.transpose(np.stack([np.array(perplexity).reshape(-1,1), np.array(hw_metric_arr).reshape(-1,1)]),(2, 1, 0))
-            #costs_en>0
-            costs = costs[costs[:,:,-1]>0].reshape(1,-1,2)
-            costs_all_seeds.append(costs)
+                        hw_metric_arr.append(min(hw_metric_i))
+            costs_all_seeds.append(np.transpose(np.stack([np.array(perplexity).reshape(-1,1), np.array(hw_metric_arr).reshape(-1,1)]),(2, 1, 0)))
             if costs_all_seeds[-1].shape[1]<min_shape:
                min_shape = costs_all_seeds[-1].shape[1]
         costs_all_seeds = np.concatenate([c[:,:min_shape,:] for c in costs_all_seeds])
@@ -148,7 +140,6 @@ class PlotEAF:
                 self.n_independent_runs // 2,
                 3 * self.n_independent_runs // 4,
             ]
-
             surfs = get_empirical_attainment_surface(costs=costs, levels=levels)
 
             eaf_plot = EmpiricalAttainmentFuncPlot()
@@ -162,15 +153,9 @@ class PlotEAF:
             )
             plt.xlabel("Perplexity")
             plt.ylabel(metrics_map[hw_metric])
-
+            plt.title("EAF for FLOPS on GPT-"+self.search_space.upper())
             plt.tight_layout()
-            plt.legend()
-        if hw_metric == "energies":
-            plt.title("EAF for Energy on "+device.upper())
-        else:
-            plt.title("EAF for Latencies on "+device.upper())
-        plt.tight_layout()
-        plt.savefig(f"eaf_plots_latencies_low_res/{hw_metric}_{device}_{self.search_space}.pdf",bbox_inches='tight',dpi=2)
+        plt.savefig(f"eaf_plots/{hw_metric}_{self.search_space}.pdf")
         plt.clf()
 
     def plot_hv_over_time(
@@ -189,11 +174,8 @@ class PlotEAF:
             costs = self.get_baseline_results(
                 method, hw_metric, surrogate_type, device, data_type, denormalize=False
             )
-            #costs = costs[:,:1000,:]
-            #costs[:,:,0]/=37
-            #costs[:,:,1]/=17
             costs = costs[np.newaxis, ...]
-            ref_point = np.array([2,2])
+            ref_point = np.array([1.5, 1.5])
             eaf_plot = EmpiricalAttainmentFuncPlot(ref_point=ref_point)
             colors = [self.color_map[method]]
             labels = [method]
@@ -205,29 +187,16 @@ class PlotEAF:
             if min_hv_curr<min_hv:
                 min_hv = min_hv_curr
             plt.legend(prop={'size': 14},loc="lower right",ncol=2)
-            if hw_metric == "energies":
-                plt.title("HV over Time for Energy on "+device.upper())
-                plt.xlabel("Number of Surrogate Evaluations")
-                plt.ylabel("Hypervolume")
-            else:
-                plt.title("HV over Time for Latencies on "+device.upper())
-                plt.xlabel("Number of Surrogate Evaluations")
-                plt.ylabel("Hypervolume")
+            plt.title("HV over Time for FLOPS on "+self.search_space.upper())
+            plt.xlabel("Number of Surrogate Evaluations")
+            plt.ylabel("Hypervolume")
             plt.tight_layout()
-        plt.tight_layout()
-        plt.ylim(min_hv+0.8,max_hv)
-        plt.savefig(f"eaf_plots_latencies_low_res/hv_over_time_{hw_metric}_{device}_{self.search_space}.pdf",bbox_inches='tight',dpi=2)
 
+        plt.ylim(min_hv+0.8,max_hv)
+        plt.savefig(f"eaf_plots/hv_over_time_{hw_metric}_{self.search_space}.pdf",bbox_inches='tight')
 
 if __name__ == "__main__":
-    scales = ["s"]
-    devices = ["a100","a6000","v100","rtx2080","rtx3080","P100","cpu_xeon_gold","cpu_xeon_silver","h100","a40","cpu_amd_7513","cpu_amd_7502","cpu_amd_7452"]
-    for d in devices:
-        for s in scales:
-            plot_eaf = PlotEAF(dim=2,search_space=s)
-            plot_eaf.plot_eaf(
-                ["RS","LS","LSBO","MOREA","EHVI","RSBO","NSGA2","MOASHA"], "latencies", "conformal_quantile", d, data_type="quantile"
-            )
-            plot_eaf.plot_hv_over_time(
-                ["RS","LS","LSBO","MOREA","EHVI","RSBO","NSGA2","MOASHA"], "latencies", "conformal_quantile", d, data_type="quantile"
-            )
+    plot_eaf = PlotEAF(dim=2,search_space="m")
+    plot_eaf.plot_eaf(
+        ["LS", "LSBO","EHVI","RSBO","NSGA2","MOASHA"], "flops", "conformal_quantile", "rtx2080", data_type="quantile"
+    )
