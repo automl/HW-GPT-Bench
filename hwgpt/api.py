@@ -12,10 +12,12 @@ from lib.utils import (
     convert_arch_to_str,
     convert_str_to_arch,
 )
+from hwgpt.predictors.hwmetric.net import Net
 from hwgpt.api_utils import estimate_flops, num_parameters
 from hwgpt.model.gpt_base.model import GPT
 from data_collection.pl_gpt.utils.configuration import Config
 from data_collection.gpt_profiler.profile.gpt_perplexity_profiler import GPTProfilerPPL
+from hwgpt.predictors.hwmetric.models.autogluon.autogluon_gpu_latencies import MultilabelPredictor
 from typing import Any, Dict
 from argparse import Namespace
 import pickle
@@ -27,6 +29,7 @@ class HWGPTBenchAPI:
         search_space: str,
         use_supernet_surrogate: bool = False,
     ):
+        print(search_spaces)
 
         self.search_space = search_spaces[search_space]
         self.search_space_name = search_space
@@ -51,7 +54,7 @@ class HWGPTBenchAPI:
             "float16_memory",
             "bfloat16_memory",
         ]
-        self.hw_metrics_true = ["flops", "params"]
+        self.hw_metrics_true = ["flops", "params", "float16_memory", "bfloat16_memory"]
         self.metrics = ["perplexity", "accuracy"]
         self.config = None
         self.use_supernet_surrogate = use_supernet_surrogate
@@ -69,6 +72,11 @@ class HWGPTBenchAPI:
             self.gpt_ppl_profiler = GPTProfilerPPL(
                 self.prepare_args_for_ppl_profiler(), self.cfg_model
             )
+
+    def init_devices(self):
+        self.device_query = self.device_list
+        self.hw_metrics_surrogate_query = self.hw_metrics_surrogate
+        self.hw_metrics_true_query = self.hw_metrics_true
 
     def get_model_config(self) -> Config:
         config = Config(
@@ -124,11 +132,13 @@ class HWGPTBenchAPI:
     def set_metrics_and_devices(self, hw_metric: str = None, device: str = None):
         if hw_metric is not None:
             if hw_metric in self.hw_metrics_true:
-                self.hw_metrics_true = [hw_metric]
+                self.hw_metrics_true_query = [hw_metric]
+                self.hw_metrics_surrogate_query = []
             else:
-                self.hw_metrics_surrogate = [hw_metric]
+                self.hw_metrics_surrogate_query = [hw_metric]
+                self.hw_metrics_true_query = []
         if device is not None:
-            self.device_list = [device]
+            self.device_query = [device]
 
     def get_flops(self):
         flops = estimate_flops(self.create_model())
@@ -138,35 +148,43 @@ class HWGPTBenchAPI:
         params = num_parameters(self.create_model())
         return params
 
+    def get_memory(self, objective):
+        device = "cuda" if torch.cuda.is_available() else "cpu"
+        num_layers = max(search_spaces[search_space]["n_layer_choices"])
+        hw_predictor = Net(num_layers,False,128,128).to(device)
+        hw_predictor.load_state_dict(
+            torch.load(
+                "data_collection/gpt_datasets/predictor_ckpts/hwmetric/mlp/"+str(objective)+"_"+str(search_space)+".pth"
+            , map_location=device)
+        )
+        arch_feature_map = get_arch_feature_map(self.config, self.search_space_name)
+        arch_feature_map_predictor = normalize_arch_feature_map(
+            arch_feature_map, self.search_space_name
+        )
+        hw_metric = hw_predictor(torch.tensor(arch_feature_map_predictor).to(device).unsqueeze(0))
+
+        return hw_metric.item()
+
+
+
     def compute_predictions_hw(
         self,
         hw_metric: str,
         device: str,
-        surrogate_type: str = "conformal_quantile",
-        data_type: str = "quantile",
-        return_all: bool = True,
-        return_all_quantiles: bool = False,
     ) -> Any:
         arch_feature = get_arch_feature_map(self.config, self.search_space_name)
-        arch_feature = normalize_arch_feature_map(arch_feature, self.search_space_name)
-        max_layers = max(self.search_space["n_layer_choices"])
+        #arch_feature = normalize_arch_feature_map(arch_feature, self.search_space_name)
         surrogate = get_hw_predictor_surrogate(
-            max_layers,
             self.search_space_name,
             device,
-            surrogate_type,
-            data_type,
             hw_metric,
         )
         predictions_hw = predict_hw_surrogate(
             [arch_feature],
             surrogate,
-            surrogate_type,
-            return_all=return_all,
-            return_quantiles=return_all_quantiles,
+            hw_metric,
+            device,
         )
-        if not return_all_quantiles:
-            return predictions_hw[0]
         return predictions_hw
 
     def eval_supernet_surrogate(self) -> Dict[str, float]:
@@ -204,11 +222,8 @@ class HWGPTBenchAPI:
 
     def query(
         self,
-        hw_surrogate_type: str = "conformal_quantile",
-        hw_data_type: str = "quantile",
-        device: str = None,
-        hw_metric: str = None,
-        return_all_quantiles: bool = False,
+        device: str = "a100",
+        hw_metric: str = "latencies",
     ):
 
         if self.config is None:
@@ -216,21 +231,20 @@ class HWGPTBenchAPI:
         results = {}
         results["perplexity"] = self.compute_predictions_ppl()
         self.set_metrics_and_devices(hw_metric, device)
-        for hw_metric in self.hw_metrics_surrogate:
+        for hw_metric in self.hw_metrics_surrogate_query:
             results[hw_metric] = {}
-            for device in self.device_list:
+            for device in self.device_query:
                 results[hw_metric][device] = self.compute_predictions_hw(
                     hw_metric,
-                    device,
-                    hw_surrogate_type,
-                    hw_data_type,
-                    return_all_quantiles,
+                    device
                 )
-        for hw_metric_true in self.hw_metrics_true:
+        for hw_metric_true in self.hw_metrics_true_query:
             if hw_metric_true == "flops":
                 results[hw_metric_true] = self.get_flops()
             elif hw_metric_true == "params":
                 results[hw_metric_true] = self.get_params()
+            elif hw_metric_true in ["float16_memory", "bfloat16_memory"]:
+                results[hw_metric_true] = self.get_memory(hw_metric_true)
             else:
                 raise ValueError("Invalid hw metric")
         if self.use_supernet_surrogate:
@@ -240,43 +254,12 @@ class HWGPTBenchAPI:
 
 # test
 if __name__ == "__main__":
-    scales = ["s", "m", "l"]
-
-    devices = [
-        "a100",
-        "a40",
-        "h100",
-        "rtx2080",
-        "rtx3080",
-        "a6000",
-        "v100",
-        "P100",
-        "cpu_xeon_silver",
-        "cpu_xeon_gold",
-        "cpu_amd_7502",
-        "cpu_amd_7513",
-        "cpu_amd_7452",
-    ]
-    metrics = [
-        "energies",
-        "latencies",
-        "flops",
-        "params",
-        "bfloat16_memory",
-        "float16_memory",
-        "perplexity",
-    ]
-    for scale in scales:
-        api = HWGPTBenchAPI(scale)
+    metrics = ["latencies", "energies", "flops", "params", "float16_memory", "bfloat16_memory"]
+    devices = ["a100", "rtx2080", "cpu_xeon_silver", "cpu_amd_7513","h100", "a40", "rtx3080", "a6000", "P100", "v100", "cpu_xeon_gold", "cpu_amd_7502", "cpu_amd_7452"]
+    search_spaces_str = ["s", "m", "l"]
+    for search_space in search_spaces_str:
         for device in devices:
             for metric in metrics:
-                # print(metric)
-                archs_device = api.query_gt_all_archs(metric, device)
-                # print(archs_device.keys())
-                arch = list(archs_device.keys())[0]
-                print(archs_device[arch])
-                print("Arch to config", convert_str_to_arch(arch))
-                print(
-                    "Arch config to str",
-                    convert_arch_to_str(convert_str_to_arch(arch), scale),
-                )
+                api = HWGPTBenchAPI(search_space)
+                api.sample_random_arch()
+                print(api.query(device=device, hw_metric=metric))

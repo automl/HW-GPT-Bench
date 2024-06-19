@@ -1,5 +1,6 @@
 # Logs
 experiments/*
+data_collection/*
 logs/*
 logs/
 *pdf
