@@ -132,20 +132,20 @@ class HWGPT:
 
     def set_metrics_and_devices(self, hw_metric: str = None, device: str = None):
         if hw_metric is not None:
-          if isinstance(hw_metric, str):
-            if hw_metric in self.hw_metrics_true:
-                self.hw_metrics_true_query = [hw_metric]
-                self.hw_metrics_surrogate_query = []
+            if isinstance(hw_metric, str):
+                if hw_metric in self.hw_metrics_true:
+                    self.hw_metrics_true_query = [hw_metric]
+                    self.hw_metrics_surrogate_query = []
+                else:
+                    self.hw_metrics_surrogate_query = [hw_metric]
+                    self.hw_metrics_true_query = []
             else:
-                self.hw_metrics_surrogate_query = [hw_metric]
-                self.hw_metrics_true_query = []
-          else:
-            if all(metric in self.hw_metrics_true for metric in hw_metric):
-                self.hw_metrics_true_query = hw_metric
-                self.hw_metrics_surrogate_query = []
-            else:
-                self.hw_metrics_surrogate_query = hw_metric
-                self.hw_metrics_true_query = []
+                if all(metric in self.hw_metrics_true for metric in hw_metric):
+                    self.hw_metrics_true_query = hw_metric
+                    self.hw_metrics_surrogate_query = []
+                else:
+                    self.hw_metrics_surrogate_query = hw_metric
+                    self.hw_metrics_true_query = []
         else:
             self.hw_metrics_surrogate_query = self.hw_metrics_surrogate
             self.hw_metrics_true_query = self.hw_metrics_true
@@ -242,12 +242,7 @@ class HWGPT:
                 raise ValueError("Unsupported metric type")
         return metric_stats
 
-    def query(
-        self,
-        device: str = None,
-        metric: str = None,
-        predictor: str = "mlp"
-    ):
+    def query(self, device: str = None, metric: str = None, predictor: str = "mlp"):
         if device is not None and metric is None:
             metric = ["latencies", "energies"]
         if metric is not None and device is None:
@@ -257,7 +252,7 @@ class HWGPT:
         results = {}
         if metric == "perplexity":
             if predictor == "mlp":
-               results["perplexity"] = self.compute_predictions_ppl()
+                results["perplexity"] = self.compute_predictions_ppl()
             else:
                 results = self.eval_supernet_surrogate()
             return results
@@ -288,15 +283,16 @@ class HWGPT:
 # test
 if __name__ == "__main__":
     from hwgpt.api import HWGPT
-    api = HWGPT(search_space="s",use_supernet_surrogate=False) # initialize API
-    random_arch = api.sample_arch() # sample random arch
-    api.set_arch(random_arch) # set  arch
-    results = api.query() # query all for the sampled arch
+
+    api = HWGPT(search_space="s", use_supernet_surrogate=False)  # initialize API
+    random_arch = api.sample_arch()  # sample random arch
+    api.set_arch(random_arch)  # set  arch
+    results = api.query()  # query all for the sampled arch
     print("Results: ", results)
-    energy = api.query(metric="energies") # query energy
+    energy = api.query(metric="energies")  # query energy
     print("Energy: ", energy)
-    rtx2080 = api.query(device="rtx2080") # query device
+    rtx2080 = api.query(device="rtx2080")  # query device
     print("RTX2080: ", rtx2080)
     # query perplexity based on mlp predictor
-    perplexity_mlp = api.query(metric="perplexity",predictor="mlp")
+    perplexity_mlp = api.query(metric="perplexity", predictor="mlp")
     print("Perplexity MLP: ", perplexity_mlp)
