@@ -1,5 +1,5 @@
-# HW-Aware-LLM-Bench
-Repository for Hardware Aware LLM Benchmark
+# HW-GPT-Bench
+Repository for HW-GPT Benchmark
 
 To install in editable mode (-e) run:
 
