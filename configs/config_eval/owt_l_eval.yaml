@@ -2,7 +2,7 @@
 resume_training: True
 
 experiment:
-  experiments_base_dir: /p/scratch/ccstdl/sukthanker1/HW-Aware-LLM-Bench/experiments
+  experiments_base_dir: /path/to/experiments
   project_name: owt_large_fast_eval
   session_name: owt_large_fast_eval
   experiment_name: default_juls # _fused-ff-prob-layer
@@ -169,7 +169,7 @@ model:
   train_strategy: "sandwich"
   sandwhich_random: 2
   use_inplace_kd: False
-  checkpoint_path: "/p/scratch/ccstdl/sukthanker1/HW-Aware-LLM-Bench/experiments/owt_large_fast/owt_large_fast/default_juls/last.ckpt"
+  checkpoint_path: "/path/to/gpt_l/last.ckpt"
 
 
 
@@ -182,5 +182,5 @@ lm_data:
   batch_size: 8
   val_ratio: 0.0005
   val_split_seed: 2357
-  data_dir: "/p/scratch/ccstdl/sukthanker1/datasets/"
-  cache_dir: "/p/scratch/ccstdl/sukthanker1/datasets/cache/"
+  data_dir: "/path/to/datasets/"
+  cache_dir: "/path/to/datasets/cache/"

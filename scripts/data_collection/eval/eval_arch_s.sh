@@ -8,7 +8,7 @@
 #SBATCH --output=logs/mpi-out.%j
 #SBATCH --error=logs/mpi-err.%j
 #SBATCH --time=24:00:00
-#SBATCH --partition=booster
+#SBATCH --partition=partition
 #SBATCH --job-name=owt_eval
 export NCCL_IB_TIMEOUT=50
 export UCX_RC_TIMEOUT=4s
@@ -32,7 +32,7 @@ module load Stages/2024
 module load CUDA/12
 module load GCC/12.3.0
 module load Python/3.11.3
-source /p/scratch/ccstdl/sukthanker1/gpt/bin/activate
+source /env/activate
 export PYTHONPATH=.
 PYTHON_SCRIPT=data_collection/gpt_profiler/profiler/profile/gpt_perplexity_profiler.py
 srun --cpu_bind=v --accel-bind=gn --threads-per-core=1 python -u $PYTHON_SCRIPT --start_index 0 --end_index 10000 $@
