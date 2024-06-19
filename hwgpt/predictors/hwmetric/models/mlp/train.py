@@ -1,13 +1,10 @@
-from hwgpt.predictors.hwmetric.net import Net
-from hwgpt.predictors.hwmetric.utils import HWDataset, search_spaces
+
 import torch
 import torch.nn as nn
 import torch.optim as optim
 import argparse
-import numpy as np
 import scipy
 from hwgpt.predictors.hwmetric.utils import get_model_and_datasets
-import pickle
 
 
 def train(
@@ -181,8 +178,7 @@ if __name__ == "__main__":
         default="energies",
     )
     parser.add_argument("--search_space", type=str, default="s")
-    parser.add_argument("--model", type=str, default="conformal_quantile")
-    parser.add_argument("--type", type=str, default="quantile")
+    parser.add_argument("--model", type=str, default="mlp")
     parser.add_argument("--num_quantiles", type=str, default=9)
     parser.add_argument(
         "--batch-size",
@@ -220,17 +216,17 @@ if __name__ == "__main__":
     test_loader = torch.utils.data.DataLoader(
         test_dataset, batch_size=1024, shuffle=False
     )
-    if args.model == "conformal_quantile" or args.model == "quantile":
-        X_train = train_dataset.arch_features_train.data.numpy()
-        X_test = test_dataset.arch_features_test.data.numpy()
-        Y_train = train_dataset.latencies_train.data.numpy()
-        Y_test = test_dataset.latencies_test.data.numpy()
-        model.fit(X_train, Y_train)
-        base_path = (
-            "data_collection/gpt_datasets/predictor_ckpts/hwmetric/"
-            + str(args.model)
-            + "/"
-        )
+    optimizer = optim.Adam(model.parameters(), lr=args.lr)
+    model = model.to(device)
+    device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+    base_path = (
+        "data_collection/gpt_datasets/predictor_ckpts/hwmetric/"
+        + str(args.model)
+        + "/"
+    )
+    if "memory" in args.metric or "flops" in args.metric or "params" in args.metric:
+        model_path = base_path + args.metric + "_" + args.search_space + ".pth"
+    else:
         model_path = (
             base_path
             + args.metric
@@ -240,62 +236,9 @@ if __name__ == "__main__":
             + args.search_space
             + "_"
             + args.device
-            + ".pkl"
+            + ".pth"
         )
-        with open(model_path, "wb") as f:
-            pickle.dump(model, f)
-    elif args.model == "mlp":
-        optimizer = optim.Adam(model.parameters(), lr=args.lr)
-        model = model.to(device)
-        device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-        base_path = (
-            "data_collection/gpt_datasets/predictor_ckpts/hwmetric/"
-            + str(args.model)
-            + "/"
-        )
-        if "memory" in args.metric or "flops" in args.metric or "params" in args.metric:
-            model_path = base_path + args.metric + "_" + args.search_space + ".pth"
-        else:
-            model_path = (
-                base_path
-                + args.metric
-                + "_"
-                + args.type
-                + "_"
-                + args.search_space
-                + "_"
-                + args.device
-                + ".pth"
-            )
-        for epoch in range(1, args.epochs + 1):
-            train(model, device, train_loader, optimizer, epoch)
-            test(model, device, test_loader)
-        torch.save(model.state_dict(), model_path)
-    elif args.model == "gaussianmlp":
-        optimizer = optim.Adam(model.parameters(), lr=args.lr)
-        model = model.to(device)
-        device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-        base_path = (
-            "data_collection/gpt_datasets/predictor_ckpts/hwmetric/"
-            + str(args.model)
-            + "/"
-        )
-        if "memory" in args.metric or "flops" in args.metric or "params" in args.metric:
-            model_path = base_path + args.metric + "_" + args.search_space + ".pth"
-        else:
-            model_path = (
-                base_path
-                + args.metric
-                + "_"
-                + args.type
-                + "_"
-                + args.search_space
-                + "_"
-                + args.device
-                + ".pth"
-            )
-        for epoch in range(1, args.epochs + 1):
-            train_gaussian(model, device, train_loader, optimizer, epoch)
-            if (epoch + 1) % 10 == 0:
-                test_gaussian(model, device, test_loader)
-        torch.save(model.state_dict(), model_path)
+    for epoch in range(1, args.epochs + 1):
+        train(model, device, train_loader, optimizer, epoch)
+        test(model, device, test_loader)
+    torch.save(model.state_dict(), model_path)

@@ -4,9 +4,7 @@ from hwgpt.predictors.metric.net import Net
 import numpy as np
 from typing import Any, Dict, Tuple, List
 from hwgpt.model.gpt.utils import sample_config_max, sample_config_min
-from hwgpt.predictors.hwmetric.models.autogluon.autogluon_cpu_energies import MultilabelPredictor as MultilabelPredictorEnergiesCPU
-from hwgpt.predictors.hwmetric.models.autogluon.autogluon_gpu_latencies import MultilabelPredictor 
-from hwgpt.predictors.hwmetric.models.autogluon.autogluon_gpu_energies import MultilabelPredictor as MultilabelPredictorEnergiesGPU
+from hwgpt.predictors.hwmetric.models.autogluon.autogluon_latencies import MultilabelPredictor 
 import pandas as pd
 metrics_map = {
     "energies": "Energy (Wh)",
@@ -475,10 +473,10 @@ def get_hw_predictor_surrogate(
 ) -> Any:
     #dir = "gpt_"+str(metric)+"_"+str(search_space)+"_"+str(device)
     if metric == "energies":
-            from hwgpt.predictors.hwmetric.models.autogluon.autogluon_gpu_energies import get_and_load_model
+            from hwgpt.predictors.hwmetric.models.autogluon.autogluon_energies import get_and_load_model
             predictor = get_and_load_model(search_space, device)
     elif metric == "latencies":
-        from hwgpt.predictors.hwmetric.models.autogluon.autogluon_gpu_latencies import get_and_load_model
+        from hwgpt.predictors.hwmetric.models.autogluon.autogluon_latencies import get_and_load_model
         predictor = get_and_load_model(search_space, device)
 
     return predictor

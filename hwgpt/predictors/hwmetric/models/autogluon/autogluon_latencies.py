@@ -117,7 +117,7 @@ class MultilabelPredictor:
                 self.eval_metrics[label] = predictor.eval_metric
         self.save()
 
-    def predict(self, data, **kwargs):
+    def predict(self, data, exp=False, **kwargs):
         """Returns DataFrame with label columns containing predictions for each label.
 
         Parameters
@@ -127,9 +127,9 @@ class MultilabelPredictor:
         kwargs :
             Arguments passed into the predict() call for each TabularPredictor.
         """
-        return self._predict(data, as_proba=False, **kwargs)
+        return self._predict(data, as_proba=False, exp=exp, **kwargs)
 
-    def predict_proba(self, data, **kwargs):
+    def predict_proba(self, data,exp=False, **kwargs):
         """Returns dict where each key is a label and the corresponding value is the `predict_proba()` output for just that label.
 
         Parameters
@@ -139,9 +139,9 @@ class MultilabelPredictor:
         kwargs :
             Arguments passed into the `predict_proba()` call for each TabularPredictor (also passed into a `predict()` call).
         """
-        return self._predict(data, as_proba=True, **kwargs)
+        return self._predict(data, as_proba=True, exp=exp, **kwargs)
 
-    def evaluate(self, data, **kwargs):
+    def evaluate(self, data, exp=False, **kwargs):
         """Returns dict where each key is a label and the corresponding value is the `evaluate()` output for just that label.
 
         Parameters
@@ -156,9 +156,16 @@ class MultilabelPredictor:
         for label in self.labels:
             print(f"Evaluating TabularPredictor for label: {label} ...")
             predictor = self.get_predictor(label)
+            if exp and label == "Target_Std":
+                eval_dict[label] = np.exp(predictor.evaluate(data, **kwargs))
+            else:
+                eval_dict[label] = predictor.evaluate(data, **kwargs)
             eval_dict[label] = predictor.evaluate(data, **kwargs)
             if self.consider_labels_correlation:
-                data[label] = predictor.predict(data, **kwargs)
+                if exp and label == "Target_Std":
+                   data[label] = np.exp(data[label])
+                else:
+                   data[label] = predictor.predict(data,**kwargs)
         return eval_dict
 
     def save(self):
@@ -172,8 +179,8 @@ class MultilabelPredictor:
     @classmethod
     def load(cls, path):
         """Load MultilabelPredictor from disk `path` previously specified when creating this MultilabelPredictor."""
-        #path = os.path.expanduser(path)
-        return load_pkl.load(path+"/"+"multilabel_predictor.pkl")
+        path = os.path.expanduser(path)
+        return load_pkl.load(path=os.path.join(path, cls.multi_predictor_file))
 
     def get_predictor(self, label):
         """Returns TabularPredictor which is used to predict this label."""
@@ -187,7 +194,7 @@ class MultilabelPredictor:
             return TabularDataset(data)
         return data.copy()
 
-    def _predict(self, data, as_proba=False,exp=False,**kwargs):
+    def _predict(self, data, as_proba=False, exp=False,**kwargs):
         data = self._get_data(data)
         if as_proba:
             predproba_dict = {}
@@ -195,12 +202,11 @@ class MultilabelPredictor:
             print(f"Predicting with TabularPredictor for label: {label} ...")
             predictor = self.get_predictor(label)
             if as_proba:
-                predproba_dict[label] = predictor.predict_proba(data, as_multiclass=True, **kwargs)
+                predproba_dict[label] = predictor.predict_proba(data, exp=exp, as_multiclass=True, **kwargs)
             if label == "Target_Std" and exp:
                 data[label] = np.exp(predictor.predict(data, **kwargs))
             else:
                 data[label] = predictor.predict(data, **kwargs)
-        print("Predictions:  \n", data[self.labels])
         if not as_proba:
             return data[self.labels]
         else:
@@ -285,13 +291,3 @@ def get_and_load_model(search_space,device):
         predictor = pickle.load(f)
 
     return predictor
-if __name__ == "__main__":
-    import argparse
-    parser = argparse.ArgumentParser(description="Run autogluon surrogates")
-    parser.add_argument("--search_space", type=str, default="s")
-    parser.add_argument("--device", type=str, default="a6000")
-    parser.add_argument("--time_limit", type=int, default=60*30)
-    parser.add_argument("--save_path", type=str, default="./ag_model")
-
-    args = parser.parse_args()
-    run(args)

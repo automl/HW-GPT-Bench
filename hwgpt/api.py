@@ -12,12 +12,12 @@ from lib.utils import (
     convert_arch_to_str,
     convert_str_to_arch,
 )
-from hwgpt.predictors.hwmetric.net import Net
+from hwgpt.predictors.hwmetric.models.mlp.net import Net
 from hwgpt.api_utils import estimate_flops, num_parameters
 from hwgpt.model.gpt_base.model import GPT
 from data_collection.pl_gpt.utils.configuration import Config
 from data_collection.gpt_profiler.profile.gpt_perplexity_profiler import GPTProfilerPPL
-from hwgpt.predictors.hwmetric.models.autogluon.autogluon_gpu_latencies import MultilabelPredictor
+from hwgpt.predictors.hwmetric.models.autogluon.autogluon_latencies import MultilabelPredictor
 from typing import Any, Dict
 from argparse import Namespace
 import pickle

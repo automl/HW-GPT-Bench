@@ -117,7 +117,7 @@ class MultilabelPredictor:
                 self.eval_metrics[label] = predictor.eval_metric
         self.save()
 
-    def predict(self, data, **kwargs):
+    def predict(self, data, exp=False, **kwargs):
         """Returns DataFrame with label columns containing predictions for each label.
 
         Parameters
@@ -127,9 +127,9 @@ class MultilabelPredictor:
         kwargs :
             Arguments passed into the predict() call for each TabularPredictor.
         """
-        return self._predict(data, as_proba=False, **kwargs)
+        return self._predict(data, as_proba=False, exp=exp, **kwargs)
 
-    def predict_proba(self, data, **kwargs):
+    def predict_proba(self, data,exp=False, **kwargs):
         """Returns dict where each key is a label and the corresponding value is the `predict_proba()` output for just that label.
 
         Parameters
@@ -139,9 +139,9 @@ class MultilabelPredictor:
         kwargs :
             Arguments passed into the `predict_proba()` call for each TabularPredictor (also passed into a `predict()` call).
         """
-        return self._predict(data, as_proba=True, **kwargs)
+        return self._predict(data, as_proba=True, exp=exp, **kwargs)
 
-    def evaluate(self, data, **kwargs):
+    def evaluate(self, data, exp=False, **kwargs):
         """Returns dict where each key is a label and the corresponding value is the `evaluate()` output for just that label.
 
         Parameters
@@ -156,9 +156,16 @@ class MultilabelPredictor:
         for label in self.labels:
             print(f"Evaluating TabularPredictor for label: {label} ...")
             predictor = self.get_predictor(label)
+            if exp and label == "Target_Std":
+                eval_dict[label] = np.exp(predictor.evaluate(data, **kwargs))
+            else:
+                eval_dict[label] = predictor.evaluate(data, **kwargs)
             eval_dict[label] = predictor.evaluate(data, **kwargs)
             if self.consider_labels_correlation:
-                data[label] = predictor.predict(data, **kwargs)
+                if exp and label == "Target_Std":
+                   data[label] = np.exp(data[label])
+                else:
+                   data[label] = predictor.predict(data,**kwargs)
         return eval_dict
 
     def save(self):
@@ -195,7 +202,7 @@ class MultilabelPredictor:
             print(f"Predicting with TabularPredictor for label: {label} ...")
             predictor = self.get_predictor(label)
             if as_proba:
-                predproba_dict[label] = predictor.predict_proba(data, as_multiclass=True, **kwargs)
+                predproba_dict[label] = predictor.predict_proba(data, exp=exp, as_multiclass=True, **kwargs)
             if label == "Target_Std" and exp:
                 data[label] = np.exp(predictor.predict(data, **kwargs))
             else:
@@ -208,7 +215,7 @@ class MultilabelPredictor:
 
 def run(args):
     # Following https://auto.gluon.ai/stable/tutorials/tabular/advanced/tabular-multilabel.html#inference-and-evaluation
-    data_path = "gpt_"+args.search_space+"_"+args.device+".csv"
+    data_path = "gpt_"+args.search_space+"_"+"latencies_"+args.device+".csv"
     df = pd.read_csv(data_path)
 
     time_limit = args.time_limit
@@ -217,20 +224,25 @@ def run(args):
     target_std = "Target_Std"
 
     train_df, test_df = train_test_split(df, test_size=0.2, random_state=42, shuffle=True)
-    target_cols = [x for x in df.columns if x.startswith("energy")]
-    # features = [x for x in df.columns if x not in target_cols]
-
-    # train_df[features] = train_df[features].astype("category")
-    train_df[target_avg] = (train_df[target_cols]*1000).mean(axis=1)
-    train_df[target_std] = np.log((train_df[target_cols]*1000).std(axis=1))
-    #for target in [target_avg, target_std]:
-    #    train_df[target] = np.log(train_df[target] + 1)
+    target_cols = [x for x in df.columns if x.startswith("latency")]
+    if "cpu" in args.device and "energies" in args.metric:
+        train_df[target_avg] = train_df["energy_mean"]*1000
+    else:
+        train_df[target_avg] = (train_df[target_cols]*1000).mean(axis=1)
+    if "cpu" in args.device and "latencies" in args.metric:
+        train_df[target_std] = (train_df[target_cols]*1000).std(axis=1)
+    else:
+        if "cpu" in args.device:
+            train_df[target_std] = np.log(train_df["energy_std"]*1000)
+        else:
+            train_df[target_std] = np.log((train_df[target_cols]*1000).std(axis=1))
+        exp = True
     train_df = train_df.drop(columns=target_cols)
 
     labels = [target_avg, target_std]  # which columns to predict based on the others
     problem_types = ["regression", "regression"]  # type of each prediction problem (optional)
     eval_metrics = ["r2","r2"]#["r2", "r2"]  # metrics used to evaluate predictions for each label (optional)
-    save_path = "gpt_energies_"+args.search_space+"_"+args.device+"_log/" #args.save_path
+    save_path = "gpt_latencies_"+args.search_space+"_"+args.device+"_log/" #args.save_path
 
     multi_predictor = MultilabelPredictor(
         labels=labels,
@@ -242,14 +254,18 @@ def run(args):
     multi_predictor.fit(train_df, time_limit=time_limit, dynamic_stacking=False, num_stack_levels=1, num_bag_folds=8, num_bag_sets=2, presets="best_quality")
 
     # test_df[features] = test_df[features].astype("category")
-    test_df[target_avg] = (test_df[target_cols]*1000).mean(axis=1)
-    test_df[target_std] = (test_df[target_cols]*1000).std(axis=1)
+    if "cpu" in args.device and "energies" in args.metric:
+        test_df[target_avg] = test_df["energy_mean"]*1000
+        test_df[target_std] = test_df["energy_std"]*1000
+    else:
+        test_df[target_avg] = (test_df[target_cols]*1000).mean(axis=1)
+        test_df[target_std] = (test_df[target_cols]*1000).std(axis=1)
     #for target in [target_avg, target_std]:
     #    test_df[target] = np.log(test_df[target] + 1)
     #metrics = uct.metrics.get_all_metrics(predictions, predictions_std, y)
     test_df = test_df.drop(columns=target_cols)
 
-    predictions = multi_predictor.predict(test_df)
+    predictions = multi_predictor.predict(test_df, exp=exp)
     metrics = uct.metrics.get_all_metrics(np.array(predictions["Target_Avg"]), np.array(predictions["Target_Std"]), np.array(test_df["Target_Avg"]))
     print(metrics)
     #save the metrics
@@ -258,32 +274,13 @@ def run(args):
         pickle.dump([test_df,predictions,metrics], f)
     print("Predictions:  \n", predictions)
 
-    evaluations = multi_predictor.evaluate(test_df)
+    evaluations = multi_predictor.evaluate(test_df, exp=exp)
     print(evaluations)
     print("Evaluated using metrics:", multi_predictor.eval_metrics)
 
     for label in labels:
         predictor_class = multi_predictor.get_predictor(label)
         predictor_class.leaderboard(test_df, display=True)
-
-def get_and_load_model(search_space,device):
-    target_avg = "Target_Avg"
-    target_std = "Target_Std"
-    labels = [target_avg, target_std]  # which columns to predict based on the others
-    problem_types = ["regression", "regression"]  # type of each prediction problem (optional)
-    eval_metrics = ["r2","r2"]#["r2", "r2"]  # metrics used to evaluate predictions for each label (optional)
-    #save_path = "gpt_latencies_"+args.search_space+"_"+args.device+"/" #args.save_path
-    #if "amd" in device:
-    #    model_path = "gpt_energies_"+search_space+"_"+device+"/"
-    #else:
-    model_path = "data_collection/gpt_datasets/predictor_ckpts/hwmetric/autogluon/gpt_energies_"+search_space+"_"+device+"_log/"
-    #model_path = "gpt_energies_"+search_space+"_"+device+"/"
-    #predictor = MultilabelPredictor(labels=labels, problem_types=problem_types, eval_metrics=eval_metrics, path=model_path)
-    import pickle
-    with open(model_path+"multilabel_predictor.pkl", "rb") as f:
-        import pickle
-        predictor = pickle.load(f)
-    return predictor
 
 if __name__ == "__main__":
     import argparse
@@ -292,6 +289,7 @@ if __name__ == "__main__":
     parser.add_argument("--device", type=str, default="a6000")
     parser.add_argument("--time_limit", type=int, default=60*30)
     parser.add_argument("--save_path", type=str, default="./ag_model")
+    parser.add_argument("--metric", type=str, default="latencies")
 
     args = parser.parse_args()
     run(args)

@@ -117,7 +117,7 @@ class MultilabelPredictor:
                 self.eval_metrics[label] = predictor.eval_metric
         self.save()
 
-    def predict(self, data, **kwargs):
+    def predict(self, data, exp=False, **kwargs):
         """Returns DataFrame with label columns containing predictions for each label.
 
         Parameters
@@ -127,9 +127,9 @@ class MultilabelPredictor:
         kwargs :
             Arguments passed into the predict() call for each TabularPredictor.
         """
-        return self._predict(data, as_proba=False, **kwargs)
+        return self._predict(data, as_proba=False, exp=exp, **kwargs)
 
-    def predict_proba(self, data, **kwargs):
+    def predict_proba(self, data,exp=False, **kwargs):
         """Returns dict where each key is a label and the corresponding value is the `predict_proba()` output for just that label.
 
         Parameters
@@ -139,9 +139,9 @@ class MultilabelPredictor:
         kwargs :
             Arguments passed into the `predict_proba()` call for each TabularPredictor (also passed into a `predict()` call).
         """
-        return self._predict(data, as_proba=True, **kwargs)
+        return self._predict(data, as_proba=True, exp=exp, **kwargs)
 
-    def evaluate(self, data, **kwargs):
+    def evaluate(self, data, exp=False, **kwargs):
         """Returns dict where each key is a label and the corresponding value is the `evaluate()` output for just that label.
 
         Parameters
@@ -156,9 +156,9 @@ class MultilabelPredictor:
         for label in self.labels:
             print(f"Evaluating TabularPredictor for label: {label} ...")
             predictor = self.get_predictor(label)
-            eval_dict[label] = predictor.evaluate(data, **kwargs)
+            eval_dict[label] = predictor.evaluate(data, exp=exp, **kwargs)
             if self.consider_labels_correlation:
-                data[label] = predictor.predict(data, **kwargs)
+                data[label] = predictor.predict(data, exp=exp,**kwargs)
         return eval_dict
 
     def save(self):
@@ -179,7 +179,7 @@ class MultilabelPredictor:
         """Returns TabularPredictor which is used to predict this label."""
         predictor = self.predictors[label]
         if isinstance(predictor, str):
-            return TabularPredictor.load(path=predictor)
+            return TabularPredictor.load(path="data_collection/gpt_datasets/predictor_ckpts/hwmetric/autogluon/"+predictor)
         return predictor
 
     def _get_data(self, data):
@@ -187,7 +187,7 @@ class MultilabelPredictor:
             return TabularDataset(data)
         return data.copy()
 
-    def _predict(self, data, as_proba=False, exp=False, **kwargs):
+    def _predict(self, data, as_proba=False, exp=False,**kwargs):
         data = self._get_data(data)
         if as_proba:
             predproba_dict = {}
@@ -195,85 +195,31 @@ class MultilabelPredictor:
             print(f"Predicting with TabularPredictor for label: {label} ...")
             predictor = self.get_predictor(label)
             if as_proba:
-                predproba_dict[label] = predictor.predict_proba(data, as_multiclass=True, **kwargs)
+                predproba_dict[label] = predictor.predict_proba(data, exp=exp, as_multiclass=True, **kwargs)
             if label == "Target_Std" and exp:
-                data[label] = np.exp(predictor.predict(data, **kwargs))
+                data[label] = np.exp(predictor.predict(data, exp=exp, **kwargs))
             else:
-                data[label] = predictor.predict(data, **kwargs)
+                data[label] = predictor.predict(data, exp=exp, **kwargs)
         if not as_proba:
             return data[self.labels]
         else:
             return predproba_dict
 
-
-def run(args):
-    # Following https://auto.gluon.ai/stable/tutorials/tabular/advanced/tabular-multilabel.html#inference-and-evaluation
-    data_path = "gpt_"+args.search_space+"_energies_"+args.device+".csv"
-    df = pd.read_csv(data_path)
-
-    time_limit = args.time_limit
-
+def get_and_load_model(search_space,device):
     target_avg = "Target_Avg"
     target_std = "Target_Std"
-
-    train_df, test_df = train_test_split(df, test_size=0.2, random_state=42, shuffle=True)
-    target_cols = [x for x in df.columns if x.startswith("energy")]
-    # features = [x for x in df.columns if x not in target_cols]
-
-    # train_df[features] = train_df[features].astype("category")
-    train_df[target_avg] = train_df["energy_mean"]*1000
-    train_df[target_std] = np.log(train_df["energy_std"]*1000)
-    #for target in [target_avg, target_std]:
-    #    train_df[target] = np.log(train_df[target] + 1)
-    train_df = train_df.drop(columns=target_cols)
-
     labels = [target_avg, target_std]  # which columns to predict based on the others
     problem_types = ["regression", "regression"]  # type of each prediction problem (optional)
     eval_metrics = ["r2","r2"]#["r2", "r2"]  # metrics used to evaluate predictions for each label (optional)
-    save_path = "gpt_energies_"+args.search_space+"_"+args.device+"_log/" #args.save_path
-
-    multi_predictor = MultilabelPredictor(
-        labels=labels,
-        problem_types=problem_types,
-        eval_metrics=eval_metrics,
-        path=save_path,
-    )
-    # dynamic_stacking=False, num_stack_levels=1, num_bag_folds=8, num_bag_sets=4, presets="best_quality"
-    multi_predictor.fit(train_df, time_limit=time_limit, dynamic_stacking=False, num_stack_levels=1, num_bag_folds=8, num_bag_sets=2, presets="best_quality")
-
-    # test_df[features] = test_df[features].astype("category")
-    test_df[target_avg] = test_df["energy_mean"]*1000
-    test_df[target_std] = test_df["energy_std"]*1000
-    #for target in [target_avg, target_std]:
-    #    test_df[target] = np.log(test_df[target] + 1)
-    #metrics = uct.metrics.get_all_metrics(predictions, predictions_std, y)
-    test_df = test_df.drop(columns=target_cols)
-
-    predictions = multi_predictor.predict(test_df)
-    metrics = uct.metrics.get_all_metrics(np.array(predictions["Target_Avg"]), np.array(predictions["Target_Std"]), np.array(test_df["Target_Avg"]))
-    print(metrics)
-    #save the metrics
-    with open(save_path+"calibration_metrics.pkl", "wb") as f:
+    #save_path = "gpt_latencies_"+args.search_space+"_"+args.device+"/" #args.save_path
+    #if "amd" in device:
+    #    model_path = "gpt_energies_"+search_space+"_"+device+"/"
+    #else:
+    model_path = "data_collection/gpt_datasets/predictor_ckpts/hwmetric/autogluon/gpt_energies_"+search_space+"_"+device+"_log/"
+    #model_path = "gpt_energies_"+search_space+"_"+device+"/"
+    #predictor = MultilabelPredictor(labels=labels, problem_types=problem_types, eval_metrics=eval_metrics, path=model_path)
+    import pickle
+    with open(model_path+"multilabel_predictor.pkl", "rb") as f:
         import pickle
-        pickle.dump([test_df,predictions,metrics], f)
-    print("Predictions:  \n", predictions)
-
-    evaluations = multi_predictor.evaluate(test_df)
-    print(evaluations)
-    print("Evaluated using metrics:", multi_predictor.eval_metrics)
-
-    for label in labels:
-        predictor_class = multi_predictor.get_predictor(label)
-        predictor_class.leaderboard(test_df, display=True)
-
-
-if __name__ == "__main__":
-    import argparse
-    parser = argparse.ArgumentParser(description="Run autogluon surrogates")
-    parser.add_argument("--search_space", type=str, default="s")
-    parser.add_argument("--device", type=str, default="a6000")
-    parser.add_argument("--time_limit", type=int, default=60*30)
-    parser.add_argument("--save_path", type=str, default="./ag_model")
-
-    args = parser.parse_args()
-    run(args)
+        predictor = pickle.load(f)
+    return predictor
