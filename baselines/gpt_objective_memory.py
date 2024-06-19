@@ -45,7 +45,7 @@ def objective(
     hw_predictor = Net(num_layers,False,128,128).to(device_run)
     hw_predictor.load_state_dict(
         torch.load(
-            "/work/dlclarge2/sukthank-hw-llm-bench/arxiv/HW-Aware-LLM-Bench/data_collection/gpt_datasets/predictor_ckpts/hwmetric/mlp/"+str(objective)+"_"+str(search_space)+".pth"
+            "data_collection/gpt_datasets/predictor_ckpts/hwmetric/mlp/"+str(objective)+"_"+str(search_space)+".pth"
         , map_location=device_run)
     )
     hw_metric = hw_predictor(torch.tensor(arch_feature_map_predictor).to(device_run).unsqueeze(0))
