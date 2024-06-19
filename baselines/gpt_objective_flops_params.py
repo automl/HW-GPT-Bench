@@ -44,7 +44,7 @@ if __name__ == "__main__":
     search_space = search_spaces[args.search_space]
     max_layers = max(search_space["n_layer_choices"])
     for i in range(max_layers):
-        parser.add_argument(f"--num_heads_{i}", type=int, default=16)
+        parser.add_argument(f"--num_heads_{i}", type=int, default=12)
         parser.add_argument(f"--mlp_ratio_{i}", type=int, default=4)
 
     args, _ = parser.parse_known_args()
@@ -53,7 +53,7 @@ if __name__ == "__main__":
     sample_config = {}
     sample_config["sample_n_layer"] = args.num_layers
     sample_config["sample_embed_dim"] = args.embed_dim
-    sample_config["sample_bias"] = args.bias
+    sample_config["sample_bias"] = str(args.bias)
     sample_config["sample_n_head"] = []
     sample_config["sample_mlp_ratio"] = []
     for i in range(max_layers):

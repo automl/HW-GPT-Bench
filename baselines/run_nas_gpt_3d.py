@@ -1,3 +1,19 @@
+import socket
+import sys
+
+deny_connects = False
+
+def deny_nework_connections():
+  global deny_connects
+
+  def audit_hook_deny_connects(event: str, args):
+    if deny_connects and event == 'socket.connect':
+      sock: socket.socket = args[0]
+      if sock.family != socket.AddressFamily.AF_UNIX:
+        raise Exception("network connection denied to prevent accidental Internet access")
+
+  deny_connects = True
+  sys.addaudithook(audit_hook_deny_connects)
 import logging
 from argparse import ArgumentParser
 from pathlib import Path
@@ -27,8 +43,10 @@ from lib.utils import search_spaces
 
 
 if __name__ == "__main__":
-    logging.getLogger().setLevel(logging.DEBUG)
+    logging.getLogger().setLevel(logging.INFO)
     # [1]
+    deny_nework_connections()
+    #socket.create_connection(("www.google.com", 10))
     parser = ArgumentParser()
     parser.add_argument(
         "--method",
@@ -60,7 +78,7 @@ if __name__ == "__main__":
     parser.add_argument(
         "--max_wallclock_time",
         type=int,
-        default=200,
+        default=10000,
     )
     parser.add_argument(
         "--experiment_tag",
@@ -82,14 +100,14 @@ if __name__ == "__main__":
         type=str,
         default="a6000",
     )
-    parser.add_argument("--objective_1", type=str, default="energy")
-    parser.add_argument("--objective_2", type=str, deafult="latency")
+    parser.add_argument("--objective_1", type=str, default="latencies")
+    parser.add_argument("--objective_2", type=str, default="energies")
     parser.add_argument("--search_space", type=str, default="s")
     parser.add_argument("--surrogate_type", type=str, default="conformal_quantile")
     parser.add_argument("--type", type=str, default="quantile")
     args, _ = parser.parse_known_args()
     search_space = search_spaces[args.search_space]
-    max_layers = max(search_spaces["n_layer_choices"])
+    max_layers = max(search_space["n_layer_choices"])
     config_space = {
         "search_space": args.search_space,
         "device_1": args.device_1,
@@ -182,7 +200,7 @@ if __name__ == "__main__":
 
     # Stopping criterion: We stop after `args.max_wallclock_time` seconds
     # [5]
-    stop_criterion = StoppingCriterion(max_num_evaluations=10)
+    stop_criterion = StoppingCriterion(max_wallclock_time=args.max_wallclock_time)
 
     tuner = Tuner(
         trial_backend=trial_backend,
@@ -194,7 +212,7 @@ if __name__ == "__main__":
             "seed": args.random_seed,
             "algorithm": args.method,
             "tag": args.experiment_tag,
-        },
+        }
     )
 
     tuner.run()
@@ -236,12 +254,6 @@ if __name__ == "__main__":
     save_path = (
         objectiv_path
         + args.experiment_tag
-        + "_"
-        + args.method
-        + "_"
-        + args.surrogate_type
-        + "_"
-        + args.type
         + "_"
         + args.device_1
         + "_"

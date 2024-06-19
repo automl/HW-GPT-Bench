@@ -20,7 +20,7 @@ import torch
 
 report = Reporter()
 from analysis.autogluon_gpu_latencies import MultilabelPredictor
-
+from hwgpt.predictors.hwmetric.net import Net
 def objective(
     sampled_config: Dict[str, Any],
     device: str,
@@ -33,26 +33,29 @@ def objective(
     arch_feature_map_ppl_predictor = convert_config_to_one_hot(
         sampled_config, search_space=search_space
     )
-    #arch_feature_map_predictor = normalize_arch_feature_map(
-    #    arch_feature_map, search_space
-    #)
+    arch_feature_map_predictor = normalize_arch_feature_map(
+        arch_feature_map, search_space
+    )
     device_run = "cuda" if torch.cuda.is_available() else "cpu"
-    ppl_predictor = get_ppl_predictor_surrogate(search_space)
+    ppl_predictor = get_ppl_predictor_surrogate(search_space).to(device_run)
     perplexity = ppl_predictor(
         arch_feature_map_ppl_predictor.to(device_run).unsqueeze(0)
     )
-    hw_predictor = get_hw_predictor_surrogate(
-    search_space, device, objective
+    num_layers = max(search_spaces[search_space]["n_layer_choices"])
+    hw_predictor = Net(num_layers,False,128,128).to(device_run)
+    hw_predictor.load_state_dict(
+        torch.load(
+            "/work/dlclarge2/sukthank-hw-llm-bench/arxiv/HW-Aware-LLM-Bench/data_collection/gpt_datasets/predictor_ckpts/hwmetric/mlp/"+str(objective)+"_"+str(search_space)+".pth"
+        , map_location=device_run)
     )
-    hw_metric = predict_hw_surrogate(
-        [arch_feature_map], hw_predictor, objective, device
-    )
+    hw_metric = hw_predictor(torch.tensor(arch_feature_map_predictor).to(device_run).unsqueeze(0))
+    hw_metric_norm = normalize_memory(hw_metric.item(),search_space,objective)
     ppl = perplexity.item()
-    ppl_norm = normalize_ppl(ppl, search_space,method="max-min")
-    if objective  == "energies":
-        hw_metric_norm = normalize_energy(hw_metric,device=device,scale=search_space,surrogate=surrogate_type,metric=objective,data_type=type,method="max-min")
-    else:
-        hw_metric_norm = normalize_latency(hw_metric/1000,device=device,scale=search_space,surrogate=surrogate_type,metric=objective,data_type=type,method="max-min")
+    ppl_norm = normalize_ppl(ppl, search_space)
+    #if objective  == "energies":
+    #    hw_metric_norm = normalize_energy(hw_metric,device=device,scale=search_space,surrogate=surrogate_type,metric=objective,data_type=type)
+    #else:
+    #    hw_metric_norm = normalize_latency(hw_metric/1000,device=device,scale=search_space,surrogate=surrogate_type,metric=objective,data_type=type)
     report(perplexity=ppl_norm, hw_metric=hw_metric_norm)
 
 
@@ -64,14 +67,14 @@ if __name__ == "__main__":
     root.setLevel(logging.INFO)
     parser = argparse.ArgumentParser()
     parser.add_argument("--epochs", type=int, default=100)
-    parser.add_argument("--surrogate_type", type=str, default="conformal_quantile")
-    parser.add_argument("--type", type=str, default="quantile")
+    parser.add_argument("--surrogate_type", type=str, default="memory")
+    parser.add_argument("--type", type=str, default="median")
     parser.add_argument("--search_space", type=str, default="s")
     parser.add_argument("--device", type=str, default="v100")
     parser.add_argument("--num_layers", type=int, default=12)
     parser.add_argument("--embed_dim", type=int, default=768)
     parser.add_argument("--bias", type=bool, default=True)
-    parser.add_argument("--objective", type=str, default="energies")
+    parser.add_argument("--objective", type=str, default="float16_memory")
     args = parser.parse_known_args()[0]
     search_space = search_spaces[args.search_space]
     max_layers = max(search_space["n_layer_choices"])

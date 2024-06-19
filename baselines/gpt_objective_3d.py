@@ -19,7 +19,7 @@ from lib.utils import (
 )
 
 from typing import List, Dict, Any
-
+from analysis.autogluon_gpu_latencies import MultilabelPredictor
 report = Reporter()
 
 
@@ -36,22 +36,23 @@ def objective(
     arch_feature_map_ppl_predictor = convert_config_to_one_hot(
         sampled_config, search_space=search_space
     )
-    arch_feature_map_predictor = normalize_arch_feature_map(
-        arch_feature_map, search_space
-    )
     # print(arch_feature_map_predictor)
+    device = "cuda" if torch.cuda.is_available() else "cpu"
     ppl_predictor = get_ppl_predictor_surrogate(search_space)
-    perplexity = ppl_predictor(arch_feature_map_ppl_predictor.cuda().unsqueeze(0))
+    perplexity = ppl_predictor(arch_feature_map_ppl_predictor.to(device).unsqueeze(0))
     hw_metric_1_surrogate, hw_metric_2_surrogate = get_all_hw_surrogates(
         max_layers, search_space, objectives, device_list, surrogate_types, type
     )
     hw_metric_1 = predict_hw_surrogate(
-        [arch_feature_map_predictor], hw_metric_1_surrogate, surrogate_types[0]
-    )[0]
+        [arch_feature_map], hw_metric_1_surrogate, objectives[0], device_list[0]
+    )
     hw_metric_2 = predict_hw_surrogate(
-        [arch_feature_map_predictor], hw_metric_2_surrogate, surrogate_types[1]
-    )[0]
-
+        [arch_feature_map], hw_metric_2_surrogate, objectives[1], device_list[1]
+    )
+    if objectives[0] == "latencies":
+        hw_metric_1 = hw_metric_1 / 1000
+    if objectives[1] == "latencies":
+        hw_metric_2 = hw_metric_2 / 1000
     hw_metric_1_norm, hw_metric_2_norm = normalize_objectives(
         [hw_metric_1, hw_metric_2],
         objectives,
@@ -65,8 +66,8 @@ def objective(
     # print(hw_metric_1_norm, hw_metric_2_norm, ppl_norm)
     report(
         perplexity=ppl_norm,
-        hw_metric_1=hw_metric_1_norm.item(),
-        hw_metric_2=hw_metric_2_norm.item(),
+        hw_metric_1=hw_metric_1_norm,
+        hw_metric_2=hw_metric_2_norm,
     )
 
 
@@ -103,7 +104,7 @@ if __name__ == "__main__":
     sample_config = {}
     sample_config["sample_n_layer"] = args.num_layers
     sample_config["sample_embed_dim"] = args.embed_dim
-    sample_config["sample_bias"] = args.bias
+    sample_config["sample_bias"] = str(args.bias)
     sample_config["sample_n_head"] = []
     sample_config["sample_mlp_ratio"] = []
     for i in range(max_layers):

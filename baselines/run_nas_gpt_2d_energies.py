@@ -22,13 +22,14 @@ import os
 import json
 import pickle
 from lib.utils import search_spaces
-#SYNE_TUNE_ENV_FOLDER
-os.environ["SYNE_TUNE_ENV_FOLDER"] = "synetune_logs/"
 # Configuration space (or search space)
 
 
 if __name__ == "__main__":
-    logging.getLogger().setLevel(logging.INFO)
+    logging.getLogger().setLevel(logging.DEBUG)
+    #deny_nework_connections()
+    # try accesisng the internet
+    #socket.create_connection(("www.google.com", 80))
     # [1]
     parser = ArgumentParser()
     parser.add_argument(
@@ -61,7 +62,7 @@ if __name__ == "__main__":
     parser.add_argument(
         "--max_wallclock_time",
         type=int,
-        default=48000,
+        default=24*60*60,
     )
     parser.add_argument(
         "--experiment_tag",
@@ -98,7 +99,7 @@ if __name__ == "__main__":
     # - `mode` and `metric` must match what is reported in the training script
     # - Metrics need to be reported after each epoch, `resource_attr` must match
     #   what is reported in the training script
-    train_file = "gpt_objective_2d.py"
+    train_file = "gpt_objective_2d_energies.py"
     entry_point = Path(__file__).parent / train_file
     max_resource_level = 1  # Maximum number of training epochs
     mode = "min"
@@ -113,8 +114,7 @@ if __name__ == "__main__":
             "dataset_path": "./",
         }
     )
-    device_wo_hyphen = args.device.replace("_", "")
-    args.experiment_tag = args.experiment_tag  + args.objective  + device_wo_hyphen  + args.method+args.search_space+str(args.random_seed)
+
     # Local backend: Responsible for scheduling trials  [3]
     # The local backend runs trials as sub-processes on a single instance
     trial_backend = LocalBackend(entry_point=str(entry_point))
@@ -174,7 +174,7 @@ if __name__ == "__main__":
     # [5]
     stop_criterion = StoppingCriterion(max_wallclock_time=args.max_wallclock_time)
 
-
+ 
     tuner = Tuner(
         trial_backend=trial_backend,
         scheduler=scheduler,
@@ -186,7 +186,8 @@ if __name__ == "__main__":
             "algorithm": args.method,
             "tag": args.experiment_tag,
         },
-        #save_tuner=False
+        trial_backend_path="synetune_logs/",
+        save_tuner=False
     )
 
     tuner.run()
@@ -216,7 +217,7 @@ if __name__ == "__main__":
         "perplexity": perplexity,
         "hw_metric": energy,
     }
-    search_space_path = "results_gpt_baselines_2d_" + str(args.search_space) + "_log2/"
+    search_space_path = "results_gpt_baselines_2d_" + str(args.search_space) + "/"
     os.makedirs(search_space_path, exist_ok=True)
     method_path = search_space_path + args.method + "/"
     os.makedirs(method_path, exist_ok=True)
@@ -230,13 +231,20 @@ if __name__ == "__main__":
         save_path = (
             objectiv_path
             + args.experiment_tag
+            + "_"
+            + args.surrogate_type
+            + "_"
+            + str(args.random_seed)
             + ".pickle"
         )
     else:
         save_path = (
             objectiv_path
-            + "mogpt_"
+            + args.experiment_tag
+            + "_"
             + args.device
+            + "_"
+            + args.surrogate_type
             + "_"
             + str(args.random_seed)
             + ".pickle"

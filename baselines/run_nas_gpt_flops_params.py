@@ -60,7 +60,7 @@ if __name__ == "__main__":
     parser.add_argument(
         "--max_wallclock_time",
         type=int,
-        default=200,
+        default=48000,
     )
     parser.add_argument(
         "--experiment_tag",
@@ -160,7 +160,7 @@ if __name__ == "__main__":
 
     # Stopping criterion: We stop after `args.max_wallclock_time` seconds
     # [5]
-    stop_criterion = StoppingCriterion(max_num_trials_finished=10)
+    stop_criterion = StoppingCriterion(max_wallclock_time=args.max_wallclock_time)
 
     tuner = Tuner(
         trial_backend=trial_backend,
@@ -203,9 +203,9 @@ if __name__ == "__main__":
         "hw_metric": energy,
     }
 
-    search_space_path = "results_gpt_baselines_2d_" + str(args.search_space)
+    search_space_path = "results_gpt_baselines_2d_" + str(args.search_space)+"_log2/"
     os.makedirs(search_space_path, exist_ok=True)
-    method_path = "results_gpt_baselines_2d/" + args.method + "/"
+    method_path = search_space_path + args.method + "/"
     os.makedirs(method_path, exist_ok=True)
     objectiv_path = method_path + args.objective + "/"
     os.makedirs(objectiv_path, exist_ok=True)

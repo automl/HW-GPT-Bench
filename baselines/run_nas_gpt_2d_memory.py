@@ -22,8 +22,7 @@ import os
 import json
 import pickle
 from lib.utils import search_spaces
-#SYNE_TUNE_ENV_FOLDER
-os.environ["SYNE_TUNE_ENV_FOLDER"] = "synetune_logs/"
+
 # Configuration space (or search space)
 
 
@@ -98,7 +97,7 @@ if __name__ == "__main__":
     # - `mode` and `metric` must match what is reported in the training script
     # - Metrics need to be reported after each epoch, `resource_attr` must match
     #   what is reported in the training script
-    train_file = "gpt_objective_2d.py"
+    train_file = "gpt_objective_memory.py"
     entry_point = Path(__file__).parent / train_file
     max_resource_level = 1  # Maximum number of training epochs
     mode = "min"
@@ -113,8 +112,7 @@ if __name__ == "__main__":
             "dataset_path": "./",
         }
     )
-    device_wo_hyphen = args.device.replace("_", "")
-    args.experiment_tag = args.experiment_tag  + args.objective  + device_wo_hyphen  + args.method+args.search_space+str(args.random_seed)
+
     # Local backend: Responsible for scheduling trials  [3]
     # The local backend runs trials as sub-processes on a single instance
     trial_backend = LocalBackend(entry_point=str(entry_point))
@@ -174,7 +172,6 @@ if __name__ == "__main__":
     # [5]
     stop_criterion = StoppingCriterion(max_wallclock_time=args.max_wallclock_time)
 
-
     tuner = Tuner(
         trial_backend=trial_backend,
         scheduler=scheduler,
@@ -185,10 +182,8 @@ if __name__ == "__main__":
             "seed": args.random_seed,
             "algorithm": args.method,
             "tag": args.experiment_tag,
-        },
-        #save_tuner=False
+        }
     )
-
     tuner.run()
     from syne_tune.experiments import load_experiment
 
@@ -230,12 +225,15 @@ if __name__ == "__main__":
         save_path = (
             objectiv_path
             + args.experiment_tag
+            + "_"
+            + str(args.random_seed)
             + ".pickle"
         )
     else:
         save_path = (
             objectiv_path
-            + "mogpt_"
+            + args.experiment_tag
+            + "_"
             + args.device
             + "_"
             + str(args.random_seed)

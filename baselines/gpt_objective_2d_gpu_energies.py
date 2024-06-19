@@ -19,7 +19,7 @@ from typing import Dict, Any
 import torch
 
 report = Reporter()
-from analysis.autogluon_gpu_latencies import MultilabelPredictor
+from analysis.autogluon_gpu_energies import MultilabelPredictor
 
 def objective(
     sampled_config: Dict[str, Any],
@@ -45,14 +45,11 @@ def objective(
     search_space, device, objective
     )
     hw_metric = predict_hw_surrogate(
-        [arch_feature_map], hw_predictor, objective, device
+        [arch_feature_map], hw_predictor
     )
     ppl = perplexity.item()
-    ppl_norm = normalize_ppl(ppl, search_space,method="max-min")
-    if objective  == "energies":
-        hw_metric_norm = normalize_energy(hw_metric,device=device,scale=search_space,surrogate=surrogate_type,metric=objective,data_type=type,method="max-min")
-    else:
-        hw_metric_norm = normalize_latency(hw_metric/1000,device=device,scale=search_space,surrogate=surrogate_type,metric=objective,data_type=type,method="max-min")
+    ppl_norm = normalize_ppl(ppl, search_space)
+    hw_metric_norm = hw_metric
     report(perplexity=ppl_norm, hw_metric=hw_metric_norm)
 
 
