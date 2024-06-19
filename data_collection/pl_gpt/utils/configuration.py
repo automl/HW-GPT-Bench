@@ -128,7 +128,7 @@ class Config(SimpleNestedNamespace):
 if __name__ == "__main__":
     config = Config(
         config_file=os.path.join(
-            "/p/scratch/ccstdl/sukthanker1/HW-Aware-LLM-Bench/config/juwels_default.yaml"
+            "config/juwels_default.yaml"
         )
     )
 

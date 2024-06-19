@@ -1,5 +1,5 @@
 #!/bin/bash
-#SBATCH -p bosch_gpu-rtx2080
+#SBATCH -p partition
 #SBATCH -t 1-00:00:00 # time (D-HH:MM)
 #SBATCH --gres=gpu:1 # number of GPUs (per node)
 #SBATCH -c 2 # number of cores

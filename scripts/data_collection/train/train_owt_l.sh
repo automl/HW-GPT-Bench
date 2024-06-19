@@ -7,9 +7,9 @@
 #SBATCH --gres=gpu:4
 #SBATCH --output=logs/mpi-out.%j
 #SBATCH --error=logs/mpi-err.%j
-#SBATCH --time=12:00:00
-#SBATCH --partition=booster
-#SBATCH --job-name=owt
+#SBATCH --time=24:00:00
+#SBATCH --partition=partition
+#SBATCH --job-name=owt_eval
 export NCCL_IB_TIMEOUT=50
 export UCX_RC_TIMEOUT=4s
 export NCCL_IB_RETRY_CNT=10
@@ -32,7 +32,7 @@ module load Stages/2024
 module load CUDA/12
 module load GCC/12.3.0
 module load Python/3.11.3
-source /p/scratch/ccstdl/sukthanker1/gpt/bin/activate
+source /env/activate
 export PYTHONPATH=.
 
 PYTHON_SCRIPT=train_gpt.py

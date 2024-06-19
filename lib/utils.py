@@ -1,11 +1,11 @@
 import pickle
 import torch
-from hwgpt.predictors.hwmetric.net import Net as Nethw
 from hwgpt.predictors.metric.net import Net
 import numpy as np
 from typing import Any, Dict, Tuple, List
 from hwgpt.model.gpt.utils import sample_config_max, sample_config_min
-from hwgpt.predictors.hwmetric.gaussian_mlp import GaussianNN
+from hwgpt.predictors.hwmetric.models.autogluon.autogluon_latencies import MultilabelPredictor 
+import pandas as pd
 metrics_map = {
     "energies": "Energy (Wh)",
     "latencies": "Latency (ms)",
@@ -86,7 +86,6 @@ def convert_arch_to_str(arch:Dict[str,Any],scale:str)->str:
         str_heads = str_heads+str(arch["sample_n_head"][i])+"-"
     bias_str = arch["sample_bias"]
     name = "gpt-"+str(scale)+"-"+str(arch["sample_n_layer"])+'-'+str(arch["sample_embed_dim"])+'-'+str_mlp+str_heads+bias_str
-    #print(name)
     return name 
 
 
@@ -173,7 +172,6 @@ def get_arch_feature_map(arch: Dict[str, Any], scale: str) -> List:
         arch_feature_map.append(1)
     else:
         arch_feature_map.append(0)
-    # print(len(arch_feature_map))
     return arch_feature_map
 
 def denormalize_ppl(ppl: float, scale: str, method: str="mean-std") -> float:
@@ -242,10 +240,6 @@ def denormalize_energy(energy: float, device: str, surrogate:str, data_type:str,
             +"_"
             + scale
             + "_"
-            + surrogate
-            + "_"
-            + data_type
-            + "_"
             + device
             + ".pkl"
         )
@@ -263,10 +257,6 @@ def denormalize_energy(energy: float, device: str, surrogate:str, data_type:str,
             + str(metric)
             +"_"
             + scale
-            + "_"
-            + surrogate
-            + "_"
-            + data_type
             + "_"
             + device
             + ".pkl"
@@ -293,10 +283,6 @@ def normalize_energy(energy: float, device: str, surrogate:str, data_type:str, s
             +"_"
             + scale
             + "_"
-            + surrogate
-            + "_"
-            + data_type
-            + "_"
             + device
             + ".pkl"
         )
@@ -314,10 +300,6 @@ def normalize_energy(energy: float, device: str, surrogate:str, data_type:str, s
             + str(metric)
             +"_"
             + scale
-            + "_"
-            + surrogate
-            + "_"
-            + data_type
             + "_"
             + device
             + ".pkl"
@@ -341,10 +323,6 @@ def denormalize_latency(latency: float, device: str, surrogate:str, data_type:st
             +"_"
             + scale
             + "_"
-            + surrogate
-            + "_"
-            + data_type
-            + "_"
             + device
             + ".pkl"
         )
@@ -362,10 +340,6 @@ def denormalize_latency(latency: float, device: str, surrogate:str, data_type:st
             + str(metric)
             +"_"
             + scale
-            + "_"
-            + surrogate
-            + "_"
-            + data_type
             + "_"
             + device
             + ".pkl"
@@ -389,10 +363,6 @@ def normalize_latency(latency: float, device: str, surrogate:str, data_type:str,
             +"_"
             + scale
             + "_"
-            + surrogate
-            + "_"
-            + data_type
-            + "_"
             + device
             + ".pkl"
         )
@@ -411,10 +381,6 @@ def normalize_latency(latency: float, device: str, surrogate:str, data_type:str,
             +"_"
             + scale
             + "_"
-            + surrogate
-            + "_"
-            + data_type
-            + "_"
             + device
             + ".pkl"
         )
@@ -424,9 +390,7 @@ def normalize_latency(latency: float, device: str, surrogate:str, data_type:str,
             max_min_stats = pickle.load(f)
             max_latency = max_min_stats["max"]
             min_latency = max_min_stats["min"]
-            # print(max_latency, min_latency)
             latency = (latency - min_latency) / (max_latency - min_latency)
-        # print(latency)
     return latency
 
 def normalize_memory(memory: float, scale: str, metric:str, method:str="mean-std") -> float:
@@ -471,10 +435,10 @@ def normalize_objectives(
     for i, objective in enumerate(objectives_list):
         if objective == "latencies":
             metric_values_normalized.append(
-                normalize_latency(metric_values[i], devices[i], surrogate[i], data_type, search_space, "latencies"))
+                normalize_latency(metric_values[i], devices[i], surrogate[i], data_type, search_space, "latencies", "max-min"))
         elif objective == "energies":
             metric_values_normalized.append(
-                normalize_energy(metric_values[i], devices[i], surrogate[i], data_type, search_space, "energies")
+                normalize_energy(metric_values[i], devices[i], surrogate[i], data_type, search_space, "energies", "max-min")
             )
         elif "memory" in objective:
             metric_values_normalized.append(
@@ -496,95 +460,83 @@ def get_all_hw_surrogates(
     all_surrogates = []
     for i, objective in enumerate(objectives):
         all_surrogates.append(
-            get_hw_predictor_surrogate(
-                max_layers, search_space, devices[i], surrogate_types[i], type, objectives[i]
+            get_hw_predictor_surrogate(search_space, devices[i], objectives[i]
             )
         )
     return all_surrogates
 
 
 def get_hw_predictor_surrogate(
-    max_layers: int,
     search_space: str,
     device: str,
-    surrogate_type: str,
-    type: str = "quantile",
     metric: str = "energies",
 ) -> Any:
-    base_path = (
-    "data_collection/gpt_datasets/predictor_ckpts/hwmetric/"
-    + str(surrogate_type)
-    + "/")
-    if "memory" in metric or metric == "flops" or metric == "params":
-        # set surrogate type to mlp
+    #dir = "gpt_"+str(metric)+"_"+str(search_space)+"_"+str(device)
+    if metric == "energies":
+            from hwgpt.predictors.hwmetric.models.autogluon.autogluon_energies import get_and_load_model
+            predictor = get_and_load_model(search_space, device)
+    elif metric == "latencies":
+        from hwgpt.predictors.hwmetric.models.autogluon.autogluon_latencies import get_and_load_model
+        predictor = get_and_load_model(search_space, device)
 
-        model_path = base_path + metric + "_" + search_space
-    else:
-        model_path = base_path + metric + "_" + type + "_" + search_space + "_" + device
-    #print(model_path)
-
-    device = "cuda" if torch.cuda.is_available() else "cpu"
-    if surrogate_type in ["conformal_quantile", "quantile", "ensemble_xgb", "ensemble_lightgbm","ensemble_mix"]:
-        surrogate_path = model_path + ".pkl"
-        with open(surrogate_path, "rb") as f:
-            predictor = pickle.load(f)
-    elif surrogate_type == "mlp":
-        predictor = Nethw(max_layers, False, 128, 128).to(device)
-        path = model_path + ".pth"
-        predictor.load_state_dict(torch.load(path, map_location=device))
-    elif surrogate_type == "gaussianmlp":
-        predictor = GaussianNN(max_layers)
-        path = model_path + ".pth"
-        predictor.load_state_dict(torch.load(path, map_location=device))
-        
     return predictor
 
-def sample_from_gaussian(mean, logvar):
-    std = torch.sqrt(torch.exp(logvar))
-    output = []
-    for i in range(mean.shape[0]):
-        normal = torch.distributions.Normal(mean[i], std[i])
-        sample = normal.sample((1,))
-        output.append(sample)
-    return torch.tensor(output)
+def sample_from_gaussian(mean, std):
+    return np.random.normal(mean, std)
+
+def predict_hw_surrogate_multiple(
+    arch: np.array,
+    surrogate: Any,
+    metric: str = "energies",
+    device: str = "cuda",
+) -> float:
+    arch_features = []
+    if metric == "energies" and "cpu" not in device:
+        for i in range(len(arch[0])):
+            arch_features.append("arch_feature"+str(i))
+    else:
+        for i in range(len(arch[0])):
+            arch_features.append("arch_feature_"+str(i))
+    df = pd.DataFrame(arch, columns=arch_features)
+    if "cpu" in device and "latencies" in metric:
+        exp=False
+    else:
+        exp=True
+    hw_metric = surrogate.predict(df, exp=exp)
+
+    mean = hw_metric["Target_Avg"]
+    std = hw_metric["Target_Std"]
+    sampled_obs = []
+    for i in range(len(mean)):
+        sampled_obs.append(sample_from_gaussian(mean[i], std[i]))
+    if metric == "latencies":
+        return [s/1000 for s in sampled_obs] # scale to convert to ms
+    return sampled_obs
 
 def predict_hw_surrogate(
     arch: np.array,
     surrogate: Any,
-    surrogate_type: str,
-    return_all: bool = False,
-    return_quantiles: bool = False,
+    metric: str = "energies",
+    device: str = "cuda",
 ) -> float:
-    device = "cuda" if torch.cuda.is_available() else "cpu"
-    if surrogate_type == "conformal_quantile" or surrogate_type == "quantile":
-        energy = surrogate.predict(arch).results_stacked
-        if return_quantiles:
-            return surrogate.predict(arch)
-        quantile = np.random.randint(low=0, high=9, size=1)
-        # print(energy.shape)
-        if return_all:
-            return energy
-        energy = energy[0, quantile]
-    elif surrogate_type=="mlp":
-        energy = surrogate(torch.tensor(arch).cuda())  # .item()
-    elif surrogate_type in ["ensemble_xgb", "ensemble_lightgbm","ensemble_mix"]:
-        mean, std, noisy_predictions = surrogate.predict(arch)
-        if not return_all:
-            return noisy_predictions
-        else:
-            return (mean,std)
-    elif surrogate_type == "gaussianmlp":
-      if not return_all:
-        mean, logvar = surrogate(torch.tensor(arch).cuda())
-        energy = sample_from_gaussian(mean,logvar)
-        energy = torch.squeeze(energy).item()
-      else:
-          surrogate = surrogate.to(device)
-          mean, logvar = surrogate(torch.tensor(arch).cuda())
-          print(mean)
-          print(logvar)
-          return (mean.item(),torch.sqrt(torch.exp(logvar)).item())
-    return energy
+    arch_features = []
+    if metric == "energies" and "cpu" not in device:
+        for i in range(len(arch[0])):
+            arch_features.append("arch_feature"+str(i))
+    else:
+        for i in range(len(arch[0])):
+            arch_features.append("arch_feature_"+str(i))
+    df = pd.DataFrame(np.array([[a] for a in arch[0]]).reshape(1,-1), columns=arch_features)
+    if "cpu" in device and "latencies" in metric:
+        exp=False
+    else:
+        exp=True
+    hw_metric = surrogate.predict(df, exp=exp)
+    mean = hw_metric["Target_Avg"][0].item()
+    std = hw_metric["Target_Std"][0].item()
+    if metric == "latencies":
+        return sample_from_gaussian(mean, std)/1000 # scale to convert to ms
+    return sample_from_gaussian(mean, std)
 
 
 def get_ppl_predictor_surrogate(search_space: str) -> Any:

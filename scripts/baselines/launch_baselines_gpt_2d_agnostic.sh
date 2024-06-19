@@ -15,7 +15,7 @@ do
         do
             exp_name="baseline-${method}-${search_space}-${metric}-${seed}"
             echo Submitting job $exp_name
-            sbatch --bosch -J $exp_name scripts/baselines/baselines_gpt_2d_agnostic.sh $search_space $method $metric $seed
+            sbatch -J $exp_name scripts/baselines/baselines_gpt_2d_agnostic.sh $search_space $method $metric $seed
         done
       done
     done

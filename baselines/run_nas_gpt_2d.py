@@ -23,11 +23,13 @@ import json
 import pickle
 from lib.utils import search_spaces
 
+# SYNE_TUNE_ENV_FOLDER
+os.environ["SYNE_TUNE_ENV_FOLDER"] = "synetune_logs/"
 # Configuration space (or search space)
 
 
 if __name__ == "__main__":
-    logging.getLogger().setLevel(logging.DEBUG)
+    logging.getLogger().setLevel(logging.INFO)
     # [1]
     parser = ArgumentParser()
     parser.add_argument(
@@ -60,7 +62,7 @@ if __name__ == "__main__":
     parser.add_argument(
         "--max_wallclock_time",
         type=int,
-        default=79200,
+        default=48000,
     )
     parser.add_argument(
         "--experiment_tag",
@@ -112,7 +114,15 @@ if __name__ == "__main__":
             "dataset_path": "./",
         }
     )
-
+    device_wo_hyphen = args.device.replace("_", "")
+    args.experiment_tag = (
+        args.experiment_tag
+        + args.objective
+        + device_wo_hyphen
+        + args.method
+        + args.search_space
+        + str(args.random_seed)
+    )
     # Local backend: Responsible for scheduling trials  [3]
     # The local backend runs trials as sub-processes on a single instance
     trial_backend = LocalBackend(entry_point=str(entry_point))
@@ -183,6 +193,7 @@ if __name__ == "__main__":
             "algorithm": args.method,
             "tag": args.experiment_tag,
         },
+        # save_tuner=False
     )
 
     tuner.run()
@@ -212,7 +223,7 @@ if __name__ == "__main__":
         "perplexity": perplexity,
         "hw_metric": energy,
     }
-    search_space_path = "results_gpt_baselines_2d_" + str(args.search_space) + "/"
+    search_space_path = "results_gpt_baselines_2d_" + str(args.search_space) + "_log2/"
     os.makedirs(search_space_path, exist_ok=True)
     method_path = search_space_path + args.method + "/"
     os.makedirs(method_path, exist_ok=True)
@@ -223,23 +234,12 @@ if __name__ == "__main__":
         or "params" in args.objective
         or "flops" in args.objective
     ):
-        save_path = (
-            objectiv_path
-            + args.experiment_tag
-            + "_"
-            + args.surrogate_type
-            + "_"
-            + str(args.random_seed)
-            + ".pickle"
-        )
+        save_path = objectiv_path + args.experiment_tag + ".pickle"
     else:
         save_path = (
             objectiv_path
-            + args.experiment_tag
-            + "_"
+            + "mogpt_"
             + args.device
-            + "_"
-            + args.surrogate_type
             + "_"
             + str(args.random_seed)
             + ".pickle"

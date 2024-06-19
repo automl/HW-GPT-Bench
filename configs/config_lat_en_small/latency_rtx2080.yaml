@@ -2,7 +2,7 @@
 resume_training: False
 
 experiment:
-  experiments_base_dir: /p/scratch/ccstdl/sukthanker1/HW-Aware-LLM-Bench/experiments
+  experiments_base_dir: /path/to/experiments
   project_name: cl2_reg
   session_name: gpt2s_AdamW_ATB_expt_4
   experiment_name: default_juls # _fused-ff-prob-layer
@@ -180,5 +180,5 @@ lm_data:
   batch_size: 32
   val_ratio: 0.0005
   val_split_seed: 2357
-  data_dir: "/p/scratch/ccstdl/sukthanker1/datasets/"
-  cache_dir: "/p/scratch/ccstdl/sukthanker1/datasets/cache/"
+  data_dir: "/path/to/datasets/"
+  cache_dir: "/path/to/datasets/cache/"

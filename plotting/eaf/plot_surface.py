@@ -500,7 +500,7 @@ class EmpiricalAttainmentFuncPlot:
             max_hv = self._compute_true_pareto_surface_hypervolume2d()
             hvs /= max_hv
 
-        T = np.arange(n_observations) + 1
+        T = np.arange(n_observations) + 1  # *384
         m, s = np.mean(hvs, axis=0), np.std(hvs, axis=0) / np.sqrt(n_observations)
 
         marker_kwargs, kwargs = _extract_marker_kwargs(**kwargs)
@@ -520,7 +520,7 @@ class EmpiricalAttainmentFuncPlot:
             ax.set_ylabel(("Normalized " if normalize else "") + "Hypervolume")
 
         ax.set_xlim((1, n_observations))
-        return line
+        return line, np.max(hvs), np.min(hvs)
 
     def plot_multiple_hypervolume2d_with_band(
         self,
@@ -588,7 +588,7 @@ class EmpiricalAttainmentFuncPlot:
                 marker=marker,
                 normalize=normalize,
             )
-            line = self.plot_hypervolume2d_with_band(
+            line, max_hv, min_hv = self.plot_hypervolume2d_with_band(
                 ax, _costs_array, log=False, axis_label=False, **kwargs
             )
             lines.append(line)
@@ -600,7 +600,7 @@ class EmpiricalAttainmentFuncPlot:
             ax.set_ylabel(("Normalized " if normalize else "") + "Hypervolume")
 
         ax.set_xlim((1, n_observations))
-        return lines
+        return lines, max_hv, min_hv
 
     def _compute_true_pareto_surface_hypervolume2d(self) -> float:
         if self._true_pareto_sols is None:
