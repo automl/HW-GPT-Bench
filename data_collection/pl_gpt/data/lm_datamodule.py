@@ -20,8 +20,8 @@ from pl_gpt.data.detokenizer import wikitext_detokenize
 from pl_gpt.data.collators import DataCollator
 import os
 
-os.environ["HF_DATASETS_CACHE"] = "/p/scratch/ccstdl/sukthanker1/datasets/cache"
-os.environ["HF_HOME"] = "/p/scratch/ccstdl/sukthanker1/model/cache"
+os.environ["HF_DATASETS_CACHE"] = "/path/to/datasets/cache"
+os.environ["HF_HOME"] = "/path/to/model/cache"
 IGNORE_INDEX = -100
 
 
@@ -442,11 +442,8 @@ if __name__ == "__main__":
         "batch_size": 8,
         "val_ratio": 0.0005,
         "val_split_seed": 2357,
-        # "data_dir": '/work/dlclarge1/frankej-bio_data/llm/lm_data',
-        "data_dir": "/p/scratch/ccstdl/sukthanker1/datasets",
-        # "cache_dir": '/work/dlclarge1/frankej-bio_data/llm/cache/lm_data',
-        # "cache_dir": '/p/scratch/ccstdl/franke5/data/cache/lm_data',
-        "cache_dir": "/p/scratch/ccstdl/sukthanker1/datasets/cache",
+        "data_dir": "/path/to/datasets",
+        "cache_dir": "/path/to/cache",
     }
 
     my_data_handler = PlArrowFileModule(**lm_data_config)
