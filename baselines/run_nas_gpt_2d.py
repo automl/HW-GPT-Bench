@@ -22,7 +22,8 @@ import os
 import json
 import pickle
 from lib.utils import search_spaces
-#SYNE_TUNE_ENV_FOLDER
+
+# SYNE_TUNE_ENV_FOLDER
 os.environ["SYNE_TUNE_ENV_FOLDER"] = "synetune_logs/"
 # Configuration space (or search space)
 
@@ -114,7 +115,14 @@ if __name__ == "__main__":
         }
     )
     device_wo_hyphen = args.device.replace("_", "")
-    args.experiment_tag = args.experiment_tag  + args.objective  + device_wo_hyphen  + args.method+args.search_space+str(args.random_seed)
+    args.experiment_tag = (
+        args.experiment_tag
+        + args.objective
+        + device_wo_hyphen
+        + args.method
+        + args.search_space
+        + str(args.random_seed)
+    )
     # Local backend: Responsible for scheduling trials  [3]
     # The local backend runs trials as sub-processes on a single instance
     trial_backend = LocalBackend(entry_point=str(entry_point))
@@ -174,7 +182,6 @@ if __name__ == "__main__":
     # [5]
     stop_criterion = StoppingCriterion(max_wallclock_time=args.max_wallclock_time)
 
-
     tuner = Tuner(
         trial_backend=trial_backend,
         scheduler=scheduler,
@@ -186,7 +193,7 @@ if __name__ == "__main__":
             "algorithm": args.method,
             "tag": args.experiment_tag,
         },
-        #save_tuner=False
+        # save_tuner=False
     )
 
     tuner.run()
@@ -227,11 +234,7 @@ if __name__ == "__main__":
         or "params" in args.objective
         or "flops" in args.objective
     ):
-        save_path = (
-            objectiv_path
-            + args.experiment_tag
-            + ".pickle"
-        )
+        save_path = objectiv_path + args.experiment_tag + ".pickle"
     else:
         save_path = (
             objectiv_path

@@ -21,6 +21,7 @@ import torch
 report = Reporter()
 from analysis.autogluon_gpu_energies import MultilabelPredictor
 
+
 def objective(
     sampled_config: Dict[str, Any],
     device: str,
@@ -33,20 +34,16 @@ def objective(
     arch_feature_map_ppl_predictor = convert_config_to_one_hot(
         sampled_config, search_space=search_space
     )
-    #arch_feature_map_predictor = normalize_arch_feature_map(
+    # arch_feature_map_predictor = normalize_arch_feature_map(
     #    arch_feature_map, search_space
-    #)
+    # )
     device_run = "cuda" if torch.cuda.is_available() else "cpu"
     ppl_predictor = get_ppl_predictor_surrogate(search_space)
     perplexity = ppl_predictor(
         arch_feature_map_ppl_predictor.to(device_run).unsqueeze(0)
     )
-    hw_predictor = get_hw_predictor_surrogate(
-    search_space, device, objective
-    )
-    hw_metric = predict_hw_surrogate(
-        [arch_feature_map], hw_predictor
-    )
+    hw_predictor = get_hw_predictor_surrogate(search_space, device, objective)
+    hw_metric = predict_hw_surrogate([arch_feature_map], hw_predictor)
     ppl = perplexity.item()
     ppl_norm = normalize_ppl(ppl, search_space)
     hw_metric_norm = hw_metric

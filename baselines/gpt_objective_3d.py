@@ -20,6 +20,7 @@ from lib.utils import (
 
 from typing import List, Dict, Any
 from analysis.autogluon_gpu_latencies import MultilabelPredictor
+
 report = Reporter()
 
 

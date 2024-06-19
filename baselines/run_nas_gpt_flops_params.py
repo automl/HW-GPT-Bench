@@ -203,7 +203,7 @@ if __name__ == "__main__":
         "hw_metric": energy,
     }
 
-    search_space_path = "results_gpt_baselines_2d_" + str(args.search_space)+"_log2/"
+    search_space_path = "results_gpt_baselines_2d_" + str(args.search_space) + "_log2/"
     os.makedirs(search_space_path, exist_ok=True)
     method_path = search_space_path + args.method + "/"
     os.makedirs(method_path, exist_ok=True)

@@ -6,11 +6,13 @@ from lib.utils import search_spaces
 from hwgpt.api import HWGPTBenchAPI
 import torch
 from plotting.eaf import get_empirical_attainment_surface, EmpiricalAttainmentFuncPlot
+
 plt.rcParams["axes.grid"] = True
 plt.rcParams["grid.linestyle"] = "dotted"
 plt.rcParams["font.size"] = 16
 # plt tight layout
 plt.rcParams["figure.autolayout"] = True
+
 
 def get_pareto_optimal(costs: np.ndarray):
     """
@@ -32,6 +34,7 @@ def get_pareto_optimal(costs: np.ndarray):
             is_pareto[i] = True  # keep self
     return is_pareto
 
+
 class CorrScatter:
     def __init__(self, search_space=str, num_archs=int):
         self.search_space = search_space
@@ -52,14 +55,18 @@ class CorrScatter:
     def get_perplexity_list(self, hwmetric):
         perplexity = []
         for arch in self.gt_stats.keys():
-            if hwmetric=="flops" or hwmetric=="params" or hwmetric=="float16_memory" or hwmetric=="bfloat16_memory":
+            if (
+                hwmetric == "flops"
+                or hwmetric == "params"
+                or hwmetric == "float16_memory"
+                or hwmetric == "bfloat16_memory"
+            ):
                 perplexity.append(self.gt_stats[arch]["perplexity"])
             else:
                 for i in range(10):
                     perplexity.append(self.gt_stats[arch]["perplexity"])
 
         return perplexity
-    
 
     def get_flops_list(self):
         flops = []
@@ -86,28 +93,28 @@ class CorrScatter:
         for arch in self.gt_stats.keys():
             bfloat16_memory.append(self.gt_stats[arch]["bfloat16_memory"])
         return bfloat16_memory
-    
+
     def remove_outliers(self, hw_metric: str, device: str, arch: str):
         hw_stats = np.array(self.gt_stats[arch][device][hw_metric])
         # remove outliers
         hw_stats = hw_stats[hw_stats < np.percentile(hw_stats, 99)]
         return hw_stats
-    
+
     def get_lat_en_random(self, hw_metric: str, device: str):
         lat_en = []
         for arch in self.gt_stats.keys():
             # remove outliers
             np.random.seed(np.random.randint(0, 1000))
-            #if hw_metric == "energies":
+            # if hw_metric == "energies":
             #    hw_stats = self.remove_outliers(hw_metric, device, arch)#[0:10]
-            #else:
-            hw_stats = self.gt_stats[arch][device][hw_metric]#[0:10]
+            # else:
+            hw_stats = self.gt_stats[arch][device][hw_metric]  # [0:10]
             if hw_metric == "energies":
-                lat_en.append(np.random.choice(hw_stats)*1000)
+                lat_en.append(np.random.choice(hw_stats) * 1000)
             else:
                 lat_en.append(np.random.choice(hw_stats))
         return lat_en
-    
+
     def get_lat_en_worst(self, hw_metric: str, device: str):
         lat_en = []
         for arch in self.gt_stats.keys():
@@ -115,31 +122,34 @@ class CorrScatter:
             if hw_metric == "energies":
                 hw_stats = self.remove_outliers(hw_metric, device, arch)[0:10]
             else:
-               hw_stats = self.gt_stats[arch][device][hw_metric][0:10]
+                hw_stats = self.gt_stats[arch][device][hw_metric][0:10]
             if hw_metric == "energies":
-                lat_en.append(np.max(hw_stats)*1000)
+                lat_en.append(np.max(hw_stats) * 1000)
             else:
                 lat_en.append(np.max(hw_stats))
         return lat_en
-    
+
     def get_lat_en(
-        self, hw_metric: str, device: str, 
+        self,
+        hw_metric: str,
+        device: str,
     ):
         lat_en = []
         for arch in self.gt_stats.keys():
             # remove outliers
             if hw_metric == "energies":
-               hw_stats = self.remove_outliers(hw_metric, device, arch)
+                hw_stats = self.remove_outliers(hw_metric, device, arch)
             else:
-               hw_stats = self.gt_stats[arch][device][hw_metric]
+                hw_stats = self.gt_stats[arch][device][hw_metric]
 
             for lat in hw_stats[0:10]:
                 if hw_metric == "energies":
-                    lat_en.append(lat*1000)
+                    lat_en.append(lat * 1000)
                 else:
                     lat_en.append(lat)
-        
+
         return lat_en
+
     def sample_random_for_arch(self, arch_list: list, hw_metric: str, device: str):
         lat_en = []
         for arch in arch_list:
@@ -150,24 +160,22 @@ class CorrScatter:
                 hw_stats = self.gt_stats[arch][device][hw_metric]
             lat_en.append(np.random.choice(hw_stats))
         return lat_en
-    
-    def plot_corr_scatter(
-        self, metrics_list: list, device: str, ppl_dependency:str
-    ):
+
+    def plot_corr_scatter(self, metrics_list: list, device: str, ppl_dependency: str):
         metrics_dict = {}
         metrics_worst = {}
         metrics_random = {}
         self.n_independent_runs = 10
-        levels = [
-                1 , self.n_independent_runs // 2, self.n_independent_runs
-            ]
+        levels = [1, self.n_independent_runs // 2, self.n_independent_runs]
         assert len(metrics_list) == 3
         plt.figure(figsize=(15, 5))
         for metric in metrics_list:
             if metric == "perplexity":
                 metrics_dict[metric] = self.get_perplexity_list(ppl_dependency)
                 metrics_worst[metric] = self.get_perplexity_list("flops")
-                metrics_random[metric] = [self.get_perplexity_list("params") for i in range(10)]
+                metrics_random[metric] = [
+                    self.get_perplexity_list("params") for i in range(10)
+                ]
 
             elif metric == "flops":
                 metrics_dict[metric] = self.get_flops_list()
@@ -180,7 +188,9 @@ class CorrScatter:
             else:
                 metrics_dict[metric] = self.get_lat_en(metric, device)
                 metrics_worst[metric] = self.get_lat_en_worst(metric, device)
-                metrics_random[metric] = [self.get_lat_en_random(metric, device) for i in range(10)]
+                metrics_random[metric] = [
+                    self.get_lat_en_random(metric, device) for i in range(10)
+                ]
         plt.subplot(1, 3, 1)
         metrics_dict_subset = {}
         for k in metrics_dict.keys():
@@ -193,7 +203,9 @@ class CorrScatter:
             s=4,
         )
         # plot pareto front in red
-        costs = np.array([metrics_dict[metrics_list[0]], metrics_dict[metrics_list[1]]]).T
+        costs = np.array(
+            [metrics_dict[metrics_list[0]], metrics_dict[metrics_list[1]]]
+        ).T
         is_pareto = get_pareto_optimal(costs)
         plt.scatter(
             np.array(metrics_dict[metrics_list[0]])[is_pareto],
@@ -201,20 +213,20 @@ class CorrScatter:
             c="red",
             s=4,
         )
-        #random pareto
-        costs = np.array([metrics_random[metrics_list[0]], metrics_random[metrics_list[1]]]).T
+        # random pareto
+        costs = np.array(
+            [metrics_random[metrics_list[0]], metrics_random[metrics_list[1]]]
+        ).T
         costs = np.transpose(costs, (1, 0, 2))
         surfs = get_empirical_attainment_surface(costs=np.squeeze(costs), levels=levels)
         eaf_plot = EmpiricalAttainmentFuncPlot()
         eaf_plot.plot_surface_with_band(
-            ax=plt.gca(),
-            surfs=surfs,
-            label="median pareto",
-            color="blue",
-            alpha=0.6
+            ax=plt.gca(), surfs=surfs, label="median pareto", color="blue", alpha=0.6
         )
-        #worst pareto
-        costs = np.array([metrics_worst[metrics_list[0]], metrics_worst[metrics_list[1]]]).T
+        # worst pareto
+        costs = np.array(
+            [metrics_worst[metrics_list[0]], metrics_worst[metrics_list[1]]]
+        ).T
         is_pareto = get_pareto_optimal(costs)
         plt.scatter(
             np.array(metrics_worst[metrics_list[0]])[is_pareto],
@@ -223,11 +235,11 @@ class CorrScatter:
             s=4,
         )
         # order and line plot
-        #plt.plot(
+        # plt.plot(
         #    np.sort(metrics_worst[metrics_list[0]][is_pareto]),
         #    np.sort(metrics_worst[metrics_list[1]][is_pareto]),
         #    c="black",
-        #)
+        # )
         #
         plt.colorbar(sc, label=metrics_list[2])
         plt.xlabel(metrics_list[0])
@@ -242,7 +254,9 @@ class CorrScatter:
             cmap="viridis",
             s=4,
         )
-        costs = np.array([metrics_dict[metrics_list[0]], metrics_dict[metrics_list[2]]]).T
+        costs = np.array(
+            [metrics_dict[metrics_list[0]], metrics_dict[metrics_list[2]]]
+        ).T
         is_pareto = get_pareto_optimal(costs)
         plt.scatter(
             np.array(metrics_dict[metrics_list[0]])[is_pareto],
@@ -250,19 +264,19 @@ class CorrScatter:
             c="red",
             s=4,
         )
-        costs = np.array([metrics_random[metrics_list[0]], metrics_random[metrics_list[2]]]).T
+        costs = np.array(
+            [metrics_random[metrics_list[0]], metrics_random[metrics_list[2]]]
+        ).T
         costs = np.transpose(costs, (1, 0, 2))
         surfs = get_empirical_attainment_surface(np.squeeze(costs), levels)
         eaf_plot = EmpiricalAttainmentFuncPlot()
         eaf_plot.plot_surface_with_band(
-            ax=plt.gca(),
-            surfs=surfs,
-            label = "median pareto",
-            color = "blue",
-            alpha=0.6
+            ax=plt.gca(), surfs=surfs, label="median pareto", color="blue", alpha=0.6
         )
-        #worst pareto
-        costs = np.array([metrics_worst[metrics_list[0]], metrics_worst[metrics_list[2]]]).T
+        # worst pareto
+        costs = np.array(
+            [metrics_worst[metrics_list[0]], metrics_worst[metrics_list[2]]]
+        ).T
         is_pareto = get_pareto_optimal(costs)
         plt.scatter(
             np.array(metrics_worst[metrics_list[0]])[is_pareto],
@@ -270,11 +284,11 @@ class CorrScatter:
             c="black",
             s=4,
         )
-        #plt.plot(
+        # plt.plot(
         #    np.sort(metrics_worst[metrics_list[0]][is_pareto]),
         #    np.sort(metrics_worst[metrics_list[2]][is_pareto]),
         #    c="black",
-        #)
+        # )
         plt.colorbar(sc, label=metrics_list[1])
         plt.xlabel(metrics_list[0])
         plt.ylabel(metrics_list[2])
@@ -286,7 +300,9 @@ class CorrScatter:
             cmap="viridis",
             s=4,
         )
-        costs = np.array([metrics_dict[metrics_list[1]], metrics_dict[metrics_list[2]]]).T
+        costs = np.array(
+            [metrics_dict[metrics_list[1]], metrics_dict[metrics_list[2]]]
+        ).T
         is_pareto = get_pareto_optimal(costs)
         plt.scatter(
             np.array(metrics_dict[metrics_list[1]])[is_pareto],
@@ -295,7 +311,9 @@ class CorrScatter:
             s=4,
             label="Pareto Front",
         )
-        costs = np.array([metrics_worst[metrics_list[1]], metrics_worst[metrics_list[2]]]).T
+        costs = np.array(
+            [metrics_worst[metrics_list[1]], metrics_worst[metrics_list[2]]]
+        ).T
         is_pareto = get_pareto_optimal(costs)
         plt.scatter(
             np.array(metrics_worst[metrics_list[1]])[is_pareto],
@@ -329,9 +347,6 @@ class CorrScatter:
             + ".pdf"
         )
         # clear subplots
-
-
-        
 
         plt.clf()
         plt.close()

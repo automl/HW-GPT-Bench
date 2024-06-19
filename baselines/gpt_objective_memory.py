@@ -21,6 +21,8 @@ import torch
 report = Reporter()
 from analysis.autogluon_gpu_latencies import MultilabelPredictor
 from hwgpt.predictors.hwmetric.net import Net
+
+
 def objective(
     sampled_config: Dict[str, Any],
     device: str,
@@ -42,19 +44,26 @@ def objective(
         arch_feature_map_ppl_predictor.to(device_run).unsqueeze(0)
     )
     num_layers = max(search_spaces[search_space]["n_layer_choices"])
-    hw_predictor = Net(num_layers,False,128,128).to(device_run)
+    hw_predictor = Net(num_layers, False, 128, 128).to(device_run)
     hw_predictor.load_state_dict(
         torch.load(
-            "data_collection/gpt_datasets/predictor_ckpts/hwmetric/mlp/"+str(objective)+"_"+str(search_space)+".pth"
-        , map_location=device_run)
+            "data_collection/gpt_datasets/predictor_ckpts/hwmetric/mlp/"
+            + str(objective)
+            + "_"
+            + str(search_space)
+            + ".pth",
+            map_location=device_run,
+        )
     )
-    hw_metric = hw_predictor(torch.tensor(arch_feature_map_predictor).to(device_run).unsqueeze(0))
-    hw_metric_norm = normalize_memory(hw_metric.item(),search_space,objective)
+    hw_metric = hw_predictor(
+        torch.tensor(arch_feature_map_predictor).to(device_run).unsqueeze(0)
+    )
+    hw_metric_norm = normalize_memory(hw_metric.item(), search_space, objective)
     ppl = perplexity.item()
     ppl_norm = normalize_ppl(ppl, search_space)
-    #if objective  == "energies":
+    # if objective  == "energies":
     #    hw_metric_norm = normalize_energy(hw_metric,device=device,scale=search_space,surrogate=surrogate_type,metric=objective,data_type=type)
-    #else:
+    # else:
     #    hw_metric_norm = normalize_latency(hw_metric/1000,device=device,scale=search_space,surrogate=surrogate_type,metric=objective,data_type=type)
     report(perplexity=ppl_norm, hw_metric=hw_metric_norm)
 

@@ -22,14 +22,15 @@ import os
 import json
 import pickle
 from lib.utils import search_spaces
+
 # Configuration space (or search space)
 
 
 if __name__ == "__main__":
     logging.getLogger().setLevel(logging.DEBUG)
-    #deny_nework_connections()
+    # deny_nework_connections()
     # try accesisng the internet
-    #socket.create_connection(("www.google.com", 80))
+    # socket.create_connection(("www.google.com", 80))
     # [1]
     parser = ArgumentParser()
     parser.add_argument(
@@ -62,7 +63,7 @@ if __name__ == "__main__":
     parser.add_argument(
         "--max_wallclock_time",
         type=int,
-        default=24*60*60,
+        default=24 * 60 * 60,
     )
     parser.add_argument(
         "--experiment_tag",
@@ -174,7 +175,6 @@ if __name__ == "__main__":
     # [5]
     stop_criterion = StoppingCriterion(max_wallclock_time=args.max_wallclock_time)
 
- 
     tuner = Tuner(
         trial_backend=trial_backend,
         scheduler=scheduler,
@@ -187,7 +187,7 @@ if __name__ == "__main__":
             "tag": args.experiment_tag,
         },
         trial_backend_path="synetune_logs/",
-        save_tuner=False
+        save_tuner=False,
     )
 
     tuner.run()

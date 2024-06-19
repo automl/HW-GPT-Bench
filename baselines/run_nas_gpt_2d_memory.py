@@ -182,7 +182,7 @@ if __name__ == "__main__":
             "seed": args.random_seed,
             "algorithm": args.method,
             "tag": args.experiment_tag,
-        }
+        },
     )
     tuner.run()
     from syne_tune.experiments import load_experiment

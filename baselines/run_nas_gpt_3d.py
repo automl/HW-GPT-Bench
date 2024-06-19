@@ -3,17 +3,22 @@ import sys
 
 deny_connects = False
 
+
 def deny_nework_connections():
-  global deny_connects
+    global deny_connects
 
-  def audit_hook_deny_connects(event: str, args):
-    if deny_connects and event == 'socket.connect':
-      sock: socket.socket = args[0]
-      if sock.family != socket.AddressFamily.AF_UNIX:
-        raise Exception("network connection denied to prevent accidental Internet access")
+    def audit_hook_deny_connects(event: str, args):
+        if deny_connects and event == "socket.connect":
+            sock: socket.socket = args[0]
+            if sock.family != socket.AddressFamily.AF_UNIX:
+                raise Exception(
+                    "network connection denied to prevent accidental Internet access"
+                )
 
-  deny_connects = True
-  sys.addaudithook(audit_hook_deny_connects)
+    deny_connects = True
+    sys.addaudithook(audit_hook_deny_connects)
+
+
 import logging
 from argparse import ArgumentParser
 from pathlib import Path
@@ -46,7 +51,7 @@ if __name__ == "__main__":
     logging.getLogger().setLevel(logging.INFO)
     # [1]
     deny_nework_connections()
-    #socket.create_connection(("www.google.com", 10))
+    # socket.create_connection(("www.google.com", 10))
     parser = ArgumentParser()
     parser.add_argument(
         "--method",
@@ -212,7 +217,7 @@ if __name__ == "__main__":
             "seed": args.random_seed,
             "algorithm": args.method,
             "tag": args.experiment_tag,
-        }
+        },
     )
 
     tuner.run()

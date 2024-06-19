@@ -500,7 +500,7 @@ class EmpiricalAttainmentFuncPlot:
             max_hv = self._compute_true_pareto_surface_hypervolume2d()
             hvs /= max_hv
 
-        T = (np.arange(n_observations)+1)#*384
+        T = np.arange(n_observations) + 1  # *384
         m, s = np.mean(hvs, axis=0), np.std(hvs, axis=0) / np.sqrt(n_observations)
 
         marker_kwargs, kwargs = _extract_marker_kwargs(**kwargs)

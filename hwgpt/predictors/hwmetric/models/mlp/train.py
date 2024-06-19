@@ -1,4 +1,3 @@
-
 import torch
 import torch.nn as nn
 import torch.optim as optim
@@ -220,9 +219,7 @@ if __name__ == "__main__":
     model = model.to(device)
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
     base_path = (
-        "data_collection/gpt_datasets/predictor_ckpts/hwmetric/"
-        + str(args.model)
-        + "/"
+        "data_collection/gpt_datasets/predictor_ckpts/hwmetric/" + str(args.model) + "/"
     )
     if "memory" in args.metric or "flops" in args.metric or "params" in args.metric:
         model_path = base_path + args.metric + "_" + args.search_space + ".pth"

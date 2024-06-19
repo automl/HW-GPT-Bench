@@ -17,7 +17,9 @@ from hwgpt.api_utils import estimate_flops, num_parameters
 from hwgpt.model.gpt_base.model import GPT
 from data_collection.pl_gpt.utils.configuration import Config
 from data_collection.gpt_profiler.profile.gpt_perplexity_profiler import GPTProfilerPPL
-from hwgpt.predictors.hwmetric.models.autogluon.autogluon_latencies import MultilabelPredictor
+from hwgpt.predictors.hwmetric.models.autogluon.autogluon_latencies import (
+    MultilabelPredictor,
+)
 from typing import Any, Dict
 from argparse import Namespace
 import pickle
@@ -151,21 +153,26 @@ class HWGPTBenchAPI:
     def get_memory(self, objective):
         device = "cuda" if torch.cuda.is_available() else "cpu"
         num_layers = max(search_spaces[search_space]["n_layer_choices"])
-        hw_predictor = Net(num_layers,False,128,128).to(device)
+        hw_predictor = Net(num_layers, False, 128, 128).to(device)
         hw_predictor.load_state_dict(
             torch.load(
-                "data_collection/gpt_datasets/predictor_ckpts/hwmetric/mlp/"+str(objective)+"_"+str(search_space)+".pth"
-            , map_location=device)
+                "data_collection/gpt_datasets/predictor_ckpts/hwmetric/mlp/"
+                + str(objective)
+                + "_"
+                + str(search_space)
+                + ".pth",
+                map_location=device,
+            )
         )
         arch_feature_map = get_arch_feature_map(self.config, self.search_space_name)
         arch_feature_map_predictor = normalize_arch_feature_map(
             arch_feature_map, self.search_space_name
         )
-        hw_metric = hw_predictor(torch.tensor(arch_feature_map_predictor).to(device).unsqueeze(0))
+        hw_metric = hw_predictor(
+            torch.tensor(arch_feature_map_predictor).to(device).unsqueeze(0)
+        )
 
         return hw_metric.item()
-
-
 
     def compute_predictions_hw(
         self,
@@ -173,7 +180,7 @@ class HWGPTBenchAPI:
         device: str,
     ) -> Any:
         arch_feature = get_arch_feature_map(self.config, self.search_space_name)
-        #arch_feature = normalize_arch_feature_map(arch_feature, self.search_space_name)
+        # arch_feature = normalize_arch_feature_map(arch_feature, self.search_space_name)
         surrogate = get_hw_predictor_surrogate(
             self.search_space_name,
             device,
@@ -235,8 +242,7 @@ class HWGPTBenchAPI:
             results[hw_metric] = {}
             for device in self.device_query:
                 results[hw_metric][device] = self.compute_predictions_hw(
-                    hw_metric,
-                    device
+                    hw_metric, device
                 )
         for hw_metric_true in self.hw_metrics_true_query:
             if hw_metric_true == "flops":
@@ -254,8 +260,29 @@ class HWGPTBenchAPI:
 
 # test
 if __name__ == "__main__":
-    metrics = ["latencies", "energies", "flops", "params", "float16_memory", "bfloat16_memory"]
-    devices = ["a100", "rtx2080", "cpu_xeon_silver", "cpu_amd_7513","h100", "a40", "rtx3080", "a6000", "P100", "v100", "cpu_xeon_gold", "cpu_amd_7502", "cpu_amd_7452"]
+    metrics = [
+        "latencies",
+        "energies",
+        "flops",
+        "params",
+        "float16_memory",
+        "bfloat16_memory",
+    ]
+    devices = [
+        "a100",
+        "rtx2080",
+        "cpu_xeon_silver",
+        "cpu_amd_7513",
+        "h100",
+        "a40",
+        "rtx3080",
+        "a6000",
+        "P100",
+        "v100",
+        "cpu_xeon_gold",
+        "cpu_amd_7502",
+        "cpu_amd_7452",
+    ]
     search_spaces_str = ["s", "m", "l"]
     for search_space in search_spaces_str:
         for device in devices:

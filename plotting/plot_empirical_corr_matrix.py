@@ -15,6 +15,7 @@ def calculate_correlation_matrix(all_dict: Dict) -> Tuple[np.ndarray, List]:
             corr_mat[i, j] = round(corr, 2)
     return corr_mat, keys
 
+
 def get_min_corr_parts(corr_mat, keys, top_k=10):
     # min 2*k elements
     min_corr = np.min(corr_mat)
@@ -27,10 +28,16 @@ def get_min_corr_parts(corr_mat, keys, top_k=10):
         corr_mat[min_corr_idx] = 1
 
 
-
 def plot_correlation_matrix(corr_mat: np.ndarray, keys: List, filename: str):
     plt.figure(figsize=(25, 25))
-    sns.clustermap(corr_mat, xticklabels=keys, yticklabels=keys,fmt='.2f',annot_kws={"size": 6}, annot=True)
+    sns.clustermap(
+        corr_mat,
+        xticklabels=keys,
+        yticklabels=keys,
+        fmt=".2f",
+        annot_kws={"size": 6},
+        annot=True,
+    )
     plt.savefig(filename)
 
 
@@ -108,7 +115,7 @@ def main():
                 cpu_dict[key] = corr_mat_lists[key]
         corr_mat_cpu, keys_cpu = calculate_correlation_matrix(cpu_dict)
         # update keys
-        
+
         plot_correlation_matrix(
             corr_mat_cpu, keys_cpu, "corr_matrix_cpu_" + ss + ".pdf"
         )
@@ -127,6 +134,7 @@ def main():
         corr_mat, keys = calculate_correlation_matrix(corr_mat_lists)
         plot_correlation_matrix(corr_mat, keys, "corr_matrix_all_" + ss + ".pdf")
         get_min_corr_parts(corr_mat, keys, top_k=10)
+
 
 if __name__ == "__main__":
     main()

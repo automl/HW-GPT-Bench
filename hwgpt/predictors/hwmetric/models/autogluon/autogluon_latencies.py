@@ -11,6 +11,7 @@ from sklearn.model_selection import train_test_split
 import numpy as np
 import uncertainty_toolbox as uct
 
+
 class MultilabelPredictor:
     """Tabular Predictor for predicting multiple columns in table.
     Creates multiple TabularPredictor objects which you can also use individually.
@@ -55,13 +56,19 @@ class MultilabelPredictor:
                 "MultilabelPredictor is only intended for predicting MULTIPLE labels (columns), use TabularPredictor for predicting one label (column).",
             )
         if (problem_types is not None) and (len(problem_types) != len(labels)):
-            raise ValueError("If provided, `problem_types` must have same length as `labels`")
+            raise ValueError(
+                "If provided, `problem_types` must have same length as `labels`"
+            )
         if (eval_metrics is not None) and (len(eval_metrics) != len(labels)):
-            raise ValueError("If provided, `eval_metrics` must have same length as `labels`")
+            raise ValueError(
+                "If provided, `eval_metrics` must have same length as `labels`"
+            )
         self.path = setup_outputdir(path, warn_if_exist=False)
         self.labels = labels
         self.consider_labels_correlation = consider_labels_correlation
-        self.predictors = {}  # key = label, value = TabularPredictor or str path to the TabularPredictor for this label
+        self.predictors = (
+            {}
+        )  # key = label, value = TabularPredictor or str path to the TabularPredictor for this label
         if eval_metrics is None:
             self.eval_metrics = {}
         else:
@@ -106,7 +113,9 @@ class MultilabelPredictor:
             if not self.consider_labels_correlation:
                 labels_to_drop = [l for l in self.labels if l != label]
             else:
-                labels_to_drop = [self.labels[j] for j in range(i + 1, len(self.labels))]
+                labels_to_drop = [
+                    self.labels[j] for j in range(i + 1, len(self.labels))
+                ]
             train_data = train_data_og.drop(labels_to_drop, axis=1)
             if tuning_data is not None:
                 tuning_data = tuning_data_og.drop(labels_to_drop, axis=1)
@@ -129,7 +138,7 @@ class MultilabelPredictor:
         """
         return self._predict(data, as_proba=False, exp=exp, **kwargs)
 
-    def predict_proba(self, data,exp=False, **kwargs):
+    def predict_proba(self, data, exp=False, **kwargs):
         """Returns dict where each key is a label and the corresponding value is the `predict_proba()` output for just that label.
 
         Parameters
@@ -163,9 +172,9 @@ class MultilabelPredictor:
             eval_dict[label] = predictor.evaluate(data, **kwargs)
             if self.consider_labels_correlation:
                 if exp and label == "Target_Std":
-                   data[label] = np.exp(data[label])
+                    data[label] = np.exp(data[label])
                 else:
-                   data[label] = predictor.predict(data,**kwargs)
+                    data[label] = predictor.predict(data, **kwargs)
         return eval_dict
 
     def save(self):
@@ -173,8 +182,12 @@ class MultilabelPredictor:
         for label in self.labels:
             if not isinstance(self.predictors[label], str):
                 self.predictors[label] = self.predictors[label].path
-        save_pkl.save(path=os.path.join(self.path, self.multi_predictor_file), object=self)
-        print(f"MultilabelPredictor saved to disk. Load with: MultilabelPredictor.load('{self.path}')")
+        save_pkl.save(
+            path=os.path.join(self.path, self.multi_predictor_file), object=self
+        )
+        print(
+            f"MultilabelPredictor saved to disk. Load with: MultilabelPredictor.load('{self.path}')"
+        )
 
     @classmethod
     def load(cls, path):
@@ -186,7 +199,10 @@ class MultilabelPredictor:
         """Returns TabularPredictor which is used to predict this label."""
         predictor = self.predictors[label]
         if isinstance(predictor, str):
-            return TabularPredictor.load(path="data_collection/gpt_datasets/predictor_ckpts/hwmetric/autogluon/"+predictor)
+            return TabularPredictor.load(
+                path="data_collection/gpt_datasets/predictor_ckpts/hwmetric/autogluon/"
+                + predictor
+            )
         return predictor
 
     def _get_data(self, data):
@@ -194,7 +210,7 @@ class MultilabelPredictor:
             return TabularDataset(data)
         return data.copy()
 
-    def _predict(self, data, as_proba=False, exp=False,**kwargs):
+    def _predict(self, data, as_proba=False, exp=False, **kwargs):
         data = self._get_data(data)
         if as_proba:
             predproba_dict = {}
@@ -202,7 +218,9 @@ class MultilabelPredictor:
             print(f"Predicting with TabularPredictor for label: {label} ...")
             predictor = self.get_predictor(label)
             if as_proba:
-                predproba_dict[label] = predictor.predict_proba(data, exp=exp, as_multiclass=True, **kwargs)
+                predproba_dict[label] = predictor.predict_proba(
+                    data, exp=exp, as_multiclass=True, **kwargs
+                )
             if label == "Target_Std" and exp:
                 data[label] = np.exp(predictor.predict(data, **kwargs))
             else:
@@ -215,7 +233,7 @@ class MultilabelPredictor:
 
 def run(args):
     # Following https://auto.gluon.ai/stable/tutorials/tabular/advanced/tabular-multilabel.html#inference-and-evaluation
-    data_path = "gpt_"+args.search_space+"_"+"latencies_"+args.device+".csv"
+    data_path = "gpt_" + args.search_space + "_" + "latencies_" + args.device + ".csv"
     df = pd.read_csv(data_path)
 
     time_limit = args.time_limit
@@ -223,21 +241,31 @@ def run(args):
     target_avg = "Target_Avg"
     target_std = "Target_Std"
 
-    train_df, test_df = train_test_split(df, test_size=0.2, random_state=42, shuffle=True)
+    train_df, test_df = train_test_split(
+        df, test_size=0.2, random_state=42, shuffle=True
+    )
     target_cols = [x for x in df.columns if x.startswith("latency")]
     # features = [x for x in df.columns if x not in target_cols]
 
     # train_df[features] = train_df[features].astype("category")
-    train_df[target_avg] = (train_df[target_cols]*1000).mean(axis=1)
-    train_df[target_std] = np.log((train_df[target_cols]*1000).std(axis=1))
-    #for target in [target_avg, target_std]:
+    train_df[target_avg] = (train_df[target_cols] * 1000).mean(axis=1)
+    train_df[target_std] = np.log((train_df[target_cols] * 1000).std(axis=1))
+    # for target in [target_avg, target_std]:
     #    train_df[target] = np.log(train_df[target] + 1)
     train_df = train_df.drop(columns=target_cols)
 
     labels = [target_avg, target_std]  # which columns to predict based on the others
-    problem_types = ["regression", "regression"]  # type of each prediction problem (optional)
-    eval_metrics = ["r2","r2"]#["r2", "r2"]  # metrics used to evaluate predictions for each label (optional)
-    save_path = "gpt_latencies_"+args.search_space+"_"+args.device+"_log/" #args.save_path
+    problem_types = [
+        "regression",
+        "regression",
+    ]  # type of each prediction problem (optional)
+    eval_metrics = [
+        "r2",
+        "r2",
+    ]  # ["r2", "r2"]  # metrics used to evaluate predictions for each label (optional)
+    save_path = (
+        "gpt_latencies_" + args.search_space + "_" + args.device + "_log/"
+    )  # args.save_path
 
     multi_predictor = MultilabelPredictor(
         labels=labels,
@@ -246,23 +274,36 @@ def run(args):
         path=save_path,
     )
     # dynamic_stacking=False, num_stack_levels=1, num_bag_folds=8, num_bag_sets=4, presets="best_quality"
-    multi_predictor.fit(train_df, time_limit=time_limit, dynamic_stacking=False, num_stack_levels=1, num_bag_folds=8, num_bag_sets=2, presets="best_quality")
+    multi_predictor.fit(
+        train_df,
+        time_limit=time_limit,
+        dynamic_stacking=False,
+        num_stack_levels=1,
+        num_bag_folds=8,
+        num_bag_sets=2,
+        presets="best_quality",
+    )
 
     # test_df[features] = test_df[features].astype("category")
-    test_df[target_avg] = (test_df[target_cols]*1000).mean(axis=1)
-    test_df[target_std] = (test_df[target_cols]*1000).std(axis=1)
-    #for target in [target_avg, target_std]:
+    test_df[target_avg] = (test_df[target_cols] * 1000).mean(axis=1)
+    test_df[target_std] = (test_df[target_cols] * 1000).std(axis=1)
+    # for target in [target_avg, target_std]:
     #    test_df[target] = np.log(test_df[target] + 1)
-    #metrics = uct.metrics.get_all_metrics(predictions, predictions_std, y)
+    # metrics = uct.metrics.get_all_metrics(predictions, predictions_std, y)
     test_df = test_df.drop(columns=target_cols)
 
     predictions = multi_predictor.predict(test_df)
-    metrics = uct.metrics.get_all_metrics(np.array(predictions["Target_Avg"]), np.array(predictions["Target_Std"]), np.array(test_df["Target_Avg"]))
+    metrics = uct.metrics.get_all_metrics(
+        np.array(predictions["Target_Avg"]),
+        np.array(predictions["Target_Std"]),
+        np.array(test_df["Target_Avg"]),
+    )
     print(metrics)
-    #save the metrics
-    with open(save_path+"calibration_metrics.pkl", "wb") as f:
+    # save the metrics
+    with open(save_path + "calibration_metrics.pkl", "wb") as f:
         import pickle
-        pickle.dump([test_df,predictions,metrics], f)
+
+        pickle.dump([test_df, predictions, metrics], f)
     print("Predictions:  \n", predictions)
 
     evaluations = multi_predictor.evaluate(test_df)
@@ -274,20 +315,39 @@ def run(args):
         predictor_class.leaderboard(test_df, display=True)
 
 
-def get_and_load_model(search_space,device):
+def get_and_load_model(search_space, device):
     target_avg = "Target_Avg"
     target_std = "Target_Std"
     labels = [target_avg, target_std]  # which columns to predict based on the others
-    problem_types = ["regression", "regression"]  # type of each prediction problem (optional)
-    eval_metrics = ["r2","r2"]#["r2", "r2"]  # metrics used to evaluate predictions for each label (optional)
-    #save_path = "gpt_latencies_"+args.search_space+"_"+args.device+"/" #args.save_path
+    problem_types = [
+        "regression",
+        "regression",
+    ]  # type of each prediction problem (optional)
+    eval_metrics = [
+        "r2",
+        "r2",
+    ]  # ["r2", "r2"]  # metrics used to evaluate predictions for each label (optional)
+    # save_path = "gpt_latencies_"+args.search_space+"_"+args.device+"/" #args.save_path
     if "cpu" in device:
-        model_path = "data_collection/gpt_datasets/predictor_ckpts/hwmetric/autogluon/gpt_latencies_"+search_space+"_"+device+"/"
+        model_path = (
+            "data_collection/gpt_datasets/predictor_ckpts/hwmetric/autogluon/gpt_latencies_"
+            + search_space
+            + "_"
+            + device
+            + "/"
+        )
     else:
-        model_path = "data_collection/gpt_datasets/predictor_ckpts/hwmetric/autogluon/gpt_latencies_"+search_space+"_"+device+"_log/"
-    #predictor = MultilabelPredictor(labels=labels, problem_types=problem_types, eval_metrics=eval_metrics, path=model_path)
-    with open(model_path+"multilabel_predictor.pkl", "rb") as f:
+        model_path = (
+            "data_collection/gpt_datasets/predictor_ckpts/hwmetric/autogluon/gpt_latencies_"
+            + search_space
+            + "_"
+            + device
+            + "_log/"
+        )
+    # predictor = MultilabelPredictor(labels=labels, problem_types=problem_types, eval_metrics=eval_metrics, path=model_path)
+    with open(model_path + "multilabel_predictor.pkl", "rb") as f:
         import pickle
+
         predictor = pickle.load(f)
 
     return predictor

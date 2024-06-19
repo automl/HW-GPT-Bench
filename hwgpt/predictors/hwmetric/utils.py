@@ -15,17 +15,17 @@ import argparse
 
 def get_model_and_datasets(args: argparse.Namespace):
     train_dataset = HWDataset(
-            mode="train",
-            device_name=args.device,
-            search_space=args.search_space,
-            metric=args.metric,
-        )
+        mode="train",
+        device_name=args.device,
+        search_space=args.search_space,
+        metric=args.metric,
+    )
     test_dataset = HWDataset(
-            mode="test",
-            device_name=args.device,
-            search_space=args.search_space,
-            metric=args.metric,
-        )
+        mode="test",
+        device_name=args.device,
+        search_space=args.search_space,
+        metric=args.metric,
+    )
     model = get_model(args)
     return model, train_dataset, test_dataset
 
@@ -75,18 +75,14 @@ class HWDataset(torch.utils.data.Dataset):
         feature = get_arch_feature_map(arch_config, self.search_space)
         feature = normalize_arch_feature_map(feature, self.search_space)
         if self.metric == "latencies" or self.metric == "energies":
-                if "cpu" in self.device_name and self.metric == "energies":
-                    latencies_arch = [
-                        self.arch_stats[arch][self.device_name][self.metric]
-                    ]
-                else:
-                    latencies_arch = self.arch_stats[arch][self.device_name][
-                        self.metric
-                    ]
-                latencies_arch = list(latencies_arch)
-                for lat in latencies_arch:
-                    metric.append(lat)
-                    arch_features.append(feature)
+            if "cpu" in self.device_name and self.metric == "energies":
+                latencies_arch = [self.arch_stats[arch][self.device_name][self.metric]]
+            else:
+                latencies_arch = self.arch_stats[arch][self.device_name][self.metric]
+            latencies_arch = list(latencies_arch)
+            for lat in latencies_arch:
+                metric.append(lat)
+                arch_features.append(feature)
         elif "memory" in self.metric:
             metric.append(self.arch_stats[arch][self.metric])
             arch_features.append(feature)
