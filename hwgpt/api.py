@@ -25,11 +25,11 @@ from argparse import Namespace
 import pickle
 
 
-class HWGPTBenchAPI:
+class HWGPT:
     def __init__(
         self,
         search_space: str,
-        use_supernet_surrogate: bool = False,
+        use_supernet_surrogate: bool = True,
     ):
         print(search_spaces)
 
@@ -53,8 +53,6 @@ class HWGPTBenchAPI:
         self.hw_metrics_surrogate = [
             "latencies",
             "energies",
-            "float16_memory",
-            "bfloat16_memory",
         ]
         self.hw_metrics_true = ["flops", "params", "float16_memory", "bfloat16_memory"]
         self.metrics = ["perplexity", "accuracy"]
@@ -106,7 +104,7 @@ class HWGPTBenchAPI:
         self.reset_config()
         return GPT(self.cfg_model.model)
 
-    def sample_random_arch(self) -> dict:
+    def sample_arch(self) -> dict:
         seed = hash(
             (
                 random.randint(0, 1000000),
@@ -117,6 +115,7 @@ class HWGPTBenchAPI:
         config = sample_config(self.search_space, seed)
         self.config = config
         self.reset_config()
+        return config
 
     def set_arch(self, config: dict):
         self.config = config
@@ -133,14 +132,30 @@ class HWGPTBenchAPI:
 
     def set_metrics_and_devices(self, hw_metric: str = None, device: str = None):
         if hw_metric is not None:
-            if hw_metric in self.hw_metrics_true:
-                self.hw_metrics_true_query = [hw_metric]
-                self.hw_metrics_surrogate_query = []
+            if isinstance(hw_metric, str):
+                if hw_metric in self.hw_metrics_true:
+                    self.hw_metrics_true_query = [hw_metric]
+                    self.hw_metrics_surrogate_query = []
+                else:
+                    self.hw_metrics_surrogate_query = [hw_metric]
+                    self.hw_metrics_true_query = []
             else:
-                self.hw_metrics_surrogate_query = [hw_metric]
-                self.hw_metrics_true_query = []
+                if all(metric in self.hw_metrics_true for metric in hw_metric):
+                    self.hw_metrics_true_query = hw_metric
+                    self.hw_metrics_surrogate_query = []
+                else:
+                    self.hw_metrics_surrogate_query = hw_metric
+                    self.hw_metrics_true_query = []
+        else:
+            self.hw_metrics_surrogate_query = self.hw_metrics_surrogate
+            self.hw_metrics_true_query = self.hw_metrics_true
         if device is not None:
-            self.device_query = [device]
+            if isinstance(device, str):
+                self.device_query = [device]
+            else:
+                self.device_query = device
+        else:
+            self.device_query = self.device_list
 
     def get_flops(self):
         flops = estimate_flops(self.create_model())
@@ -152,14 +167,14 @@ class HWGPTBenchAPI:
 
     def get_memory(self, objective):
         device = "cuda" if torch.cuda.is_available() else "cpu"
-        num_layers = max(search_spaces[search_space]["n_layer_choices"])
+        num_layers = max(self.search_space["n_layer_choices"])
         hw_predictor = Net(num_layers, False, 128, 128).to(device)
         hw_predictor.load_state_dict(
             torch.load(
                 "data_collection/gpt_datasets/predictor_ckpts/hwmetric/mlp/"
                 + str(objective)
                 + "_"
-                + str(search_space)
+                + str(self.search_space_name)
                 + ".pth",
                 map_location=device,
             )
@@ -227,20 +242,27 @@ class HWGPTBenchAPI:
                 raise ValueError("Unsupported metric type")
         return metric_stats
 
-    def query(
-        self,
-        device: str = "a100",
-        hw_metric: str = "latencies",
-    ):
-
+    def query(self, device: str = None, metric: str = None, predictor: str = "mlp"):
+        if device is not None and metric is None:
+            metric = ["latencies", "energies"]
+        if metric is not None and device is None:
+            device = self.device_list
         if self.config is None:
             raise ValueError("Please set arch config before querying")
         results = {}
-        results["perplexity"] = self.compute_predictions_ppl()
-        self.set_metrics_and_devices(hw_metric, device)
+        if metric == "perplexity":
+            if predictor == "mlp":
+                results["perplexity"] = self.compute_predictions_ppl()
+            else:
+                results = self.eval_supernet_surrogate()
+            return results
+        self.set_metrics_and_devices(metric, device)
+        print(self.hw_metrics_surrogate_query)
         for hw_metric in self.hw_metrics_surrogate_query:
+            print(hw_metric)
             results[hw_metric] = {}
             for device in self.device_query:
+                print(hw_metric, device)
                 results[hw_metric][device] = self.compute_predictions_hw(
                     hw_metric, device
                 )
@@ -260,33 +282,17 @@ class HWGPTBenchAPI:
 
 # test
 if __name__ == "__main__":
-    metrics = [
-        "latencies",
-        "energies",
-        "flops",
-        "params",
-        "float16_memory",
-        "bfloat16_memory",
-    ]
-    devices = [
-        "a100",
-        "rtx2080",
-        "cpu_xeon_silver",
-        "cpu_amd_7513",
-        "h100",
-        "a40",
-        "rtx3080",
-        "a6000",
-        "P100",
-        "v100",
-        "cpu_xeon_gold",
-        "cpu_amd_7502",
-        "cpu_amd_7452",
-    ]
-    search_spaces_str = ["s", "m", "l"]
-    for search_space in search_spaces_str:
-        for device in devices:
-            for metric in metrics:
-                api = HWGPTBenchAPI(search_space)
-                api.sample_random_arch()
-                print(api.query(device=device, hw_metric=metric))
+    from hwgpt.api import HWGPT
+
+    api = HWGPT(search_space="s", use_supernet_surrogate=False)  # initialize API
+    random_arch = api.sample_arch()  # sample random arch
+    api.set_arch(random_arch)  # set  arch
+    results = api.query()  # query all for the sampled arch
+    print("Results: ", results)
+    energy = api.query(metric="energies")  # query energy
+    print("Energy: ", energy)
+    rtx2080 = api.query(device="rtx2080")  # query device
+    print("RTX2080: ", rtx2080)
+    # query perplexity based on mlp predictor
+    perplexity_mlp = api.query(metric="perplexity", predictor="mlp")
+    print("Perplexity MLP: ", perplexity_mlp)
