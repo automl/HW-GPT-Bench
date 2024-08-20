@@ -37,7 +37,9 @@ def convert_and_evaluate(
     seed: int = 1234,
     save_filepath: Path | None = None,
     access_token: str | None = None,
-    tokenizer: str | transformers.PreTrainedTokenizer | transformers.PreTrainedTokenizerFast = None
+    tokenizer: (
+        str | transformers.PreTrainedTokenizer | transformers.PreTrainedTokenizerFast
+    ) = None,
 ) -> None:
     """Evaluate a model with the LM Evaluation Harness.
 
@@ -86,7 +88,11 @@ def convert_and_evaluate(
         device = "cuda" if torch.cuda.is_available() else "cpu"
 
     model = WhittleLM(
-        pretrained=model, device=device, batch_size=batch_size, dtype=dtype, tokenizer = tokenizer
+        pretrained=model,
+        device=device,
+        batch_size=batch_size,
+        dtype=dtype,
+        tokenizer=tokenizer,
     )
 
     os.environ["TOKENIZERS_PARALLELISM"] = "false"
