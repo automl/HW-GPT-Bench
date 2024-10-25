@@ -2,7 +2,7 @@
 ## Repository for [HW-GPT Benchmark](https://arxiv.org/abs/2405.10299)
 ![alt text](figures/overview.png)
 ## Supernet Checkpoints and Pretrained Surrogates
-We release the pretrained supernet checkpoints [here](https://drive.google.com/drive/folders/1-Efori5ou1b4pmGYyFJItoqgqRueGfyv?usp=sharing), the pretrained hardware surrogates [here](https://drive.google.com/file/d/1-HXev4sdoDf_nwDJoBdlK1eKIOFN5K00/view?usp=sharing) and the perplexity surrogates [here](https://drive.google.com/file/d/1-Z998sYUprA5fuogLElQfAYq7Z29XqUg/view?usp=sharing). 
+We release the pretrained supernet checkpoints [here](https://drive.google.com/drive/folders/1uUxO05Hx-T_KOiTkA3zT_iuaeK6HdxM0?usp=sharing), the pretrained hardware surrogates [here](https://drive.google.com/file/d/1-HXev4sdoDf_nwDJoBdlK1eKIOFN5K00/view?usp=sharing) and the perplexity surrogates [here](https://drive.google.com/file/d/1-Z998sYUprA5fuogLElQfAYq7Z29XqUg/view?usp=sharing) and the list of architectures sampled [here](https://drive.google.com/drive/folders/1Y54MN4ybpUs_pCuElworFvc5ZeoN2amu?usp=sharing). 
 
 ## To install in editable mode (-e) run:
 
