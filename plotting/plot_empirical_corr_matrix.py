@@ -1,3 +1,5 @@
+import argparse
+import os
 import pickle
 import matplotlib.pyplot as plt
 import seaborn as sns
@@ -42,6 +44,14 @@ def plot_correlation_matrix(corr_mat: np.ndarray, keys: List, filename: str):
 
 
 def main():
+    parser = argparse.ArgumentParser(description="Plot empirical corr matrix")
+    parser.add_argument(
+        "--base_path",
+        type=str,
+        default=".",
+    )
+    args = parser.parse_args()
+
     hw_agnostic = (
         "params",
         "flops",
@@ -77,6 +87,7 @@ def main():
     )
     for ss in search_space_choices:
         base_path = "data_collection/gpt_datasets/gpt_" + str(ss) + "/" + "stats.pkl"
+        base_path = os.path.join(args.base_path, base_path)
         corr_mat_lists = {}
         corr_mat_lists["1/perplexity"] = []
         corr_mat_lists["accuracy"] = []

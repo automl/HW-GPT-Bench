@@ -37,8 +37,8 @@ class Block(nn.Module):
 
     def norm_class(self):
         # `self._norm_class` cannot be the type to keep the config json serializable
-        from gpt.super_modules.rmsnorm_super import RMSNormSuper
-        from gpt.super_modules.layernorm_super import LayerNormSuper
+        from hwgpt.model.gpt.super_modules.rmsnorm_super import RMSNormSuper
+        from hwgpt.model.gpt.super_modules.layernorm_super import LayerNormSuper
 
         if self.config._norm_class == "RMSNorm":
 
@@ -47,7 +47,7 @@ class Block(nn.Module):
 
     def mlp_class(self):
         # `self._mlp_class` cannot be the type to keep the config json serializable
-        from gpt.blocks.mlp import GptNeoxMLP, LLaMAMLP
+        from hwgpt.model.gpt.blocks.mlp import GptNeoxMLP, LLaMAMLP
 
         if self.config._mlp_class == "LLaMAMLP":
             return LLaMAMLP
