@@ -236,10 +236,6 @@ def get_and_load_model(search_space, device):
         "r2",
         "r2",
     ]  # ["r2", "r2"]  # metrics used to evaluate predictions for each label (optional)
-    # save_path = "gpt_latencies_"+args.search_space+"_"+args.device+"/" #args.save_path
-    # if "amd" in device:
-    #    model_path = "gpt_energies_"+search_space+"_"+device+"/"
-    # else:
     model_path = (
         "data_collection/gpt_datasets/predictor_ckpts/hwmetric/autogluon/gpt_energies_"
         + search_space
@@ -247,12 +243,13 @@ def get_and_load_model(search_space, device):
         + device
         + "_log/"
     )
-    # model_path = "gpt_energies_"+search_space+"_"+device+"/"
-    # predictor = MultilabelPredictor(labels=labels, problem_types=problem_types, eval_metrics=eval_metrics, path=model_path)
     import pickle
 
     with open(model_path + "multilabel_predictor.pkl", "rb") as f:
         import pickle
+
+        predictor = pickle.load(f)
+    return predictor
 
         predictor = pickle.load(f)
     return predictor
