@@ -31,7 +31,6 @@ class HWGPT:
         search_space: str,
         use_supernet_surrogate: bool = True,
     ):
-        print(search_spaces)
 
         self.search_space = search_spaces[search_space]
         self.search_space_name = search_space
@@ -112,7 +111,7 @@ class HWGPT:
                 random.randint(0, 1000000),
             )
         )
-        config = sample_config(self.search_space, seed)
+        config = sample_config(self.search_space, seed=seed)
         self.config = config
         self.reset_config()
         return config
@@ -257,12 +256,9 @@ class HWGPT:
                 results = self.eval_supernet_surrogate()
             return results
         self.set_metrics_and_devices(metric, device)
-        print(self.hw_metrics_surrogate_query)
         for hw_metric in self.hw_metrics_surrogate_query:
-            print(hw_metric)
             results[hw_metric] = {}
             for device in self.device_query:
-                print(hw_metric, device)
                 results[hw_metric][device] = self.compute_predictions_hw(
                     hw_metric, device
                 )
@@ -283,16 +279,17 @@ class HWGPT:
 # test
 if __name__ == "__main__":
     from hwgpt.api import HWGPT
+    # the snippet below will test if everything is downloaded correctly
+    for scale in ['s', 'm', 'l']:
+      for metric in ["energies", "latencies"]:
+       for device in ["a100", "a40", "h100", "rtx2080", "rtx3080", "a6000", "v100", "P100", "cpu_xeon_silver", "cpu_xeon_gold", "cpu_amd_7502", "cpu_amd_7513", "cpu_amd_7452"]:
+        api = HWGPT(search_space=scale, use_supernet_surrogate=False)  # initialize API
+        random_arch = api.sample_arch()  # sample random arch
+        print(random_arch)
+        api.set_arch(random_arch)  # set  arch
+        hwmetric = api.query(metric=metric, device=device)  # query energy
+        print(f"{metric} for scale {scale} and device {device}: ", hwmetric)
+        # query perplexity based on mlp predictor
+        perplexity_mlp = api.query(metric="perplexity", predictor="mlp")
+        print("Perplexity MLP: ", perplexity_mlp)
 
-    api = HWGPT(search_space="s", use_supernet_surrogate=False)  # initialize API
-    random_arch = api.sample_arch()  # sample random arch
-    api.set_arch(random_arch)  # set  arch
-    results = api.query()  # query all for the sampled arch
-    print("Results: ", results)
-    energy = api.query(metric="energies")  # query energy
-    print("Energy: ", energy)
-    rtx2080 = api.query(device="rtx2080")  # query device
-    print("RTX2080: ", rtx2080)
-    # query perplexity based on mlp predictor
-    perplexity_mlp = api.query(metric="perplexity", predictor="mlp")
-    print("Perplexity MLP: ", perplexity_mlp)
