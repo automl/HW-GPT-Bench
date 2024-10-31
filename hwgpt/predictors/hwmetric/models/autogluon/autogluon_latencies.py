@@ -49,7 +49,7 @@ class MultilabelPredictor:
         problem_types=None,
         eval_metrics=None,
         consider_labels_correlation=True,
-        base_path='.',
+        base_path=".",
         **kwargs,
     ):
         if len(labels) < 2:
@@ -202,7 +202,10 @@ class MultilabelPredictor:
         predictor = self.predictors[label]
         if isinstance(predictor, str):
             return TabularPredictor.load(
-                path=os.path.join(self.base_path, "data_collection/gpt_datasets/predictor_ckpts/hwmetric/autogluon/")
+                path=os.path.join(
+                    self.base_path,
+                    "data_collection/gpt_datasets/predictor_ckpts/hwmetric/autogluon/",
+                )
                 + predictor
             )
         return predictor
@@ -317,7 +320,7 @@ def run(args):
         predictor_class.leaderboard(test_df, display=True)
 
 
-def get_and_load_model(search_space, device, base_path='.'):
+def get_and_load_model(search_space, device, base_path="."):
     target_avg = "Target_Avg"
     target_std = "Target_Std"
     labels = [target_avg, target_std]  # which columns to predict based on the others
@@ -331,15 +334,13 @@ def get_and_load_model(search_space, device, base_path='.'):
     ]  # ["r2", "r2"]  # metrics used to evaluate predictions for each label (optional)
     # save_path = "gpt_latencies_"+args.search_space+"_"+args.device+"/" #args.save_path
     if "cpu" in device:
-        model_path = (
-            os.path.join(
-                base_path,
-                "data_collection/gpt_datasets/predictor_ckpts/hwmetric/autogluon/gpt_latencies_"
-                + search_space
-                + "_"
-                + device
-                + "/"
-            )
+        model_path = os.path.join(
+            base_path,
+            "data_collection/gpt_datasets/predictor_ckpts/hwmetric/autogluon/gpt_latencies_"
+            + search_space
+            + "_"
+            + device
+            + "/",
         )
     else:
         model_path = os.path.join(
@@ -348,7 +349,7 @@ def get_and_load_model(search_space, device, base_path='.'):
             + search_space
             + "_"
             + device
-            + "_log/"
+            + "_log/",
         )
     # predictor = MultilabelPredictor(labels=labels, problem_types=problem_types, eval_metrics=eval_metrics, path=model_path)
     with open(model_path + "multilabel_predictor.pkl", "rb") as f:

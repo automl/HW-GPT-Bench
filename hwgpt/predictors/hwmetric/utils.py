@@ -49,7 +49,7 @@ class HWDataset(torch.utils.data.Dataset):
         search_space: str = "s",
         metric: str = "latencies",
         mode: str = "train",
-        base_path: str = '.'
+        base_path: str = ".",
     ):
         "Initialization"
         self.base_path = base_path
@@ -62,7 +62,7 @@ class HWDataset(torch.utils.data.Dataset):
         self.metric_obs = []
         arch_stats_path = os.path.join(
             base_path,
-            "data_collection/gpt_datasets/gpt_" + str(self.search_space) + "/stats.pkl"
+            "data_collection/gpt_datasets/gpt_" + str(self.search_space) + "/stats.pkl",
         )
         arch_stats_path = os.path.join(base_path, arch_stats_path)
         with open(arch_stats_path, "rb") as f:

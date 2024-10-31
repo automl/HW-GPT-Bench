@@ -31,7 +31,7 @@ def objective(
     surrogate_types: List[str],
     type: str,
     objectives: List[str],
-    base_path: str = '.'
+    base_path: str = ".",
 ) -> Reporter:
     max_layers = get_max_min_stats(search_space)["max_layers"]
     arch_feature_map = get_arch_feature_map(sampled_config, search_space)
@@ -43,7 +43,13 @@ def objective(
     ppl_predictor = get_ppl_predictor_surrogate(search_space)
     perplexity = ppl_predictor(arch_feature_map_ppl_predictor.to(device).unsqueeze(0))
     hw_metric_1_surrogate, hw_metric_2_surrogate = get_all_hw_surrogates(
-        max_layers, search_space, objectives, device_list, surrogate_types, type, base_path=base_path
+        max_layers,
+        search_space,
+        objectives,
+        device_list,
+        surrogate_types,
+        type,
+        base_path=base_path,
     )
     hw_metric_1 = predict_hw_surrogate(
         [arch_feature_map], hw_metric_1_surrogate, objectives[0], device_list[0]
@@ -121,5 +127,5 @@ if __name__ == "__main__":
         type=args.type,
         device_list=[args.device_1, args.device_2],
         objectives=[args.objective_1, args.objective_2],
-        base_path=args.base_path
+        base_path=args.base_path,
     )

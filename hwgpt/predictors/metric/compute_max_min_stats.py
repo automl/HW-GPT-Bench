@@ -17,7 +17,9 @@ if __name__ == "__main__":
         default="perplexity",
     )
     parser.add_argument("--search_space", type=str, default="s", help="search space")
-    parser.add_argument("--base_path", type=str, default=".", help="HW-GPT-Bench repo base path.")
+    parser.add_argument(
+        "--base_path", type=str, default=".", help="HW-GPT-Bench repo base path."
+    )
 
     args = parser.parse_args()
     search_space = search_spaces[args.search_space]
@@ -31,7 +33,7 @@ if __name__ == "__main__":
                 + str(args.metric)
                 + "_"
                 + str(args.search_space)
-                + ".pt"
+                + ".pt",
             )
         )
     )
@@ -48,15 +50,13 @@ if __name__ == "__main__":
     out = net(min_arch_feature_map)
     out_list.append(out.item())
     max_min_stats = {"max": max(out_list), "min": min(out_list)}
-    max_min_save_path = (
-        os.path.join(
-            args.base_path,
-            "data_collection/gpt_datasets/predictor_ckpts/metric/max_min_stats_"
-            + str(args.metric)
-            + "_"
-            + str(args.search_space)
-            + ".pkl"
-        )
+    max_min_save_path = os.path.join(
+        args.base_path,
+        "data_collection/gpt_datasets/predictor_ckpts/metric/max_min_stats_"
+        + str(args.metric)
+        + "_"
+        + str(args.search_space)
+        + ".pkl",
     )
     max_min_stats = {"max": max(out_list), "min": min(out_list)}
     with open(max_min_save_path, "wb") as f:
@@ -73,15 +73,13 @@ if __name__ == "__main__":
         out_list.append(out.item())
     mean = sum(out_list) / len(out_list)
     std = (sum([(x - mean) ** 2 for x in out_list]) / len(out_list)) ** 0.5
-    mean_std_save_path = (
-        os.path.join(
-            args.base_path,
-            "data_collection/gpt_datasets/predictor_ckpts/metric/mean_std_"
-            + str(args.metric)
-            + "_"
-            + str(args.search_space)
-            + ".pkl"
-        )
+    mean_std_save_path = os.path.join(
+        args.base_path,
+        "data_collection/gpt_datasets/predictor_ckpts/metric/mean_std_"
+        + str(args.metric)
+        + "_"
+        + str(args.search_space)
+        + ".pkl",
     )
     mean_std_stats = {"mean": mean, "std": std}
     with open(mean_std_save_path, "wb") as f:

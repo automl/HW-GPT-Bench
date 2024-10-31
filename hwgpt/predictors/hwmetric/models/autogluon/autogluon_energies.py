@@ -49,7 +49,7 @@ class MultilabelPredictor:
         problem_types=None,
         eval_metrics=None,
         consider_labels_correlation=True,
-        base_path='.',
+        base_path=".",
         **kwargs,
     ):
         if len(labels) < 2:
@@ -195,7 +195,10 @@ class MultilabelPredictor:
         predictor = self.predictors[label]
         if isinstance(predictor, str):
             return TabularPredictor.load(
-                path=os.path.join(self.base_path, "data_collection/gpt_datasets/predictor_ckpts/hwmetric/autogluon/")
+                path=os.path.join(
+                    self.base_path,
+                    "data_collection/gpt_datasets/predictor_ckpts/hwmetric/autogluon/",
+                )
                 + predictor
             )
         return predictor
@@ -226,7 +229,7 @@ class MultilabelPredictor:
             return predproba_dict
 
 
-def get_and_load_model(search_space, device, base_path='.'):
+def get_and_load_model(search_space, device, base_path="."):
     target_avg = "Target_Avg"
     target_std = "Target_Std"
     labels = [target_avg, target_std]  # which columns to predict based on the others
@@ -248,7 +251,7 @@ def get_and_load_model(search_space, device, base_path='.'):
         + search_space
         + "_"
         + device
-        + "_log/"
+        + "_log/",
     )
     # model_path = "gpt_energies_"+search_space+"_"+device+"/"
     # predictor = MultilabelPredictor(labels=labels, problem_types=problem_types, eval_metrics=eval_metrics, path=model_path)

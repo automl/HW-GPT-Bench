@@ -31,7 +31,7 @@ def objective(
     surrogate_type: str,
     type: str,
     objective: str,
-    base_path: str = '.'
+    base_path: str = ".",
 ) -> Reporter:
     arch_feature_map = get_arch_feature_map(sampled_config, search_space)
     arch_feature_map_ppl_predictor = convert_config_to_one_hot(
@@ -55,7 +55,7 @@ def objective(
                 + str(objective)
                 + "_"
                 + str(search_space)
-                + ".pth"
+                + ".pth",
             ),
             map_location=device_run,
         )
@@ -116,5 +116,5 @@ if __name__ == "__main__":
         type=args.type,
         device=args.device,
         objective=args.objective,
-        base_path=args.base_path
+        base_path=args.base_path,
     )

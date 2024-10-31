@@ -31,7 +31,7 @@ class HWGPT:
         self,
         search_space: str,
         use_supernet_surrogate: bool = True,
-        base_path: str = '.'
+        base_path: str = ".",
     ):
         print(search_spaces)
         self.base_path = base_path
@@ -61,14 +61,16 @@ class HWGPT:
         self.metrics = ["perplexity", "accuracy"]
         self.config = None
         self.use_supernet_surrogate = use_supernet_surrogate
-        self.surrogate_ppl = get_ppl_predictor_surrogate(self.search_space_name, base_path=self.base_path)
+        self.surrogate_ppl = get_ppl_predictor_surrogate(
+            self.search_space_name, base_path=self.base_path
+        )
         self.on_device = "cuda" if torch.cuda.is_available() else "cpu"
         self.cfg_model = self.get_model_config()
         gt_stats_path = os.path.join(
             base_path,
             "data_collection/gpt_datasets/gpt_"
             + str(self.search_space_name)
-            + "/stats.pkl"
+            + "/stats.pkl",
         )
         with open(gt_stats_path, "rb") as f:
             self.gt_stats = pickle.load(f)
@@ -86,7 +88,7 @@ class HWGPT:
         config_path = os.path.join(
             self.base_path, "hwgpt/configs_api/gpt_" + self.search_space_name + ".yaml"
         )
-        return Config(config_file=config_path)        
+        return Config(config_file=config_path)
 
     def prepare_args_for_ppl_profiler(self) -> Namespace:
         args = Namespace()
@@ -176,15 +178,13 @@ class HWGPT:
             + str(objective)
             + "_"
             + str(self.search_space_name)
-            + ".pth"
+            + ".pth",
         )
 
         device = "cuda" if torch.cuda.is_available() else "cpu"
         num_layers = max(self.search_space["n_layer_choices"])
         hw_predictor = Net(num_layers, False, 128, 128).to(device)
-        hw_predictor.load_state_dict(
-            torch.load(predictor_path, map_location=device)
-        )
+        hw_predictor.load_state_dict(torch.load(predictor_path, map_location=device))
         arch_feature_map = get_arch_feature_map(self.config, self.search_space_name)
         arch_feature_map_predictor = normalize_arch_feature_map(
             arch_feature_map, self.search_space_name
