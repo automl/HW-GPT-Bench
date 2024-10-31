@@ -151,7 +151,7 @@ model:
   shared_embedding: True
   pos_embedding: False  # absolute position encoding
   rel_pos_enc: True  # relative position encoding
-  rotary_percentage: 0.25
+  rotary_percentage: 0.5
   _mlp_class: "GptNeoxMLP"
   gelu_approximate: "none"
   # fast config
