@@ -10,6 +10,7 @@ from hwgpt.model.gpt.utils import sample_config_max, sample_config_min, sample_c
 import argparse
 from hwgpt.predictors.hwmetric.utils import get_model
 import numpy as np
+import os
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="PyTorch HW Metric Predictor")
@@ -47,8 +48,11 @@ if __name__ == "__main__":
     parser.add_argument(
         "--seed", type=int, default=1, metavar="S", help="random seed ((default: 1)"
     )
+    parser.add_argument(
+        "--base_path", type=str, default='.'
+    )
     args = parser.parse_args()
-    base_path = "data_collection/gpt_datasets/predictor_ckpts/hwmetric/"
+    base_path = os.path.join(args.base_path, "data_collection/gpt_datasets/predictor_ckpts/hwmetric/")
     model = get_model(args)
     search_space = search_spaces[args.search_space]
     model = get_hw_predictor_surrogate(
