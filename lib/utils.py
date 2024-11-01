@@ -1,4 +1,5 @@
 import pickle
+import os
 import torch
 from hwgpt.predictors.metric.net import Net
 import numpy as np
@@ -175,13 +176,16 @@ def get_arch_feature_map(arch: Dict[str, Any], scale: str) -> List:
         arch_feature_map.append(0)
     return arch_feature_map
 
-def denormalize_ppl(ppl: float, scale: str, method: str="mean-std") -> float:
+def denormalize_ppl(ppl: float, scale: str, method: str="mean-std", base_path: str = '.') -> float:
     if method == "mean-std":
         with open(
-            "data_collection/gpt_datasets/predictor_ckpts/metric/mean_std_"
-            + "perplexity_"
-            + str(scale)
-            + ".pkl",
+            os.path.join(
+                base_path,
+                "data_collection/gpt_datasets/predictor_ckpts/metric/mean_std_"
+                + "perplexity_"
+                + str(scale)
+                + ".pkl"
+            ),
             "rb",
         ) as f:
             mean_std_stats = pickle.load(f)
@@ -190,10 +194,13 @@ def denormalize_ppl(ppl: float, scale: str, method: str="mean-std") -> float:
         ppl = ppl * std_ppl + mean_ppl
     elif method == "max-min":
         with open(
-            "data_collection/gpt_datasets/predictor_ckpts/metric/max_min_stats_"
-            + "perplexity_"
-            + str(scale)
-            + ".pkl",
+            os.path.join(
+                base_path,
+                "data_collection/gpt_datasets/predictor_ckpts/metric/max_min_stats_"
+                + "perplexity_"
+                + str(scale)
+                + ".pkl"
+            ),
             "rb",
         ) as f:
             max_min_stats = pickle.load(f)
@@ -202,13 +209,16 @@ def denormalize_ppl(ppl: float, scale: str, method: str="mean-std") -> float:
         ppl = ppl * (max_ppl - min_ppl) + min_ppl
     return ppl
 
-def normalize_ppl(ppl: float, scale: str, method: str="mean-std") -> float:
+def normalize_ppl(ppl: float, scale: str, method: str="mean-std", base_path: str = '.') -> float:
     if method == "mean-std":
         with open(
-            "data_collection/gpt_datasets/predictor_ckpts/metric/mean_std_"
-            + "perplexity_"
-            + str(scale)
-            + ".pkl",
+            os.path.join(
+                base_path,
+                "data_collection/gpt_datasets/predictor_ckpts/metric/mean_std_"
+                + "perplexity_"
+                + str(scale)
+                + ".pkl"
+            ),
             "rb",
         ) as f:
             mean_std_stats = pickle.load(f)
@@ -217,10 +227,13 @@ def normalize_ppl(ppl: float, scale: str, method: str="mean-std") -> float:
         ppl = (ppl - mean_ppl) / std_ppl
     elif method == "max-min":
         with open(
-            "data_collection/gpt_datasets/predictor_ckpts/metric/max_min_stats_"
-            + "perplexity_"
-            + str(scale)
-            + ".pkl",
+            os.path.join(
+                base_path,
+                "data_collection/gpt_datasets/predictor_ckpts/metric/max_min_stats_"
+                + "perplexity_"
+                + str(scale)
+                + ".pkl"
+            ),
             "rb",
         ) as f:
             max_min_stats = pickle.load(f)
@@ -229,9 +242,10 @@ def normalize_ppl(ppl: float, scale: str, method: str="mean-std") -> float:
         ppl = (ppl - min_ppl) / (max_ppl - min_ppl)
     return ppl
 
-def denormalize_energy(energy: float, device: str, surrogate:str, data_type:str, scale: str, metric:str, method="mean-std") -> float:
-    base_path = (
-        "data_collection/gpt_datasets/predictor_ckpts/hwmetric/" 
+def denormalize_energy(energy: float, device: str, surrogate:str, data_type:str, scale: str, metric:str, method="mean-std",
+                       base_path = '.') -> float:
+    base_path = os.path.join(
+        base_path, "data_collection/gpt_datasets/predictor_ckpts/hwmetric/" 
     )
     if method == "mean-std":
         model_path = (
@@ -272,9 +286,10 @@ def denormalize_energy(energy: float, device: str, surrogate:str, data_type:str,
     return energy
 
 
-def normalize_energy(energy: float, device: str, surrogate:str, data_type:str, scale: str, metric:str, method="mean-std") -> float:
-    base_path = (
-        "data_collection/gpt_datasets/predictor_ckpts/hwmetric/"
+def normalize_energy(energy: float, device: str, surrogate:str, data_type:str, scale: str, metric:str, method="mean-std",
+                     base_path: str = '.') -> float:
+    base_path = os.path.join(
+        base_path, "data_collection/gpt_datasets/predictor_ckpts/hwmetric/"
     )
     if method == "mean-std":
         model_path = (
@@ -314,8 +329,11 @@ def normalize_energy(energy: float, device: str, surrogate:str, data_type:str, s
             energy = (energy - min_energy) / (max_energy - min_energy)
     return energy
 
-def denormalize_latency(latency: float, device: str, surrogate:str, data_type:str, scale: str, metric:str, method:str="mean-std") -> float:
-    base_path = "data_collection/gpt_datasets/predictor_ckpts/hwmetric/"  + str(surrogate) + "/"
+def denormalize_latency(latency: float, device: str, surrogate:str, data_type:str, scale: str, metric:str, method:str="mean-std",
+                        base_path: str = '.') -> float:
+    base_path = os.path.join(
+        base_path, "data_collection/gpt_datasets/predictor_ckpts/hwmetric/"  + str(surrogate) + "/"
+    )
     if method == "mean-std":
         model_path = (
             base_path
@@ -354,8 +372,9 @@ def denormalize_latency(latency: float, device: str, surrogate:str, data_type:st
             latency = latency * (max_latency - min_latency) + min_latency
     return latency
 
-def normalize_latency(latency: float, device: str, surrogate:str, data_type:str, scale: str, metric:str, method:str="mean-std") -> float:
-    base_path = "data_collection/gpt_datasets/predictor_ckpts/hwmetric/"
+def normalize_latency(latency: float, device: str, surrogate:str, data_type:str, scale: str, metric:str, method:str="mean-std",
+                      base_path: str = '.') -> float:
+    base_path = os.path.join(base_path, "data_collection/gpt_datasets/predictor_ckpts/hwmetric/")
     if method == "mean-std":
         model_path = (
             base_path
@@ -394,14 +413,17 @@ def normalize_latency(latency: float, device: str, surrogate:str, data_type:str,
             latency = (latency - min_latency) / (max_latency - min_latency)
     return latency
 
-def normalize_memory(memory: float, scale: str, metric:str, method:str="mean-std") -> float:
+def normalize_memory(memory: float, scale: str, metric:str, method:str="mean-std", base_path: str = '.') -> float:
     if method == "mean-std":
         with open(
-            "data_collection/gpt_datasets/predictor_ckpts/hwmetric/stats_mean_std_"
-            + str(metric)
-            + "_"
-            + str(scale)
-            + ".pkl",
+            os.path.join(
+                base_path,
+                "data_c,ollection/gpt_datasets/predictor_ckpts/hwmetric/stats_mean_std_"
+                + str(metric)
+                + "_"
+                + str(scale)
+                + ".pkl"
+            ),
             "rb",
         ) as f:
             mean_std_stats = pickle.load(f)
@@ -410,11 +432,14 @@ def normalize_memory(memory: float, scale: str, metric:str, method:str="mean-std
         memory = (memory - mean_memory) / std_memory
     elif method == "max-min":
         with open(
-            "data_collection/gpt_datasets/predictor_ckpts/hwmetric/stats_max_min_"
-            + str(metric)
-            + "_"
-            + str(scale)
-            + ".pkl",
+            os.path.join(
+                base_path,
+                "data_collection/gpt_datasets/predictor_ckpts/hwmetric/stats_max_min_"
+                + str(metric)
+                + "_"
+                + str(scale)
+                + ".pkl"
+            ),
             "rb",
         ) as f:
             max_min_stats = pickle.load(f)
@@ -457,12 +482,12 @@ def get_all_hw_surrogates(
     devices: List[str],
     surrogate_types: List[str],
     type: str = "quantile",
+    base_path: str = '.'
 ) -> List[Any]:
     all_surrogates = []
     for i, objective in enumerate(objectives):
         all_surrogates.append(
-            get_hw_predictor_surrogate(search_space, devices[i], objectives[i]
-            )
+            get_hw_predictor_surrogate(search_space, devices[i], objectives[i], base_path=base_path)
         )
     return all_surrogates
 
@@ -471,14 +496,15 @@ def get_hw_predictor_surrogate(
     search_space: str,
     device: str,
     metric: str = "energies",
+    base_path: str = '.'
 ) -> Any:
     #dir = "gpt_"+str(metric)+"_"+str(search_space)+"_"+str(device)
     if metric == "energies":
             from hwgpt.predictors.hwmetric.models.autogluon.autogluon_energies import get_and_load_model
-            predictor = get_and_load_model(search_space, device)
+            predictor = get_and_load_model(search_space, device, base_path=base_path)
     elif metric == "latencies":
         from hwgpt.predictors.hwmetric.models.autogluon.autogluon_latencies import get_and_load_model
-        predictor = get_and_load_model(search_space, device)
+        predictor = get_and_load_model(search_space, device, base_path=base_path)
 
     return predictor
 
@@ -540,7 +566,7 @@ def predict_hw_surrogate(
     return sample_from_gaussian(mean, std)
 
 
-def get_ppl_predictor_surrogate(search_space: str) -> Any:
+def get_ppl_predictor_surrogate(search_space: str, base_path: str = '.') -> Any:
     if search_space == "s":
         max_layers = 12
     elif search_space == "m":
@@ -551,15 +577,24 @@ def get_ppl_predictor_surrogate(search_space: str) -> Any:
     ppl_predictor = Net(max_layers, 128).to(device)
     if search_space == "s":
         pred_path = (
-            "data_collection/gpt_datasets/predictor_ckpts/metric/perplexity_s.pt"
+            os.path.join(
+                base_path,
+                "data_collection/gpt_datasets/predictor_ckpts/metric/perplexity_s.pt"
+            )
         )
     elif search_space == "m":
         pred_path = (
-            "data_collection/gpt_datasets/predictor_ckpts/metric/perplexity_m.pt"
+            os.path.join(
+                base_path,
+                "data_collection/gpt_datasets/predictor_ckpts/metric/perplexity_m.pt"
+            )
         )
     else:
         pred_path = (
-            "data_collection/gpt_datasets/predictor_ckpts/metric/perplexity_l.pt"
+            os.path.join(
+                base_path,
+                "data_collection/gpt_datasets/predictor_ckpts/metric/perplexity_l.pt"
+            )
         )
     ppl_predictor.load_state_dict(torch.load(pred_path, map_location=device))
     return ppl_predictor

@@ -49,8 +49,10 @@ class HWDataset(torch.utils.data.Dataset):
         search_space: str = "s",
         metric: str = "latencies",
         mode: str = "train",
+        base_path: str = ".",
     ):
         "Initialization"
+        self.base_path = base_path
         self.device_name = device_name
         self.search_space = search_space
         self.transform = False
@@ -58,9 +60,11 @@ class HWDataset(torch.utils.data.Dataset):
         self.mode = mode
         self.archs_to_one_hot = []
         self.metric_obs = []
-        arch_stats_path = (
-            "data_collection/gpt_datasets/gpt_" + str(self.search_space) + "/stats.pkl"
+        arch_stats_path = os.path.join(
+            base_path,
+            "data_collection/gpt_datasets/gpt_" + str(self.search_space) + "/stats.pkl",
         )
+        arch_stats_path = os.path.join(base_path, arch_stats_path)
         with open(arch_stats_path, "rb") as f:
             self.arch_stats = pickle.load(f)
         self.archs_all = list(self.arch_stats.keys())

@@ -16,6 +16,7 @@ from lib.utils import (
     normalize_memory,
 )
 from typing import Dict, Any
+import os
 import torch
 
 report = Reporter()
@@ -30,6 +31,7 @@ def objective(
     surrogate_type: str,
     type: str,
     objective: str,
+    base_path: str = ".",
 ) -> Reporter:
     arch_feature_map = get_arch_feature_map(sampled_config, search_space)
     arch_feature_map_ppl_predictor = convert_config_to_one_hot(
@@ -47,11 +49,14 @@ def objective(
     hw_predictor = Net(num_layers, False, 128, 128).to(device_run)
     hw_predictor.load_state_dict(
         torch.load(
-            "data_collection/gpt_datasets/predictor_ckpts/hwmetric/mlp/"
-            + str(objective)
-            + "_"
-            + str(search_space)
-            + ".pth",
+            os.path.join(
+                base_path,
+                "data_collection/gpt_datasets/predictor_ckpts/hwmetric/mlp/"
+                + str(objective)
+                + "_"
+                + str(search_space)
+                + ".pth",
+            ),
             map_location=device_run,
         )
     )
@@ -84,6 +89,7 @@ if __name__ == "__main__":
     parser.add_argument("--embed_dim", type=int, default=768)
     parser.add_argument("--bias", type=bool, default=True)
     parser.add_argument("--objective", type=str, default="float16_memory")
+    parser.add_argument("--base_path", type=str, default=".")
     args = parser.parse_known_args()[0]
     search_space = search_spaces[args.search_space]
     max_layers = max(search_space["n_layer_choices"])
@@ -110,4 +116,5 @@ if __name__ == "__main__":
         type=args.type,
         device=args.device,
         objective=args.objective,
+        base_path=args.base_path,
     )

@@ -49,6 +49,7 @@ class MultilabelPredictor:
         problem_types=None,
         eval_metrics=None,
         consider_labels_correlation=True,
+        base_path=".",
         **kwargs,
     ):
         if len(labels) < 2:
@@ -64,6 +65,7 @@ class MultilabelPredictor:
                 "If provided, `eval_metrics` must have same length as `labels`"
             )
         self.path = setup_outputdir(path, warn_if_exist=False)
+        self.base_path = base_path
         self.labels = labels
         self.consider_labels_correlation = consider_labels_correlation
         self.predictors = (
@@ -200,7 +202,10 @@ class MultilabelPredictor:
         predictor = self.predictors[label]
         if isinstance(predictor, str):
             return TabularPredictor.load(
-                path="data_collection/gpt_datasets/predictor_ckpts/hwmetric/autogluon/"
+                path=os.path.join(
+                    self.base_path,
+                    "data_collection/gpt_datasets/predictor_ckpts/hwmetric/autogluon/",
+                )
                 + predictor
             )
         return predictor

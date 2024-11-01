@@ -1,3 +1,4 @@
+import os
 import torch
 import random
 from hwgpt.model.gpt.utils import sample_config
@@ -30,7 +31,9 @@ class HWGPT:
         self,
         search_space: str,
         use_supernet_surrogate: bool = True,
+        base_path: str = ".",
     ):
+        self.base_path = base_path
 
         self.search_space = search_spaces[search_space]
         self.search_space_name = search_space
@@ -57,13 +60,16 @@ class HWGPT:
         self.metrics = ["perplexity", "accuracy"]
         self.config = None
         self.use_supernet_surrogate = use_supernet_surrogate
-        self.surrogate_ppl = get_ppl_predictor_surrogate(self.search_space_name)
+        self.surrogate_ppl = get_ppl_predictor_surrogate(
+            self.search_space_name, base_path=self.base_path
+        )
         self.on_device = "cuda" if torch.cuda.is_available() else "cpu"
         self.cfg_model = self.get_model_config()
-        gt_stats_path = (
+        gt_stats_path = os.path.join(
+            base_path,
             "data_collection/gpt_datasets/gpt_"
             + str(self.search_space_name)
-            + "/stats.pkl"
+            + "/stats.pkl",
         )
         with open(gt_stats_path, "rb") as f:
             self.gt_stats = pickle.load(f)
@@ -78,14 +84,14 @@ class HWGPT:
         self.hw_metrics_true_query = self.hw_metrics_true
 
     def get_model_config(self) -> Config:
-        config = Config(
-            config_file="hwgpt/configs_api/gpt_" + self.search_space_name + ".yaml"
+        config_path = os.path.join(
+            self.base_path, "hwgpt/configs_api/gpt_" + self.search_space_name + ".yaml"
         )
-        return config
+        return Config(config_file=config_path)
 
     def prepare_args_for_ppl_profiler(self) -> Namespace:
         args = Namespace()
-        args.config = "hwgpt/configs_api/gpt_" + self.search_space_name + ".yaml"
+        args.config = self.get_model_config()
         args.num_archs_to_evaluate = 0
         args.num_evals = 10
         args.resume_path = "none"
@@ -165,19 +171,19 @@ class HWGPT:
         return params
 
     def get_memory(self, objective):
+        predictor_path = os.path.join(
+            self.base_path,
+            "data_collection/gpt_datasets/predictor_ckpts/hwmetric/mlp/"
+            + str(objective)
+            + "_"
+            + str(self.search_space_name)
+            + ".pth",
+        )
+
         device = "cuda" if torch.cuda.is_available() else "cpu"
         num_layers = max(self.search_space["n_layer_choices"])
         hw_predictor = Net(num_layers, False, 128, 128).to(device)
-        hw_predictor.load_state_dict(
-            torch.load(
-                "data_collection/gpt_datasets/predictor_ckpts/hwmetric/mlp/"
-                + str(objective)
-                + "_"
-                + str(self.search_space_name)
-                + ".pth",
-                map_location=device,
-            )
-        )
+        hw_predictor.load_state_dict(torch.load(predictor_path, map_location=device))
         arch_feature_map = get_arch_feature_map(self.config, self.search_space_name)
         arch_feature_map_predictor = normalize_arch_feature_map(
             arch_feature_map, self.search_space_name
