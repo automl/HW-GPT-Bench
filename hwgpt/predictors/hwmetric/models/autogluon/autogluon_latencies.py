@@ -175,8 +175,7 @@ class MultilabelPredictor:
             if self.consider_labels_correlation:
                 if exp and label == "Target_Std":
                     data[label] = np.exp(data[label])
-                else:
-                    data[label] = predictor.predict(data, **kwargs)
+                data[label] = predictor.predict(data, **kwargs)
         return eval_dict
 
     def save(self):
@@ -356,5 +355,3 @@ def get_and_load_model(search_space, device, base_path="."):
         import pickle
 
         predictor = pickle.load(f)
-
-    return predictor

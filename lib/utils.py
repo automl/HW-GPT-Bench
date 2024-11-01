@@ -3,10 +3,11 @@ import os
 import torch
 from hwgpt.predictors.metric.net import Net
 import numpy as np
+import pandas as pd
 from typing import Any, Dict, Tuple, List
 from hwgpt.model.gpt.utils import sample_config_max, sample_config_min
 from hwgpt.predictors.hwmetric.models.autogluon.autogluon_latencies import MultilabelPredictor 
-import pandas as pd
+
 metrics_map = {
     "energies": "Energy (Wh)",
     "latencies": "Latency (ms)",
