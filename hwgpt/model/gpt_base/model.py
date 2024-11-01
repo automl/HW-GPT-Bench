@@ -156,7 +156,6 @@ class Block(nn.Module):
     def rope_cache(
         self, device: Optional[torch.device] = None, i: int = 0
     ) -> Tuple[torch.Tensor, torch.Tensor]:
-
         head_size = self.config.head_size
         rope_elem = int(head_size * self.config.rotary_percentage)
         return build_rope_cache(

@@ -155,7 +155,6 @@ class Config:
         from gpt.super_modules.layernorm_super import LayerNormSuper
 
         if self._norm_class == "RMSNorm":
-
             return RMSNormSuper
         return LayerNormSuper
 

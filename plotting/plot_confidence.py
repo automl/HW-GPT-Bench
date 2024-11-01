@@ -278,7 +278,6 @@ def make_confidence_plots(args):
             idx_counter += 1
 
             if args.objective == "latencies":
-
                 plot_xy(
                     pred_mean / 1000,
                     pred_std / 1000,

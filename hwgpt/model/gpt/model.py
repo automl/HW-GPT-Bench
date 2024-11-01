@@ -58,7 +58,6 @@ class GPT(nn.Module):
         from hwgpt.model.gpt.super_modules.layernorm_super import LayerNormSuper
 
         if self.config._norm_class == "RMSNorm":
-
             return RMSNormSuper
         return LayerNormSuper
 

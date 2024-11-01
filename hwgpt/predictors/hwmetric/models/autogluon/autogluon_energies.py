@@ -68,9 +68,7 @@ class MultilabelPredictor:
         self.base_path = base_path
         self.labels = labels
         self.consider_labels_correlation = consider_labels_correlation
-        self.predictors = (
-            {}
-        )  # key = label, value = TabularPredictor or str path to the TabularPredictor for this label
+        self.predictors = {}  # key = label, value = TabularPredictor or str path to the TabularPredictor for this label
         if eval_metrics is None:
             self.eval_metrics = {}
         else:
@@ -253,9 +251,6 @@ def get_and_load_model(search_space, device, base_path="."):
 
     with open(model_path + "multilabel_predictor.pkl", "rb") as f:
         import pickle
-
-        predictor = pickle.load(f)
-    return predictor
 
         predictor = pickle.load(f)
     return predictor

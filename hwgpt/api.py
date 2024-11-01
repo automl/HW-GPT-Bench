@@ -285,17 +285,33 @@ class HWGPT:
 # test
 if __name__ == "__main__":
     from hwgpt.api import HWGPT
-    # the snippet below will test if everything is downloaded correctly
-    for scale in ['s', 'm', 'l']:
-      for metric in ["energies", "latencies"]:
-       for device in ["a100", "a40", "h100", "rtx2080", "rtx3080", "a6000", "v100", "P100", "cpu_xeon_silver", "cpu_xeon_gold", "cpu_amd_7502", "cpu_amd_7513", "cpu_amd_7452"]:
-        api = HWGPT(search_space=scale, use_supernet_surrogate=False)  # initialize API
-        random_arch = api.sample_arch()  # sample random arch
-        print(random_arch)
-        api.set_arch(random_arch)  # set  arch
-        hwmetric = api.query(metric=metric, device=device)  # query energy
-        print(f"{metric} for scale {scale} and device {device}: ", hwmetric)
-        # query perplexity based on mlp predictor
-        perplexity_mlp = api.query(metric="perplexity", predictor="mlp")
-        print("Perplexity MLP: ", perplexity_mlp)
 
+    # the snippet below will test if everything is downloaded correctly
+    for scale in ["s", "m", "l"]:
+        for metric in ["energies", "latencies"]:
+            for device in [
+                "a100",
+                "a40",
+                "h100",
+                "rtx2080",
+                "rtx3080",
+                "a6000",
+                "v100",
+                "P100",
+                "cpu_xeon_silver",
+                "cpu_xeon_gold",
+                "cpu_amd_7502",
+                "cpu_amd_7513",
+                "cpu_amd_7452",
+            ]:
+                api = HWGPT(
+                    search_space=scale, use_supernet_surrogate=False
+                )  # initialize API
+                random_arch = api.sample_arch()  # sample random arch
+                print(random_arch)
+                api.set_arch(random_arch)  # set  arch
+                hwmetric = api.query(metric=metric, device=device)  # query energy
+                print(f"{metric} for scale {scale} and device {device}: ", hwmetric)
+                # query perplexity based on mlp predictor
+                perplexity_mlp = api.query(metric="perplexity", predictor="mlp")
+                print("Perplexity MLP: ", perplexity_mlp)
