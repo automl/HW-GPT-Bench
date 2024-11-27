@@ -253,4 +253,5 @@ def get_and_load_model(search_space, device, base_path="."):
         import pickle
 
         predictor = pickle.load(f)
+    predictor.base_path = base_path
     return predictor
