@@ -19,8 +19,8 @@ from typing import Dict, Any
 import torch
 
 report = Reporter()
-from analysis.autogluon_gpu_latencies import MultilabelPredictor
-
+from hwgpt.predictors.hwmetric.models.autogluon.multipredictor_train import MultilabelPredictor
+from hwgpt.api import HWGPT
 
 def objective(
     sampled_config: Dict[str, Any],
@@ -30,44 +30,26 @@ def objective(
     type: str,
     objective: str,
 ) -> Reporter:
-    arch_feature_map = get_arch_feature_map(sampled_config, search_space)
-    arch_feature_map_ppl_predictor = convert_config_to_one_hot(
-        sampled_config, search_space=search_space
-    )
+    api = HWGPT(search_space=search_space, use_supernet_surrogate=False)  # initialize API
+    api.set_arch(sampled_config)  # set  arch
     # arch_feature_map_predictor = normalize_arch_feature_map(
     #    arch_feature_map, search_space
     # )
-    device_run = "cuda" if torch.cuda.is_available() else "cpu"
-    ppl_predictor = get_ppl_predictor_surrogate(search_space)
-    perplexity = ppl_predictor(
-        arch_feature_map_ppl_predictor.to(device_run).unsqueeze(0)
-    )
-    hw_predictor = get_hw_predictor_surrogate(search_space, device, objective)
-    hw_metric = predict_hw_surrogate(
-        [arch_feature_map], hw_predictor, objective, device
-    )
-    ppl = perplexity.item()
+    perplexity = api.query(metric="perplexity", predictor="mlp")["perplexity"]
+    
+    hw_metric = api.query(metric=objective, device=device)[objective][device]
+    ppl = perplexity
     ppl_norm = normalize_ppl(ppl, search_space, method="max-min")
-    if objective == "energies":
-        hw_metric_norm = normalize_energy(
-            hw_metric,
-            device=device,
-            scale=search_space,
-            surrogate=surrogate_type,
-            metric=objective,
-            data_type=type,
-            method="max-min",
-        )
-    else:
-        hw_metric_norm = normalize_latency(
-            hw_metric / 1000,
-            device=device,
-            scale=search_space,
-            surrogate=surrogate_type,
-            metric=objective,
-            data_type=type,
-            method="max-min",
-        )
+    hw_metric_norm = normalize_energy(
+        hw_metric,
+        device=device,
+        scale=search_space,
+        surrogate=surrogate_type,
+        metric=objective,
+        data_type=type,
+        method="max-min",
+    )
+
     report(perplexity=ppl_norm, hw_metric=hw_metric_norm)
 
 
