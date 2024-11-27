@@ -19,8 +19,11 @@ from typing import Dict, Any
 import torch
 
 report = Reporter()
-from hwgpt.predictors.hwmetric.models.autogluon.multipredictor_train import MultilabelPredictor
+from hwgpt.predictors.hwmetric.models.autogluon.multipredictor_train import (
+    MultilabelPredictor,
+)
 from hwgpt.api import HWGPT
+
 
 def objective(
     sampled_config: Dict[str, Any],
@@ -30,13 +33,15 @@ def objective(
     type: str,
     objective: str,
 ) -> Reporter:
-    api = HWGPT(search_space=search_space, use_supernet_surrogate=False)  # initialize API
+    api = HWGPT(
+        search_space=search_space, use_supernet_surrogate=False
+    )  # initialize API
     api.set_arch(sampled_config)  # set  arch
     # arch_feature_map_predictor = normalize_arch_feature_map(
     #    arch_feature_map, search_space
     # )
     perplexity = api.query(metric="perplexity", predictor="mlp")["perplexity"]
-    
+
     hw_metric = api.query(metric=objective, device=device)[objective][device]
     ppl = perplexity
     ppl_norm = normalize_ppl(ppl, search_space, method="max-min")

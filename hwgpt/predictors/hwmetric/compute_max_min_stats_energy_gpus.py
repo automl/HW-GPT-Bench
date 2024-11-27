@@ -13,7 +13,10 @@ import argparse
 from hwgpt.predictors.hwmetric.utils import get_model
 import numpy as np
 import os
-from hwgpt.predictors.hwmetric.models.autogluon.multipredictor_train import MultilabelPredictor
+from hwgpt.predictors.hwmetric.models.autogluon.multipredictor_train import (
+    MultilabelPredictor,
+)
+
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="PyTorch HW Metric Predictor")
     parser.add_argument("--device", type=str, default="v100", help="device name")
@@ -75,7 +78,7 @@ if __name__ == "__main__":
                 args.search_space = s
                 args.metric = metric
                 args.device = device
-                #model = get_model(args)
+                # model = get_model(args)
                 api = HWGPT(
                     search_space=s, use_supernet_surrogate=False
                 )  # initialize API
@@ -90,8 +93,12 @@ if __name__ == "__main__":
                 random_arch = api.sample_arch()  # sample random architecture
                 random_arch["sample_embed_dim"] = max(search_space["embed_dim_choices"])
                 random_arch["sample_n_layer"] = max(search_space["n_layer_choices"])
-                random_arch["sample_n_head"] = [max(search_space["n_head_choices"])] * max(search_space["n_layer_choices"])
-                random_arch["sample_mlp_ratio"] = [max(search_space["mlp_ratio_choices"])] * max(search_space["n_layer_choices"])
+                random_arch["sample_n_head"] = [
+                    max(search_space["n_head_choices"])
+                ] * max(search_space["n_layer_choices"])
+                random_arch["sample_mlp_ratio"] = [
+                    max(search_space["mlp_ratio_choices"])
+                ] * max(search_space["n_layer_choices"])
                 random_arch["sample_bias"] = "True"
                 print(random_arch)
                 api.set_arch(random_arch)  # set  arch
@@ -99,13 +106,20 @@ if __name__ == "__main__":
                 random_arch = api.sample_arch()  # sample random architecture
                 random_arch["sample_embed_dim"] = min(search_space["embed_dim_choices"])
                 random_arch["sample_n_layer"] = min(search_space["n_layer_choices"])
-                random_arch["sample_n_head"] = [min(search_space["n_head_choices"])] * min(search_space["n_layer_choices"])
-                random_arch["sample_mlp_ratio"] = [min(search_space["mlp_ratio_choices"])] * min(search_space["n_layer_choices"])
+                random_arch["sample_n_head"] = [
+                    min(search_space["n_head_choices"])
+                ] * min(search_space["n_layer_choices"])
+                random_arch["sample_mlp_ratio"] = [
+                    min(search_space["mlp_ratio_choices"])
+                ] * min(search_space["n_layer_choices"])
                 random_arch["sample_bias"] = "False"
                 print(random_arch)
                 api.set_arch(random_arch)  # set  arch
                 hwmetric_min = api.query(metric=metric, device=device)  # query energy
-                max_min_stats = {"max": hwmetric_max[metric][device], "min": hwmetric_min[metric][device]}
+                max_min_stats = {
+                    "max": hwmetric_max[metric][device],
+                    "min": hwmetric_min[metric][device],
+                }
                 if args.type == "":
                     model_stats_path = (
                         base_path
