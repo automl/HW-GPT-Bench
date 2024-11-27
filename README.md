@@ -11,6 +11,8 @@ We release the pretrained supernet checkpoints [here](https://drive.google.com/d
 ```sh
 $ git clone https://github.com/automl/HW-Aware-LLM-Bench
 $ cd HW-Aware-LLM-Bench
+$ conda create -n hw-gpt python=3.11.9
+$ conda activate hw-gpt
 $ pip install -e .
 ```
 
