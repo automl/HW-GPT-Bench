@@ -15,6 +15,12 @@ $ conda create -n hw-gpt python=3.11.9
 $ conda activate hw-gpt
 $ pip install -e .
 ```
+To install syne-tune use the following steps
+```sh
+git clone https://github.com/awslabs/syne-tune.git
+cd syne-tune
+pip install -e '.[basic]'
+```
 
 ## Example api usage
 ```python
