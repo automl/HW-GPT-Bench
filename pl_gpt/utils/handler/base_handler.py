@@ -4,7 +4,6 @@ import pathlib
 
 
 class Handler:
-
     def __init__(self):
         pass
 
@@ -19,7 +18,6 @@ class Handler:
                 pass
 
     def counting_name(self, dir, file_name, suffix=False):
-
         dir = pathlib.Path(dir)
         counter = 0
         split_file_name = file_name.split(".")
@@ -46,7 +44,6 @@ class Handler:
         return counting_file_name
 
     def get_latest_name(self, dir, file_name, suffix=False):
-
         dir = pathlib.Path(dir)
         counter = 0
         split_file_name = file_name.split(".")

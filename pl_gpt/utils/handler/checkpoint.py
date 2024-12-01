@@ -9,7 +9,6 @@ save and restore checkpoints including parameters, rng states and env/data state
 
 
 class CheckpointHandler:
-
     def __init__(
         self,
         checkpoint_dir,

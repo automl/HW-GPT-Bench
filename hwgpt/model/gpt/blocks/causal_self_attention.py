@@ -34,9 +34,7 @@ class CausalSelfAttention(nn.Module):
         if self.config.n_query_groups == 1:
             self.sample_n_query_groups = 1
         else:
-            self.sample_n_query_groups = self.sample_n_head // (
-                self.config.n_head // self.config.n_query_groups
-            )
+            self.sample_n_query_groups = self.sample_n_head
         self.sample_qkv_shape = (
             self.sample_n_head + 2 * self.sample_n_query_groups
         ) * self.sample_head_size

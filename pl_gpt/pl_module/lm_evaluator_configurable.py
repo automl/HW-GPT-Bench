@@ -17,12 +17,11 @@ import logging
 import torch.cuda
 import numpy as np
 
-from data_collection.pl_gpt.data.lm_datamodule_nas import PlArrowFileModule
+from pl_gpt.data.lm_datamodule_nas import PlArrowFileModule
 from typing import List
-from data_collection.pl_gpt.utils.configuration import Config
-from data_collection.pl_gpt.utils.instantiate import instantiate
-from data_collection.pl_gpt.utils.folder_manager import get_experiment_folder
-
+from pl_gpt.utils.configuration import Config
+from pl_gpt.utils.instantiate import instantiate
+from pl_gpt.utils.folder_manager import get_experiment_folder
 
 class LanguageModelEvaluator(pl.LightningModule):
     """
@@ -83,7 +82,6 @@ class LanguageModelEvaluator(pl.LightningModule):
         self.model_config = model_config
 
     def validation_step(self, batch, batch_idx, dataloader_idx=0):
-
         sampled_config = self.model_config
         # print(sampled_config)
         sample_intermediate_size = [
@@ -138,13 +136,11 @@ class LanguageModelEvaluator(pl.LightningModule):
         return return_dict
 
     def on_validation_epoch_end(self):
-
         values = ["log_probs", "accuracy", "count"]
 
         assert len(self.val_sets_name) == len(self.validation_step_outputs)
 
         for dataset_idx, dataset_name in enumerate(self.val_sets_name):
-
             output = self.validation_step_outputs[dataset_idx]
             summed_values = {k: 0 for k in values}
             for out_dict in output:

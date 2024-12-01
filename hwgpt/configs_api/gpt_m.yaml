@@ -2,7 +2,7 @@
 resume_training: False
 
 experiment:
-  experiments_base_dir: /path/to/experiments
+  experiments_base_dir: experiments
   project_name: cl2_reg
   session_name: gpt2s_AdamW_ATB_expt_4
   experiment_name: default_juls # _fused-ff-prob-layer
@@ -128,15 +128,15 @@ model:
   max_len: 1024
   sampling_scheme: "normal"
 
-  n_embd: 768 # 256,  # ++ hidden dimension of my_gpt
-  n_layer: 12  # ++ number of my_gpt layers
-  n_head: 12  # ++ number of heads per layer
+  n_embd: 1024 # 256,  # ++ hidden dimension of my_gpt
+  n_layer: 24  # ++ number of my_gpt layers
+  n_head: 16  # ++ number of heads per layer
   head_size: 64
 
-  intermediate_size: 3072  # ++ hidden dim * ff_factor = size of feed-forward layer
+  intermediate_size: 4096  # ++ hidden dim * ff_factor = size of feed-forward layer
   bias: True
   lm_head_bias: False
-  n_query_groups: 12
+  n_query_groups: 16
 
   attn_dropout: 0.1
   resi_dropout: 0.1
@@ -166,8 +166,12 @@ model:
   # classic config
 
   initializer_range: 0.02
-  latency_bench_save_path: "latency_a40_m/"
-  resume_path: "none"
+  device: "cuda"
+  train_strategy: "sandwich"
+  sandwhich_random: 2
+  use_inplace_kd: False
+  checkpoint_path: "/work/dlclarge2/sukthank-hw-gpt-data/HW-GPT-checkpoints/gpt_m.ckpt"
+
   
 
 
@@ -177,8 +181,8 @@ lm_data:
   num_gpu_worker: ${trainer.devices}
   max_sample_len: 1024
   seed: ${train.seed}
-  batch_size: 32
+  batch_size: 4
   val_ratio: 0.0005
   val_split_seed: 2357
-  data_dir: "/path/to/datasets/"
-  cache_dir: "/path/to/datasets/cache/"
+  data_dir: "/work/dlclarge2/sukthank-hw-gpt-data/datasets/"
+  cache_dir: "/work/dlclarge2/sukthank-hw-gpt-data/datasets/cache"

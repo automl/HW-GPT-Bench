@@ -206,7 +206,7 @@ class GPTLatencyProfiler:
 
 
 if __name__ == "__main__":
-    from data_collection.pl_gpt.utils.configuration import Config
+    from pl_gpt.utils.configuration import Config
 
     parser = argparse.ArgumentParser(description="GPT Profiler")
     parser.add_argument(

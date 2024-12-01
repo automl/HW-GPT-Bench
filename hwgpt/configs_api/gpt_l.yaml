@@ -2,9 +2,9 @@
 resume_training: False
 
 experiment:
-  experiments_base_dir: /path/to/experiments
-  project_name: cl2_reg
-  session_name: gpt2s_AdamW_ATB_expt_4
+  experiments_base_dir: experiments
+  project_name: owt_large_fast_eval
+  session_name: owt_large_fast_eval
   experiment_name: default_juls # _fused-ff-prob-layer
 
 trainer:
@@ -32,6 +32,8 @@ trainer:
 
 train:
   seed: 1234
+  num_devices: ${trainer.devices}
+  gradient_clip_val: 1.0
 
   optimizer:
     # _target_: apex.optimizers.FusedAdam
@@ -41,7 +43,7 @@ train:
     weight_decay: 0.1
     betas:
       - 0.9
-      - 0.98
+      - 0.95
     eps: 1.0e-09
     adam_w_mode: true
     seed: 1234
@@ -68,7 +70,7 @@ callbacks:
     _target_: pytorch_lightning.callbacks.ModelCheckpoint
     dirpath: ${experiment.experiments_base_dir}
     auto_insert_metric_name: False
-    every_n_train_steps: 10000
+    every_n_train_steps: 5000
     every_n_epochs: null
     save_top_k: 1
     monitor: "step"
@@ -128,15 +130,15 @@ model:
   max_len: 1024
   sampling_scheme: "normal"
 
-  n_embd: 768 # 256,  # ++ hidden dimension of my_gpt
-  n_layer: 12  # ++ number of my_gpt layers
-  n_head: 12  # ++ number of heads per layer
+  n_embd: 1280 # 256,  # ++ hidden dimension of my_gpt
+  n_layer: 36  # ++ number of my_gpt layers
+  n_head: 20  # ++ number of heads per layer
   head_size: 64
 
-  intermediate_size: 3072  # ++ hidden dim * ff_factor = size of feed-forward layer
+  intermediate_size: 5120  # ++ hidden dim * ff_factor = size of feed-forward layer
   bias: True
   lm_head_bias: False
-  n_query_groups: 12
+  n_query_groups: 20
 
   attn_dropout: 0.1
   resi_dropout: 0.1
@@ -159,26 +161,26 @@ model:
   rope_base: 10000
   unpadded: True
   parallel_residual: True
-  gpu_dtype: "bfloat16"
-  eval_on_gpu: True
-  eval_on_cpu: False
 
   # classic config
 
   initializer_range: 0.02
-  latency_bench_save_path: "latency_a40_l/"
-  resume_path: "none"
-  
+  device: "cuda"
+  train_strategy: "sandwich"
+  sandwhich_random: 2
+  use_inplace_kd: False
+  checkpoint_path: "/work/dlclarge2/sukthank-hw-gpt-data/HW-GPT-checkpoints/gpt_l.ckpt"
+
 
 
 lm_data:
-  dataset_name: "tinystories" # openwebtext wikitext
+  dataset_name: "openwebtext" # openwebtext wikitext
   num_cpu_worker: 1
   num_gpu_worker: ${trainer.devices}
   max_sample_len: 1024
   seed: ${train.seed}
-  batch_size: 32
+  batch_size: 1
   val_ratio: 0.0005
   val_split_seed: 2357
-  data_dir: "/path/to/datasets/"
-  cache_dir: "/path/to/datasets/cache/"
+  data_dir: "/work/dlclarge2/sukthank-hw-gpt-data/datasets/"
+  cache_dir: "/work/dlclarge2/sukthank-hw-gpt-data/datasets/cache"

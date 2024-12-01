@@ -149,7 +149,6 @@ class LanguageModelTrainer(pl.LightningModule):
         return {"loss": loss}
 
     def validation_step(self, batch: Dict, batch_idx: int, dataloader_idx: int = 0):
-
         sampled_config = self.config_max
         # print(sampled_config)
         sample_intermediate_size = [
@@ -306,7 +305,6 @@ class LanguageModelTrainer(pl.LightningModule):
         return return_dict
 
     def on_validation_epoch_end(self):
-
         values = [
             "log_probs_max",
             "accuracy_max",
@@ -322,7 +320,6 @@ class LanguageModelTrainer(pl.LightningModule):
         assert len(self.val_sets_name) == len(self.validation_step_outputs)
 
         for dataset_idx, dataset_name in enumerate(self.val_sets_name):
-
             output = self.validation_step_outputs[dataset_idx]
             summed_values = {k: 0 for k in values}
             for out_dict in output:
@@ -363,7 +360,6 @@ class LanguageModelTrainer(pl.LightningModule):
         self.validation_step_outputs.clear()
 
     def configure_optimizers(self):
-
         if (
             "optimizer_param_grouping" in self.cfg_train
         ):  # Set zero weight decay for some params

@@ -1,10 +1,10 @@
 from hwgpt.model.gpt.utils import sample_config
 import pickle
-from data_collection.pl_gpt.pl_module.lm_evaluator_configurable import (
+from pl_gpt.pl_module.lm_evaluator_configurable import (
     LanguageModelEvaluator,
 )
-from data_collection.pl_gpt.data.lm_datamodule_nas import PlArrowFileModule
-from data_collection.pl_gpt.utils.instantiate import instantiate
+from pl_gpt.data.lm_datamodule_nas import PlArrowFileModule
+from pl_gpt.utils.instantiate import instantiate
 import pytorch_lightning as pl
 import os
 import logging
@@ -32,6 +32,7 @@ class GPTProfilerPPL:
         self.model_scale = args.model_scale
         self.choices_dict = {}
         cfg_model = cfg.model
+        print(cfg_model)
         # self.gpu_dtype = {'float32': torch.float32, 'bfloat16': torch.bfloat16, 'float16': torch.float16}[cfg_model.gpu_dtype]
         self.choices_dict["n_layer_choices"] = cfg_model.layer_choices
         self.choices_dict["n_head_choices"] = cfg_model.head_choices
@@ -42,6 +43,7 @@ class GPTProfilerPPL:
         cfg.model.precision = "16"
         logger = logging.getLogger(__name__)
         cfg_lm_data = {**cfg.lm_data}
+        print(cfg)
         cfg_lm_data["num_gpu_worker"] = cfg.trainer.devices * cfg.trainer.num_nodes
         self.data_module = PlArrowFileModule(**cfg_lm_data)
         assert (cfg.lm_data.max_sample_len) % 128 == 0
@@ -134,24 +136,17 @@ class GPTProfilerPPL:
         with open(save_path, "wb") as f:
             pickle.dump(self.archs_sampled, f)
 
-    def reset_config(self, arch_config: Dict[str, Any]) -> None:
-        self.cfg_model.n_embd = arch_config["sample_embed_dim"]
-        self.cfg_model.n_layer = arch_config["sample_n_layer"]
-        self.cfg_model.n_head = arch_config["sample_n_head"]
-        self.cfg_model.mlp_ratio = arch_config["sample_mlp_ratio"]
-        self.cfg_model.bias = arch_config["sample_bias"]
-
     def create_model(self, arch_config: Dict[str, Any]) -> None:
         arch_config["sample_intermediate_size"] = [
             int(arch_config["sample_mlp_ratio"][i] * arch_config["sample_embed_dim"])
             for i in range(arch_config["sample_n_layer"])
         ]
-        self.model.set_sample_config(
+        self.trainer_pl.model.set_sample_config(
             arch_config["sample_embed_dim"],
             arch_config["sample_intermediate_size"],
-            arch_config["sample_num_heads"],
+            arch_config["sample_n_head"],
             arch_config["sample_n_layer"],
-            arch_config["sample_bias_flag"],
+            arch_config["sample_bias"],
             arch_config["sample_layer_indices"],
         )
 
@@ -215,7 +210,7 @@ class GPTProfilerPPL:
 
 
 if __name__ == "__main__":
-    from data_collection.pl_gpt.utils.configuration import Config
+    from pl_gpt.utils.configuration import Config
     import argparse
 
     parser = argparse.ArgumentParser(description="GPT Profiler")

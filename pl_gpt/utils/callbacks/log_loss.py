@@ -8,7 +8,6 @@ from pytorch_lightning.utilities import rank_zero_only
 
 
 class LogLoss(Callback):
-
     def __init__(
         self,
         log_every_n_steps: int = 1,
@@ -34,9 +33,7 @@ class LogLoss(Callback):
         batch,
         batch_idx,
     ):
-
         if trainer.global_step % self.log_every_n_steps == 0:
-
             unreduced_loss = outputs["unreduced_loss"]
             local_rank = trainer.global_rank
 
@@ -65,7 +62,6 @@ class LogLoss(Callback):
                 self.loss_list.append(unreduced_loss)
 
     def on_validation_start(self, trainer, pl_module):
-
         if self.dirpath is not None and trainer.global_step > 0:
             torch.save(
                 self.loss_list,

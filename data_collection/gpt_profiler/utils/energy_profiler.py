@@ -18,7 +18,6 @@ def compute_carbon_emissions(
     use_cpu: bool = True,
     gpu_dtype: torch.dtype = torch.bfloat16,
 ):
-
     mean_co2_cpu = None
     std_co2_cpu = None
     mean_energy_cpu = None

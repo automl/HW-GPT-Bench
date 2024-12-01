@@ -1,6 +1,6 @@
 import pathlib
 
-from data_collection.pl_gpt.utils.handler.base_handler import Handler
+from pl_gpt.utils.handler.base_handler import Handler
 
 """
 Handle the location, new folders and experiments sub-folder structure.
@@ -13,7 +13,6 @@ experiment will be increased
 
 
 class FolderHandler(Handler):
-
     def __init__(
         self,
         experiments_dir,
@@ -41,7 +40,6 @@ class FolderHandler(Handler):
             self.expt_dir = self.experiments_dir
 
     def create_folder(self):
-
         dir = self.experiments_dir
         self.save_mkdir(dir)
 

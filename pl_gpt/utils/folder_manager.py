@@ -10,7 +10,6 @@ def get_experiment_folder(
     new_folder=False,
     count_folder=True,
 ):
-
     exp_dir = pathlib.Path(experiments_base_dir) / project_name / session_name
     exp_dir.mkdir(parents=True, exist_ok=True)
 

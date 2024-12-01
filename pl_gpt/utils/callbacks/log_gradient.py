@@ -6,7 +6,6 @@ import deepspeed
 
 
 class LogParamsAndGrads(Callback):
-
     def __init__(
         self,
         log_gradient: bool,
@@ -24,19 +23,14 @@ class LogParamsAndGrads(Callback):
     def on_before_optimizer_step(
         self, trainer: "pl.Trainer", pl_module: "pl.LightningModule", optimizer
     ):
-
         if trainer.global_step % self.log_every_n_steps == 0 and (
             self.log_params or self.log_gradient
         ):
-
             q = torch.arange(0.25, 1, 0.25).round(decimals=2).to(trainer.model.device)
             stats = {}
             for k, v in pl_module.named_parameters():
-
                 if self.log_params:
-
                     if trainer.global_rank == 0:
-
                         v_detached = v.detach()
 
                         if torch.isnan(v_detached).sum() > 0:
@@ -69,7 +63,6 @@ class LogParamsAndGrads(Callback):
                                     )
 
                 if self.log_gradient and v.requires_grad:
-
                     if trainer.num_devices > 1:
                         grad_data = deepspeed.utils.safe_get_full_grad(v)
                     else:

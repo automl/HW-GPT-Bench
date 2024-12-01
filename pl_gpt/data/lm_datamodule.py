@@ -16,11 +16,11 @@ from torch.utils.data import DataLoader
 from datasets import load_dataset
 from transformers import GPT2TokenizerFast
 
-from data_collection.pl_gpt.data.detokenizer import wikitext_detokenize
-from data_collection.pl_gpt.data.collators import DataCollator
+from pl_gpt.data.detokenizer import wikitext_detokenize
+from pl_gpt.data.collators import DataCollator
 import os
 
-os.environ["HF_DATASETS_CACHE"] =  "/path/to/datasets/cache"
+os.environ["HF_DATASETS_CACHE"] = "/path/to/datasets/cache"
 os.environ["HF_HOME"] = "/path/to/model/cache"
 IGNORE_INDEX = -100
 
@@ -84,7 +84,7 @@ class PlArrowFileModule(pl.LightningDataModule):
 
         self.logger = logging.getLogger(__name__)
 
-        self.splits = ["validationnas"]  # 'train', 'validation']
+        self.splits = ["validation", "train"]
         self.val_ratio = val_ratio
         self.val_split_seed = val_split_seed
         if self.dataset_name == "openwebtext":
@@ -115,7 +115,6 @@ class PlArrowFileModule(pl.LightningDataModule):
 
     def _exist_preprocessed_data(self):
         all_files_exist = True
-        print(self.splits)
         for split in self.splits:
             base_file = f"{self.dataset_name}_{split}_{self.val_cfg_str}{self.max_sample_len +1}_{self.num_gpu_worker}"
             for worker_id in range(self.num_gpu_worker):
@@ -131,7 +130,6 @@ class PlArrowFileModule(pl.LightningDataModule):
         return all_files_exist
 
     def _preprocess_data(self):
-
         max_sample_len_plus = (
             self.max_sample_len + 1
         )  # Because of source target shift in decoder/teacher-forcing training
@@ -159,7 +157,7 @@ class PlArrowFileModule(pl.LightningDataModule):
             )
         else:
             raise UserWarning(f"dataset name unknown: {self.dataset_name}")
-        print(all_samples.keys())
+
         if "validation" not in all_samples:
             all_samples = all_samples["train"].train_test_split(
                 test_size=self.val_ratio,
@@ -168,21 +166,7 @@ class PlArrowFileModule(pl.LightningDataModule):
             )
             all_samples["validation"] = all_samples["test"]
 
-        if "validationnas" not in all_samples:
-            val_nas_ratio = 0.1
-            all_samples_nas = all_samples["train"].train_test_split(
-                test_size=val_nas_ratio,
-                seed=self.val_split_seed,
-                shuffle=True,  # Otherwise test will be at the end of the dataset
-            )
-            all_samples["validationnas"] = all_samples_nas["test"]
-            # self.splits.append('validationnas')
-        for k in all_samples.keys():
-            print(k)
-            print(len(all_samples[k]))
-        print(self.splits)
         for split in self.splits:
-
             samples = all_samples[split]
 
             base_file = f"{self.dataset_name}_{split}_{self.val_cfg_str}{max_sample_len_plus}_{self.num_gpu_worker}"
@@ -266,7 +250,6 @@ class PlArrowFileModule(pl.LightningDataModule):
 
     @staticmethod
     def _queue2file_writer(file_name, batch, worker, worker_world_size, return_queues):
-
         total_samples = 0
         with pa.OSFile(f"{file_name}_{worker}.arrow", "wb") as sink:
             with pa.ipc.new_file(sink, batch.schema) as writer:
@@ -287,7 +270,6 @@ class PlArrowFileModule(pl.LightningDataModule):
     def _preprocess_samples2queue(
         tokenizer, samples, indexes, max_sample_len_plus, worker, return_queues, pa_type
     ):
-
         count_writes = 0
         idx_sample = 0
         tmp_sample = []
@@ -315,25 +297,20 @@ class PlArrowFileModule(pl.LightningDataModule):
         )
 
     def setup(self, stage: str):
-
         if torch.distributed.is_initialized():
             self.global_rank = torch.distributed.get_rank()
 
         self.rng = np.random.RandomState(self.seed + self.global_rank)
 
         self.logger.info("Create memory map\n")
-        # train_file_name = f"{self.dataset_name}_train_{self.val_cfg_str}{self.max_sample_len +1}_{self.num_gpu_worker}_{self.global_rank}.arrow"
-        # mmap = pa.memory_map( (self.data_dir / train_file_name).as_posix() )
-        # self.logger.info("MMAP Read ALL")
-        # self._train_dataset = pa.ipc.open_file(mmap)
+        train_file_name = f"{self.dataset_name}_train_{self.val_cfg_str}{self.max_sample_len +1}_{self.num_gpu_worker}_{self.global_rank}.arrow"
+        mmap = pa.memory_map((self.data_dir / train_file_name).as_posix())
+        self.logger.info("MMAP Read ALL")
+        self._train_dataset = pa.ipc.open_file(mmap)
 
-        # valid_file_name = f"{self.dataset_name}_validation_{self.val_cfg_str}{self.max_sample_len +1}_{self.num_gpu_worker}_{self.global_rank}.arrow"
-        # valid_mmap = pa.memory_map((self.data_dir / valid_file_name).as_posix() )
-        # self._valid_dataset = pa.ipc.open_file(valid_mmap)
-
-        valid_nas_file_name = f"{self.dataset_name}_validationnas_{self.val_cfg_str}{self.max_sample_len +1}_{self.num_gpu_worker}_{self.global_rank}.arrow"
-        valid_nas_mmap = pa.memory_map((self.data_dir / valid_nas_file_name).as_posix())
-        self._valid_nas_dataset = pa.ipc.open_file(valid_nas_mmap)
+        valid_file_name = f"{self.dataset_name}_validation_{self.val_cfg_str}{self.max_sample_len +1}_{self.num_gpu_worker}_{self.global_rank}.arrow"
+        valid_mmap = pa.memory_map((self.data_dir / valid_file_name).as_posix())
+        self._valid_dataset = pa.ipc.open_file(valid_mmap)
 
     def train_dataloader(self):
         """This will be run every epoch."""
@@ -394,7 +371,6 @@ class PlArrowFileModule(pl.LightningDataModule):
         return loader
 
     def val_dataloader(self):
-
         valid_set_size = self._valid_dataset.num_record_batches
         valid_indexes = list(range(valid_set_size))
 
@@ -441,54 +417,6 @@ class PlArrowFileModule(pl.LightningDataModule):
 
         return loader
 
-    def val_nas_dataloader(self):
-
-        valid_set_size = self._valid_nas_dataset.num_record_batches
-        valid_indexes = list(range(valid_set_size))
-
-        if torch.distributed.is_initialized():
-            global_rank = torch.distributed.get_rank()
-        else:
-            global_rank = 0
-
-        world_size = torch.cuda.device_count()
-
-        local_rank = global_rank % world_size
-
-        min_num_samples = torch.tensor(valid_set_size, device=f"cuda:{local_rank}")
-
-        if torch.distributed.is_initialized():
-            torch.distributed.all_reduce(
-                min_num_samples, op=torch.distributed.ReduceOp.MIN
-            )
-        min_num_samples = min_num_samples.item()
-        valid_indexes = valid_indexes[:min_num_samples]
-
-        valid_index_dataset = IndexDataset(valid_indexes)
-
-        print(
-            f"### load valid set with size {min_num_samples} from {valid_set_size} samples on rank {self.global_rank}"
-        )
-
-        def val_pl_collate_fn(indices):
-            inputs = [
-                self._valid_nas_dataset.get_record_batch(i)["text"].to_pylist()[0]
-                for i in indices
-            ]
-            return self.collator(inputs)
-
-        loader = DataLoader(
-            valid_index_dataset,
-            batch_size=self.batch_size,
-            collate_fn=val_pl_collate_fn,
-            num_workers=self.num_cpu_worker,
-            pin_memory=True,
-            drop_last=False,
-        )
-        self.logger.info(f"Finished loading validation data")
-
-        return loader
-
 
 if __name__ == "__main__":
     """
@@ -506,10 +434,10 @@ if __name__ == "__main__":
         "max_sample_len": 1024,
         "seed": 1,
         "batch_size": 8,
-        "val_ratio": 0.25,
+        "val_ratio": 0.0005,
         "val_split_seed": 2357,
-        "data_dir": "/path/to/datasets/",
-        "cache_dir": "/path/to/datasets/cache",
+        "data_dir": "/path/to/datasets",
+        "cache_dir": "/path/to/cache",
     }
 
     my_data_handler = PlArrowFileModule(**lm_data_config)
@@ -522,7 +450,7 @@ if __name__ == "__main__":
     my_data_handler.setup(0)
 
     print("data prepared")
-    train_dataloader = my_data_handler.val_nas_dataloader()
+    train_dataloader = my_data_handler.val_dataloader()
     for i, item in enumerate(train_dataloader):
         print(item["src_len"].shape)
         print(item["trg_len"].shape)

@@ -84,11 +84,9 @@ class LanguageModelTrainer(pl.LightningModule):
         )
 
     def get_arch_sampled(self):
-
         return self.arch_sampled
 
     def training_step(self, batch: Dict, batch_idx: int, dataloader_idx: int = 0):
-
         sampled_config = self.get_arch_sampled()
         sample_intermediate_size = [
             sampled_config["sample_mlp_ratio"][i] * sampled_config["sample_embed_dim"]
@@ -146,7 +144,6 @@ class LanguageModelTrainer(pl.LightningModule):
         return {"loss": loss}
 
     def validation_step(self, batch: Dict, batch_idx: int, dataloader_idx: int = 0):
-
         sampled_config = self.arch_sampled
         sample_intermediate_size = [
             sampled_config["sample_mlp_ratio"][i] * sampled_config["sample_embed_dim"]
@@ -205,7 +202,6 @@ class LanguageModelTrainer(pl.LightningModule):
         assert len(self.val_sets_name) == len(self.validation_step_outputs)
 
         for dataset_idx, dataset_name in enumerate(self.val_sets_name):
-
             output = self.validation_step_outputs[dataset_idx]
             summed_values = {k: 0 for k in values}
             for out_dict in output:
@@ -240,7 +236,6 @@ class LanguageModelTrainer(pl.LightningModule):
         return metrics_reduce
 
     def configure_optimizers(self):
-
         if (
             "optimizer_param_grouping" in self.cfg_train
         ):  # Set zero weight decay for some params

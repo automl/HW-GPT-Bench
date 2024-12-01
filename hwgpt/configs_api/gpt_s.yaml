@@ -2,7 +2,7 @@
 resume_training: False
 
 experiment:
-  experiments_base_dir: /path/to/experiments
+  experiments_base_dir: experiments
   project_name: cl2_reg
   session_name: gpt2s_AdamW_ATB_expt_4
   experiment_name: default_juls # _fused-ff-prob-layer
@@ -32,7 +32,7 @@ trainer:
 
 train:
   seed: 1234
-
+  num_devices: ${trainer.devices}
   optimizer:
     # _target_: apex.optimizers.FusedAdam
     _target_: torch.optim.AdamW
@@ -154,6 +154,10 @@ model:
   rotary_percentage: 0.5
   _mlp_class: "GptNeoxMLP"
   gelu_approximate: "none"
+  device: "cuda"
+  train_strategy: "sandwich"
+  sandwhich_random: 2
+  use_inplace_kd: False
   # fast config
   norm_eps: 1e-5
   rope_base: 10000
@@ -166,8 +170,9 @@ model:
   # classic config
 
   initializer_range: 0.02
-  latency_bench_save_path: "latency_a40/"
   resume_path: "none"
+  checkpoint_path: "/work/dlclarge2/sukthank-hw-gpt-data/HW-GPT-checkpoints/gpt_s.ckpt"
+
   
 
 
@@ -177,8 +182,8 @@ lm_data:
   num_gpu_worker: ${trainer.devices}
   max_sample_len: 1024
   seed: ${train.seed}
-  batch_size: 32
+  batch_size: 4
   val_ratio: 0.0005
   val_split_seed: 2357
-  data_dir: "/path/to/datasets/"
-  cache_dir: "/path/to/datasets/cache/"
+  data_dir: "/work/dlclarge2/sukthank-hw-gpt-data/datasets/"
+  cache_dir: "/work/dlclarge2/sukthank-hw-gpt-data/datasets/cache"

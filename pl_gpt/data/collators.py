@@ -4,7 +4,6 @@ from torch.nn.utils.rnn import pad_sequence
 
 
 class DataCollator:
-
     def __init__(self, src_mask_token_id, trg_mask_token_id):
         self.src_mask_token_id = src_mask_token_id
         self.trg_mask_token_id = trg_mask_token_id

@@ -12,7 +12,6 @@ import torch
 
 class SimpleNestedNamespace(Dict):
     def __init__(self, *args, **kwargs):
-
         super().__init__(**kwargs)
 
         for k, v in kwargs.items():
@@ -55,9 +54,7 @@ class SimpleNestedNamespace(Dict):
 
 
 class Config(SimpleNestedNamespace):
-
     def __init__(self, config_file=None, config_dict=None):
-
         if config_file is None and config_dict is None:
             raise UserWarning("ConfigHandler: config_file and config_dict is None")
 
@@ -126,11 +123,7 @@ class Config(SimpleNestedNamespace):
 
 
 if __name__ == "__main__":
-    config = Config(
-        config_file=os.path.join(
-            "config/juwels_default.yaml"
-        )
-    )
+    config = Config(config_file=os.path.join("config/juwels_default.yaml"))
 
     print(type(config.deepspeed.allgather_bucket_size))
     print(config)
