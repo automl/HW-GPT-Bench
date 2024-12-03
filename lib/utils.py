@@ -245,7 +245,7 @@ def normalize_ppl(ppl: float, scale: str, method: str="mean-std", base_path: str
 def denormalize_energy(energy: float, device: str, surrogate:str, data_type:str, scale: str, metric:str, method="mean-std",
                        base_path = '.') -> float:
     base_path = os.path.join(
-        base_path, "data_collection/gpt_datasets/predictor_ckpts/hwmetric/" 
+        base_path, "data_collection/gpt_datasets/predictor_ckpts/hwmetric/normalization_stats/" 
     )
     if method == "mean-std":
         model_path = (
@@ -289,7 +289,7 @@ def denormalize_energy(energy: float, device: str, surrogate:str, data_type:str,
 def normalize_energy(energy: float, device: str, surrogate:str, data_type:str, scale: str, metric:str, method="mean-std",
                      base_path: str = '.') -> float:
     base_path = os.path.join(
-        base_path, "data_collection/gpt_datasets/predictor_ckpts/hwmetric/"
+        base_path, "data_collection/gpt_datasets/predictor_ckpts/hwmetric/normalization_stats/"
     )
     if method == "mean-std":
         model_path = (
@@ -332,7 +332,7 @@ def normalize_energy(energy: float, device: str, surrogate:str, data_type:str, s
 def denormalize_latency(latency: float, device: str, surrogate:str, data_type:str, scale: str, metric:str, method:str="mean-std",
                         base_path: str = '.') -> float:
     base_path = os.path.join(
-        base_path, "data_collection/gpt_datasets/predictor_ckpts/hwmetric/"  + str(surrogate) + "/"
+        base_path, "data_collection/gpt_datasets/predictor_ckpts/hwmetric/normalization_stats/"  + str(surrogate) + "/"
     )
     if method == "mean-std":
         model_path = (
@@ -374,7 +374,7 @@ def denormalize_latency(latency: float, device: str, surrogate:str, data_type:st
 
 def normalize_latency(latency: float, device: str, surrogate:str, data_type:str, scale: str, metric:str, method:str="mean-std",
                       base_path: str = '.') -> float:
-    base_path = os.path.join(base_path, "data_collection/gpt_datasets/predictor_ckpts/hwmetric/")
+    base_path = os.path.join(base_path, "data_collection/gpt_datasets/predictor_ckpts/hwmetric/normalization_stats/")
     if method == "mean-std":
         model_path = (
             base_path
@@ -418,7 +418,7 @@ def normalize_memory(memory: float, scale: str, metric:str, method:str="mean-std
         with open(
             os.path.join(
                 base_path,
-                "data_c,ollection/gpt_datasets/predictor_ckpts/hwmetric/stats_mean_std_"
+                "data_collection/gpt_datasets/predictor_ckpts/hwmetric/normalization_stats/stats_mean_std_"
                 + str(metric)
                 + "_"
                 + str(scale)
@@ -434,7 +434,7 @@ def normalize_memory(memory: float, scale: str, metric:str, method:str="mean-std
         with open(
             os.path.join(
                 base_path,
-                "data_collection/gpt_datasets/predictor_ckpts/hwmetric/stats_max_min_"
+                "data_collection/gpt_datasets/predictor_ckpts/hwmetric/normalization_stats/stats_max_min_"
                 + str(metric)
                 + "_"
                 + str(scale)
