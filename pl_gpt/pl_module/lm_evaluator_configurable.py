@@ -23,6 +23,7 @@ from pl_gpt.utils.configuration import Config
 from pl_gpt.utils.instantiate import instantiate
 from pl_gpt.utils.folder_manager import get_experiment_folder
 
+
 class LanguageModelEvaluator(pl.LightningModule):
     """
     PTL wrapper class for model training

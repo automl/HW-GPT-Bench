@@ -1,6 +1,6 @@
-
 import os, sys, socket
 import argparse, collections, yaml
+
 # os.environ['TORCH_DISTRIBUTED_DEBUG'] = 'DETAIL'
 # os.environ['CUDA_LAUNCH_BLOCKING'] = '1'
 import random
@@ -19,17 +19,21 @@ from pl_gpt.utils.folder_manager import get_experiment_folder
 torch.backends.cudnn.deterministic = True
 torch.backends.cudnn.benchmark = False
 import os
-os.environ["HF_DATASETS_CACHE"]="/p/scratch/ccstdl/sukthanker1/datasets/cache"
-os.environ["HF_HOME"]="/p/scratch/ccstdl/sukthanker1/model/cache"
+
+os.environ["HF_DATASETS_CACHE"] = "/p/scratch/ccstdl/sukthanker1/datasets/cache"
+os.environ["HF_HOME"] = "/p/scratch/ccstdl/sukthanker1/model/cache"
+
+
 def bold(msg):
     return f"\033[1m{msg}\033[0m"
+
 
 def main(cfg, arch, arch_id):
     """
     Launch pretraining
     """
     config = cfg
-    torch.set_float32_matmul_precision('medium')
+    torch.set_float32_matmul_precision("medium")
 
     if os.environ.get("LOCAL_RANK") is None or os.environ.get("LOCAL_RANK") == 0:
         is_rank_zero = True
@@ -48,10 +52,14 @@ def main(cfg, arch, arch_id):
     cfg_new["experiments_base_dir"] = cfg.experiment.experiments_base_dir
     cfg_new["project_name"] = cfg.experiment.project_name + "_" + str(int(arch_id))
     cfg_new["session_name"] = cfg.experiment.session_name + "_" + str(int(arch_id))
-    cfg_new["experiment_name"] = cfg.experiment.experiment_name + "_" + str(int(arch_id))
+    cfg_new["experiment_name"] = (
+        cfg.experiment.experiment_name + "_" + str(int(arch_id))
+    )
     if cfg.resume_training:
         print(cfg.experiment)
-        exp_folder = get_experiment_folder(**cfg_new, new_folder=False, count_folder=False)
+        exp_folder = get_experiment_folder(
+            **cfg_new, new_folder=False, count_folder=False
+        )
         # if file last.ckpt exisits, resume training
         if (exp_folder / "last.ckpt").exists():
             do_resume_training = True
@@ -72,9 +80,11 @@ def main(cfg, arch, arch_id):
             format="[%(asctime)s][%(levelname)s][%(name)s] - %(message)s",
             datefmt="%d/%m/%Y %H:%M:%S",
             level=logging.INFO,
-            handlers=[logging.StreamHandler(sys.stdout), logging.FileHandler(exp_folder / "logfile.txt")],
+            handlers=[
+                logging.StreamHandler(sys.stdout),
+                logging.FileHandler(exp_folder / "logfile.txt"),
+            ],
         )
-
 
         logger.info(bold("######################################################"))
         logger.info(bold("########          START   TRAINING          ##########"))
@@ -101,13 +111,11 @@ def main(cfg, arch, arch_id):
         logger.info("Model args")
         logger.info(cfg.model)
 
-
     # If dataloader is already multiprocessing, skip this
     # if cfg.trainer.devices > 1 and cfg.task == "lm":
     #     os.environ["TOKENIZERS_PARALLELISM"] = "False"
 
     # Set seed before initializing model
-
 
     # set up huggingface-style model config
     # uses custom config class for extra args
@@ -136,27 +144,30 @@ def main(cfg, arch, arch_id):
         py_logger=logger,
         val_sets_name=data_module.val_sets_name,
         ignore_index=data_module.ignore_index,
-        arch_sampled=arch
+        arch_sampled=arch,
     )
 
-
     if is_rank_zero:
+
         def count_parameters(parameters):
             return sum(p.numel() for p in parameters if p.requires_grad)
-        logger.info(f"#### trainable_parameters {count_parameters(model_module.parameters())}")
 
+        logger.info(
+            f"#### trainable_parameters {count_parameters(model_module.parameters())}"
+        )
 
         def print_model_param_stats(model):
             for idx, (name, params) in enumerate(model.named_parameters()):
-                logger.info(f"{idx:03d} {name:70} shape:{str(list(params.shape)):12} mean:{params.mean():8.4f} std:{params.std():8.6f} grad: {params.requires_grad}")
-        print_model_param_stats(model_module.model)
+                logger.info(
+                    f"{idx:03d} {name:70} shape:{str(list(params.shape)):12} mean:{params.mean():8.4f} std:{params.std():8.6f} grad: {params.requires_grad}"
+                )
 
+        print_model_param_stats(model_module.model)
 
     if do_resume_training:
         logger.info(bold(f"############### RESUME TRAINING on rank {rank}"))
 
-
-    logger.info(f'#### Load logger on rank {rank}')
+    logger.info(f"#### Load logger on rank {rank}")
     # Init lightning loggers
     # training_logger: List[LightningLoggerBase] = []
     # if "logger" in cfg:
@@ -166,13 +177,13 @@ def main(cfg, arch, arch_id):
     #             training_logger.append(instantiate(lg_conf, save_dir=exp_folder))
 
     training_logger = pl.loggers.tensorboard.TensorBoardLogger(
-                        save_dir=exp_folder,
-                        name="",
-                        version="tb",
-                        #    log_graph: False
-                        #    default_hp_metric: True
-                        prefix="",
-                        )
+        save_dir=exp_folder,
+        name="",
+        version="tb",
+        #    log_graph: False
+        #    default_hp_metric: True
+        prefix="",
+    )
 
     logger.info(f"#### Load callbacks on rank {rank}")
     # Init lightning callbacks
@@ -185,16 +196,14 @@ def main(cfg, arch, arch_id):
                     cb_conf["dirpath"] = exp_folder
                 callbacks.append(instantiate(cb_conf))
 
-
-    logger.info(f'#### Load strategy on rank {rank}')
+    logger.info(f"#### Load strategy on rank {rank}")
 
     if cfg.trainer.devices == 1:
         strategy = "ddp"
 
         strategy = pl.strategies.DDPStrategy(
-             find_unused_parameters=True,
-             static_graph=False
-         )
+            find_unused_parameters=True, static_graph=False
+        )
         # strategy = pl.strategies.DeepSpeedStrategy(
         #     **cfg.deepspeed,
         #     remote_device=None,  # Initialize directly on GPUs instead of CPU (ZeRO-3)
@@ -202,8 +211,7 @@ def main(cfg, arch, arch_id):
 
     else:
         strategy = pl.strategies.DDPStrategy(
-            find_unused_parameters=True,
-            static_graph=False
+            find_unused_parameters=True, static_graph=False
         )
 
         # strategy = pl.strategies.DeepSpeedStrategy(
@@ -211,13 +219,14 @@ def main(cfg, arch, arch_id):
         #     remote_device=None,  # Initialize directly on GPUs instead of CPU (ZeRO-3)
         # )
 
-
     plugins = []
     # plugins = [SLURMEnvironment(auto_requeue=False)]
 
     logger.info(bold(f"############### TRAINER on rank {rank}"))
 
-    trainer = instantiate(cfg.trainer, instance=pl.Trainer ,
+    trainer = instantiate(
+        cfg.trainer,
+        instance=pl.Trainer,
         callbacks=callbacks,
         plugins=plugins,
         strategy=strategy,
@@ -227,7 +236,9 @@ def main(cfg, arch, arch_id):
     logger.info(f"Starting training on rank {rank}")
 
     trainer.fit(
-        model=model_module, datamodule=data_module,  ckpt_path=exp_folder / 'last.ckpt' if do_resume_training else None,
+        model=model_module,
+        datamodule=data_module,
+        ckpt_path=exp_folder / "last.ckpt" if do_resume_training else None,
     )
 
     logger.info(f"Finished saving model weights on rank {rank}")
@@ -241,11 +252,13 @@ def main(cfg, arch, arch_id):
         print(metrics_dict)
         return metrics_dict
 
-def finetune_archs(args, arch_list):
 
+def finetune_archs(args, arch_list):
     from functools import reduce  # forward compatibility for Python 3
     import operator
+
     arch_stats = []
+
     def update(d, u):
         for k, v in u.items():
             if isinstance(v, collections.abc.Mapping):
@@ -254,7 +267,6 @@ def finetune_archs(args, arch_list):
                 d[k] = v
         return d
 
-
     def getFromDict(dataDict, mapList):
         return reduce(operator.getitem, mapList, dataDict)
 
@@ -262,9 +274,9 @@ def finetune_archs(args, arch_list):
         getFromDict(dataDict, mapList[:-1])[mapList[-1]] = value
 
     def convert_string_value(value):
-        if value in ('false', 'False'):
+        if value in ("false", "False"):
             value = False
-        elif value in ('true', 'True'):
+        elif value in ("true", "True"):
             value = True
         else:
             try:
@@ -276,16 +288,15 @@ def finetune_archs(args, arch_list):
                     pass
         return value
 
-
     print("CUDA AVAILABLE", torch.cuda.is_available())
     print("CUDA DEVICES", torch.cuda.device_count())
 
     config_name = args.config
-    if not config_name.endswith('.yaml'):
-        config_name += '.yaml'
+    if not config_name.endswith(".yaml"):
+        config_name += ".yaml"
 
     config_file = os.path.join("config", args.config)
-    with open(config_file, 'r') as f:
+    with open(config_file, "r") as f:
         config_dict = yaml.load(f, Loader=yaml.Loader)
 
     config = Config(config_dict=config_dict)
@@ -294,19 +305,29 @@ def finetune_archs(args, arch_list):
         config = Config(config_dict=config_dict)
         metrics = main(cfg=config, arch=arch, arch_id=i)
         arch_stats.append(metrics)
-        with open("arch_stats_finetune_"+str(args.scale)+".pkl", "wb") as f:
-             pickle.dump(arch_stats, f)
+        with open("arch_stats_finetune_" + str(args.scale) + ".pkl", "wb") as f:
+            pickle.dump(arch_stats, f)
+
 
 if __name__ == "__main__":
     # define argparser
     import pickle
-    parser = argparse.ArgumentParser(description='Train GPT2 LLM')
-    parser.add_argument('-a', '--arch', type=str, default="sampled_archs_s.pkl", help='arch file name')
-    parser.add_argument('-c', '--config', type=str, default="juwels_owt_sw_s_finetune.yaml", help='config file name')
-    parser.add_argument('--scale', type=str, default="s")
+
+    parser = argparse.ArgumentParser(description="Train GPT2 LLM")
+    parser.add_argument(
+        "-a", "--arch", type=str, default="sampled_archs_s.pkl", help="arch file name"
+    )
+    parser.add_argument(
+        "-c",
+        "--config",
+        type=str,
+        default="juwels_owt_sw_s_finetune.yaml",
+        help="config file name",
+    )
+    parser.add_argument("--scale", type=str, default="s")
     args = parser.parse_args()
 
-    with open(args.arch, 'rb') as f:
+    with open(args.arch, "rb") as f:
         arch_list = pickle.load(f)
-    #arch_list = arch_list[5:]
+    # arch_list = arch_list[5:]
     finetune_archs(args, arch_list)
