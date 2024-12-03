@@ -88,8 +88,8 @@ if __name__ == "__main__":
     parser.add_argument("--objective_1", type=str, default="latencies")
     parser.add_argument("--objective_2", type=str, default="energies")
     parser.add_argument("--search_space", type=str, default="s")
-    parser.add_argument("--surrogate_type", type=str, default="conformal_quantile")
-    parser.add_argument("--type", type=str, default="quantile")
+    parser.add_argument("--surrogate_type", type=str, default="autogluon")
+    parser.add_argument("--type", type=str, default="autogluon")
     args, _ = parser.parse_known_args()
     search_space = search_spaces[args.search_space]
     max_layers = max(search_space["n_layer_choices"])

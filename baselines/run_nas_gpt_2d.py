@@ -75,8 +75,8 @@ if __name__ == "__main__":
         default="v100",
     )
     parser.add_argument("--search_space", type=str, default="s")
-    parser.add_argument("--surrogate_type", type=str, default="conformal_quantile")
-    parser.add_argument("--type", type=str, default="quantile")
+    parser.add_argument("--surrogate_type", type=str, default="autogluon")
+    parser.add_argument("--type", type=str, default="autogluon")
     parser.add_argument("--objective", type=str, default="energies")
     args, _ = parser.parse_known_args()
     search_space = search_spaces[args.search_space]
