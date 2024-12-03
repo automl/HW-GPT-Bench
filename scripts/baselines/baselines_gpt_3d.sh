@@ -7,4 +7,4 @@
 #SBATCH -e logs_final/%j.%x.%N.err # STDERR  (the folder log has to be created prior to running or this won't work)
 
 method=$1
-python baselines/run_nas_gpt_3d.py --method $method #--device $device 
+python baselines/run_nas_gpt_3d.py --method $method --search_space l --device_1 "a100" --device_2 "cpu_xeon_gold" --objective_1 "latencies" --objective_2 "energies"  --random_seed 1234
