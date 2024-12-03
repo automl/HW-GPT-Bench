@@ -194,11 +194,11 @@ if __name__ == "__main__":
     import logging
     import numpy as np
 
-    from data_collection.pl_gpt.data.lm_datamodule_nas import PlArrowFileModule
+    from pl_gpt.data.lm_datamodule_nas import PlArrowFileModule
 
-    from data_collection.pl_gpt.utils.configuration import Config
-    from data_collection.pl_gpt.utils.instantiate import instantiate
-    from data_collection.pl_gpt.utils.folder_manager import get_experiment_folder
+    from pl_gpt.utils.configuration import Config
+    from pl_gpt.utils.instantiate import instantiate
+    from pl_gpt.utils.folder_manager import get_experiment_folder
 
     def update(d, u):
         for k, v in u.items():

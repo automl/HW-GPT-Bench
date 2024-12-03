@@ -16,7 +16,7 @@ from lib.utils import (
 from hwgpt.predictors.hwmetric.models.mlp.net import Net
 from hwgpt.api_utils import estimate_flops, num_parameters
 from hwgpt.model.gpt_base.model import GPT
-from data_collection.pl_gpt.utils.configuration import Config
+from pl_gpt.utils.configuration import Config
 from data_collection.gpt_profiler.profile.gpt_perplexity_profiler import GPTProfilerPPL
 from hwgpt.predictors.hwmetric.models.autogluon.autogluon_latencies import (
     MultilabelPredictor,

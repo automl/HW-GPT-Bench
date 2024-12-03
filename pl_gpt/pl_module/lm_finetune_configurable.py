@@ -8,9 +8,9 @@ from hwgpt.model.gpt.utils import (
     sample_config_mid,
     sample_config_min,
 )
-from data_collection.pl_gpt.utils import instantiate
-from data_collection.pl_gpt.utils.group_parameters import group_parameters_for_optimizer
-from data_collection.pl_gpt.utils.optim.lr_schedule import get_learning_rate_schedule
+from pl_gpt.utils import instantiate
+from pl_gpt.utils.group_parameters import group_parameters_for_optimizer
+from pl_gpt.utils.optim.lr_schedule import get_learning_rate_schedule
 from typing import Any, Dict
 
 

@@ -180,7 +180,7 @@ class GPTEnergyProfiler:
 
 
 if __name__ == "__main__":
-    from data_collection.pl_gpt.utils.configuration import Config
+    from pl_gpt.utils.configuration import Config
     import argparse
 
     parser = argparse.ArgumentParser(description="GPT Profiler")
