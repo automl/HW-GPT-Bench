@@ -1,23 +1,6 @@
 import socket
 import sys
 
-deny_connects = False
-
-
-def deny_nework_connections():
-    global deny_connects
-
-    def audit_hook_deny_connects(event: str, args):
-        if deny_connects and event == "socket.connect":
-            sock: socket.socket = args[0]
-            if sock.family != socket.AddressFamily.AF_UNIX:
-                raise Exception(
-                    "network connection denied to prevent accidental Internet access"
-                )
-
-    deny_connects = True
-    sys.addaudithook(audit_hook_deny_connects)
-
 
 import logging
 from argparse import ArgumentParser
@@ -34,13 +17,12 @@ from syne_tune.optimizer.baselines import (
     EHVI,
 )
 from syne_tune import Tuner, StoppingCriterion
-from syne_tune.config_space import randint, uniform, loguniform, choice
+from syne_tune.config_space import choice
 from baselines.local_search import LS
 from syne_tune.optimizer.schedulers.multiobjective.linear_scalarizer import (
     LinearScalarizedScheduler,
 )
 import os
-import json
 import pickle
 from lib.utils import search_spaces
 
@@ -49,8 +31,6 @@ from lib.utils import search_spaces
 
 if __name__ == "__main__":
     logging.getLogger().setLevel(logging.INFO)
-    # [1]
-    deny_nework_connections()
     # socket.create_connection(("www.google.com", 10))
     parser = ArgumentParser()
     parser.add_argument(

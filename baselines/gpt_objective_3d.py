@@ -1,25 +1,15 @@
 from syne_tune import Reporter
-import time
-from syne_tune import Reporter
-import pickle
-import torch
-import numpy as np
-import random
 from lib.utils import (
-    convert_config_to_one_hot,
-    predict_hw_surrogate,
-    get_arch_feature_map,
     normalize_objectives,
     normalize_ppl,
-    get_all_hw_surrogates,
-    get_ppl_predictor_surrogate,
-    normalize_arch_feature_map,
-    get_max_min_stats,
     search_spaces,
 )
 
 from typing import List, Dict, Any
-from analysis.autogluon_gpu_latencies import MultilabelPredictor
+from hwgpt.predictors.hwmetric.models.autogluon.multipredictor_train import (
+    MultilabelPredictor,
+)
+from hwgpt.api import HWGPT
 
 report = Reporter()
 
@@ -33,49 +23,23 @@ def objective(
     objectives: List[str],
     base_path: str = ".",
 ) -> Reporter:
-    max_layers = get_max_min_stats(search_space)["max_layers"]
-    arch_feature_map = get_arch_feature_map(sampled_config, search_space)
-    arch_feature_map_ppl_predictor = convert_config_to_one_hot(
-        sampled_config, search_space=search_space
+    api = HWGPT(search_space=search_space, use_supernet_surrogate=False)
+    api.set_arch(sampled_config)
+    perplexity = api.query(metric="perplexity", predictor="mlp")["perplexity"]
+    hw_metrics = api.query(metric=objectives, device=device_list)
+    hw_metrics = [
+        hw_metrics[objective][device]
+        for objective, device in zip(objectives, device_list)
+    ]
+    ppl = perplexity
+    ppl_norm = normalize_ppl(ppl, search_space, method="max-min")
+    hw_metrics_norm = normalize_objectives(
+        hw_metrics, objectives, device_list, search_space, surrogate_types, type
     )
-    # print(arch_feature_map_predictor)
-    device = "cuda" if torch.cuda.is_available() else "cpu"
-    ppl_predictor = get_ppl_predictor_surrogate(search_space)
-    perplexity = ppl_predictor(arch_feature_map_ppl_predictor.to(device).unsqueeze(0))
-    hw_metric_1_surrogate, hw_metric_2_surrogate = get_all_hw_surrogates(
-        max_layers,
-        search_space,
-        objectives,
-        device_list,
-        surrogate_types,
-        type,
-        base_path=base_path,
-    )
-    hw_metric_1 = predict_hw_surrogate(
-        [arch_feature_map], hw_metric_1_surrogate, objectives[0], device_list[0]
-    )
-    hw_metric_2 = predict_hw_surrogate(
-        [arch_feature_map], hw_metric_2_surrogate, objectives[1], device_list[1]
-    )
-    if objectives[0] == "latencies":
-        hw_metric_1 = hw_metric_1 / 1000
-    if objectives[1] == "latencies":
-        hw_metric_2 = hw_metric_2 / 1000
-    hw_metric_1_norm, hw_metric_2_norm = normalize_objectives(
-        [hw_metric_1, hw_metric_2],
-        objectives,
-        device_list,
-        search_space,
-        surrogate_types,
-        type,
-    )
-    ppl = perplexity.item()
-    ppl_norm = normalize_ppl(ppl, search_space)
-    # print(hw_metric_1_norm, hw_metric_2_norm, ppl_norm)
     report(
         perplexity=ppl_norm,
-        hw_metric_1=hw_metric_1_norm,
-        hw_metric_2=hw_metric_2_norm,
+        hw_metric_1=hw_metrics_norm[0],
+        hw_metric_2=hw_metrics_norm[1],
     )
 
 
@@ -87,9 +51,9 @@ if __name__ == "__main__":
     root.setLevel(logging.INFO)
     parser = argparse.ArgumentParser()
     parser.add_argument("--epochs", type=int, default=100)
-    parser.add_argument("--surrogate_1", type=str, default="conformal_quantile")
-    parser.add_argument("--surrogate_2", type=str, default="conformal_quantile")
-    parser.add_argument("--type", type=str, default="quantile")
+    parser.add_argument("--surrogate_1", type=str, default="autogluon")
+    parser.add_argument("--surrogate_2", type=str, default="autogluon")
+    parser.add_argument("--type", type=str, default="autogluon")
     parser.add_argument("--search_space", type=str, default="s")
     parser.add_argument("--device_1", type=str, default="a6000")
     parser.add_argument("--device_2", type=str, default="rtx2080")
