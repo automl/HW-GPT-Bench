@@ -189,6 +189,7 @@ toolz==0.12.1
 torch==2.1.2
 torchmetrics==1.2.1
 torchvision==0.16.2
+torchaudio==2.1.2
 tqdm==4.67.1
 transformers==4.38.2
 triton==2.1.0
