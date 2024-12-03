@@ -1,13 +1,12 @@
 from syne_tune import Reporter
-from syne_tune import Reporter
 from lib.utils import search_spaces, get_max_min_true_metric, normalize_ppl
-from hwgpt.api import HWGPTBenchAPI
+from hwgpt.api import HWGPT
 
 report = Reporter()
 
 
 def objective(sampled_config, search_space, objective):
-    api = HWGPTBenchAPI(search_space=search_space)
+    api = HWGPT(search_space=search_space, use_supernet_surrogate=False)
 
     api.set_arch(sampled_config)
     if objective == "flops":
