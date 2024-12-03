@@ -1,27 +1,16 @@
 from syne_tune import Reporter
 import time
 from syne_tune import Reporter
-from lib.utils import (
-    get_arch_feature_map,
-    convert_config_to_one_hot,
-    normalize_arch_feature_map,
-    get_ppl_predictor_surrogate,
-    get_hw_predictor_surrogate,
-    get_max_min_stats,
-    predict_hw_surrogate,
-    normalize_energy,
-    normalize_latency,
-    normalize_ppl,
-    search_spaces,
-    normalize_memory,
-)
 from typing import Dict, Any
+from lib.utils import normalize_memory, normalize_ppl, search_spaces
 import os
 import torch
+from hwgpt.api import HWGPT
 
 report = Reporter()
-from analysis.autogluon_gpu_latencies import MultilabelPredictor
-from hwgpt.predictors.hwmetric.net import Net
+from hwgpt.predictors.hwmetric.models.autogluon.multipredictor_train import (
+    MultilabelPredictor,
+)
 
 
 def objective(
@@ -33,44 +22,16 @@ def objective(
     objective: str,
     base_path: str = ".",
 ) -> Reporter:
-    arch_feature_map = get_arch_feature_map(sampled_config, search_space)
-    arch_feature_map_ppl_predictor = convert_config_to_one_hot(
-        sampled_config, search_space=search_space
-    )
-    arch_feature_map_predictor = normalize_arch_feature_map(
-        arch_feature_map, search_space
-    )
-    device_run = "cuda" if torch.cuda.is_available() else "cpu"
-    ppl_predictor = get_ppl_predictor_surrogate(search_space).to(device_run)
-    perplexity = ppl_predictor(
-        arch_feature_map_ppl_predictor.to(device_run).unsqueeze(0)
-    )
-    num_layers = max(search_spaces[search_space]["n_layer_choices"])
-    hw_predictor = Net(num_layers, False, 128, 128).to(device_run)
-    hw_predictor.load_state_dict(
-        torch.load(
-            os.path.join(
-                base_path,
-                "data_collection/gpt_datasets/predictor_ckpts/hwmetric/mlp/"
-                + str(objective)
-                + "_"
-                + str(search_space)
-                + ".pth",
-            ),
-            map_location=device_run,
-        )
-    )
-    hw_metric = hw_predictor(
-        torch.tensor(arch_feature_map_predictor).to(device_run).unsqueeze(0)
-    )
-    hw_metric_norm = normalize_memory(hw_metric.item(), search_space, objective)
-    ppl = perplexity.item()
-    ppl_norm = normalize_ppl(ppl, search_space)
-    # if objective  == "energies":
-    #    hw_metric_norm = normalize_energy(hw_metric,device=device,scale=search_space,surrogate=surrogate_type,metric=objective,data_type=type)
-    # else:
-    #    hw_metric_norm = normalize_latency(hw_metric/1000,device=device,scale=search_space,surrogate=surrogate_type,metric=objective,data_type=type)
-    report(perplexity=ppl_norm, hw_metric=hw_metric_norm)
+    api = HWGPT(
+        search_space=search_space, use_supernet_surrogate=False
+    )  # initialize API
+    api.set_arch(sampled_config)  # set  arch
+    perplexity = api.query(metric="perplexity", predictor="mlp")["perplexity"]
+    hw_metric = api.query(metric=objective)[objective]
+    ppl = perplexity
+    ppl_norm = normalize_ppl(ppl, search_space, method="max-min")
+    hw_metric_norm = normalize_memory(hw_metric, search_space, objective)
+    report(perplexity=ppl_norm, hw_metric=hw_metric_norm.item())
 
 
 if __name__ == "__main__":
