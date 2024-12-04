@@ -38,6 +38,11 @@ print("RTX2080: ", rtx2080)
 perplexity_mlp = api.query(metric="perplexity",predictor="mlp")
 print("Perplexity MLP: ", perplexity_mlp)
 ```
+
+## Colab notebook demo
+
+We provide a minimal [colab-notebook](https://colab.research.google.com/drive/1evdb9oQ0y8Mg_gQVaZiHdS_5iuxGKmrf?usp=sharing) to use the api in a notebook. Note however that colab notebook has a different python version installed and it is recommended to use the environment and requirements specified in the installation instructions. 
+
 ## Citation 
 If you find HW-GPT Bench useful, you can cite us using:
 
