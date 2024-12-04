@@ -3,11 +3,31 @@
 ![alt text](figures/overview.png)
 ### *Note: We are in the process of updating the benchmark and code, with significant changes to the repository coming soon!*
 ## Supernet Checkpoints and Pretrained Surrogates
-We release the pretrained supernet checkpoints [here](https://drive.google.com/drive/folders/1uUxO05Hx-T_KOiTkA3zT_iuaeK6HdxM0?usp=sharing), the pretrained hardware surrogates [here](https://drive.google.com/drive/folders/1asANcSevV90OLwmPkbTnWUo_M-PdtVSD?usp=sharing) and the perplexity surrogates [here](https://drive.google.com/file/d/1-Z998sYUprA5fuogLElQfAYq7Z29XqUg/view?usp=sharing) and the list of architectures sampled [here]([https://drive.google.com/drive/folders/1Y54MN4ybpUs_pCuElworFvc5ZeoN2amu?usp=sharing](https://drive.google.com/drive/folders/1asANcSevV90OLwmPkbTnWUo_M-PdtVSD?usp=sharing)). If you want to install minimal requirements use the ```requirements-mix.txt```. Installing the full requirements requires building some pacages on a GPU node (with CUDA module loaded). 
+
+| Resource                     | Description                         | Link                                                                                     |
+|------------------------------|-------------------------------------|------------------------------------------------------------------------------------------|
+| **Supernet Checkpoints**     | Pretrained supernet checkpoints.   | [Download Here](https://drive.google.com/drive/folders/1uUxO05Hx-T_KOiTkA3zT_iuaeK6HdxM0?usp=sharing) |
+| **Hardware Surrogates**      | Pretrained hardware surrogates.    | [Download Here](https://drive.google.com/drive/folders/1asANcSevV90OLwmPkbTnWUo_M-PdtVSD?usp=sharing) |
+| **Perplexity Surrogates**    | Pretrained perplexity surrogates.  | [Download Here](https://drive.google.com/file/d/1-Z998sYUprA5fuogLElQfAYq7Z29XqUg/view?usp=sharing) |
+| **Sampled Architectures**    | List of architectures sampled.     | [Download Here](https://drive.google.com/drive/folders/1Y54MN4ybpUs_pCuElworFvc5ZeoN2amu?usp=sharing) |
+
+Once the AutoGluon surrogates are downloaded, move them to the following folder ```HW-GPT-Bench/data_collection/gpt_datasets/predictor_ckpts/hwmetric/autogluon/```
 
 
-## To install in editable mode (-e) run:
+### Example Command for hardware surrogate download
+Use the following commands to download the surrogates to correct directories:
 
+```bash
+$ gdown 1s1jzJwL5zv4McbwLBbZd03Z2wc-fh0Bj
+$ unzip -qq gpt_energies_l_rtx3080_log.zip
+$ mkdir -p HW-GPT-Bench/data_collection/gpt_datasets/predictor_ckpts/hwmetric/autogluon
+$ mv HW-GPT-Bench/gpt_energies_l_rtx3080_log HW-GPT-Bench/data_collection/gpt_datasets/predictor_ckpts/hwmetric/autogluon/
+```
+
+
+## Installation Instructions
+1. To install the **minimal requirements**, use the `requirements-mix.txt` file.
+2. For **full installation**, ensure you are using a GPU node with CUDA module loaded, as it requires building some packages.
 ```sh
 $ git clone https://github.com/automl/HW-GPT-Bench/
 $ cd HW-GPT-Bench
