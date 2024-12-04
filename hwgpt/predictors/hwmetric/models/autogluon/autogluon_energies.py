@@ -197,7 +197,7 @@ class MultilabelPredictor:
                     self.base_path,
                     "data_collection/gpt_datasets/predictor_ckpts/hwmetric/autogluon/",
                 )
-                + predictor
+                + predictor, require_py_version_match=False
             )
         return predictor
 
