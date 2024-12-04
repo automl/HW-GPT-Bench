@@ -9,7 +9,7 @@ We release the pretrained supernet checkpoints [here](https://drive.google.com/d
 ## To install in editable mode (-e) run:
 
 ```sh
-$ git clone https://github.com/automl/HW-Aware-LLM-Bench
+$ git clone https://github.com/automl/HW-GPT-Bench/
 $ cd HW-Aware-LLM-Bench
 $ conda create -n hw-gpt python=3.11.9
 $ conda activate hw-gpt
