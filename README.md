@@ -1,6 +1,6 @@
 # HW-GPT-Bench
 ## Repository for [HW-GPT-Bench](https://arxiv.org/abs/2405.10299)- NeurIPS DBT 2024
-![alt text](figures/overview.png)
+![alt text](figures/hw-gpt-bench.png)
 ### *Note: We are in the process of updating the benchmark and code, with significant changes to the repository coming soon!*
 ## Repository directory structure 
 
