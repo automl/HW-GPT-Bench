@@ -96,10 +96,12 @@ We provide a minimal [colab-notebook](https://colab.research.google.com/drive/1e
 If you find HW-GPT Bench useful, you can cite us using:
 
 ```
-@article{sukthanker2024hw,
-  title={HW-GPT-Bench: Hardware-Aware Architecture Benchmark for Language Models},
-  author={Sukthanker, Rhea Sanjay and Zela, Arber and Staffler, Benedikt and Klein, Aaron and Franke, Jorg KH and Hutter, Frank},
-  journal={arXiv preprint arXiv:2405.10299},
-  year={2024}
+@inproceedings{
+sukthanker2024hwgptbench,
+title={{HW}-{GPT}-Bench: Hardware-Aware Architecture Benchmark for Language Models},
+author={Rhea Sanjay Sukthanker and Arber Zela and Benedikt Staffler and Aaron Klein and Lennart Purucker and J{\"o}rg K.H. Franke and Frank Hutter},
+booktitle={The Thirty-eight Conference on Neural Information Processing Systems Datasets and Benchmarks Track},
+year={2024},
+url={https://openreview.net/forum?id=urJyyMKs7E}
 }
 ```
