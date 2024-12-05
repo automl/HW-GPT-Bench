@@ -2,6 +2,36 @@
 ## Repository for [HW-GPT-Bench](https://arxiv.org/abs/2405.10299)- NeurIPS DBT 2024
 ![alt text](figures/overview.png)
 ### *Note: We are in the process of updating the benchmark and code, with significant changes to the repository coming soon!*
+## Repository directory structure 
+
+```
+HW-GPT-Bench
+   ├── baselines
+   ├── configs 
+   ├── data_collection
+   ├── downstream_eval
+   ├── hwgpt
+   ├── lib
+   ├── pl_gpt
+   ├── plotting
+   ├── scripts
+```
+```baselines``` folder contains python scripts to run different baselines on HW-GPT-Bench using [syne-tune](https://github.com/syne-tune/syne-tune)
+
+```configs``` folder contains supernet and device configs for collection of perplexities, profiling of latencies, energies and memory on devices and supernet training 
+
+```data_collection``` folder contains the raw data and small mlp surrogates. Please refer to supernet and surrogate downloading instructions for downloading the larger surrogates and checkpoints. In addition this folder also contains the scripts used to profile energies, latencies and memory
+
+```downstream_eval``` contains an example to evaluate an architecture from hw-gpt-bench on downstream task using the [whittle](https://github.com/whittle-org/whittle/) api. 
+
+```hwgpt``` folder contains the central api of hw-gpt-bench
+
+```lib``` contains utils functions for the api
+
+```plotting``` contains scripts used for creating plots used in the paper
+
+```scripts``` contains example scripts for different multi-objective baselines using hw-gpt-bench
+
 ## Supernet Checkpoints and Pretrained Surrogates
 
 | Resource                     | Description                         | Link                                                                                     |
@@ -12,7 +42,6 @@
 | **Sampled Architectures**    | List of architectures sampled.     | [Download Here](https://drive.google.com/drive/folders/1Y54MN4ybpUs_pCuElworFvc5ZeoN2amu?usp=sharing) |
 
 Once the AutoGluon surrogates are downloaded, move them to the following folder ```HW-GPT-Bench/data_collection/gpt_datasets/predictor_ckpts/hwmetric/autogluon/```
-
 
 ### Example Command for hardware surrogate download
 Use the following commands to download the surrogates to correct directories:
@@ -26,7 +55,7 @@ $ mv HW-GPT-Bench/gpt_energies_l_rtx3080_log HW-GPT-Bench/data_collection/gpt_da
 
 
 ## Installation Instructions
-1. To install the **minimal requirements**, use the `requirements-mix.txt` file.
+1. To install the **minimal requirements**, use the `requirements-min.txt` file.
 2. For **full installation**, ensure you are using a GPU node with CUDA module loaded, as it requires building some packages.
 ```sh
 $ git clone https://github.com/automl/HW-GPT-Bench/
