@@ -170,7 +170,7 @@ model:
   train_strategy: "sandwich"
   sandwhich_random: 2
   use_inplace_kd: False
-  checkpoint_path: "/work/dlclarge2/sukthank-hw-gpt-data/HW-GPT-checkpoints/gpt_m.ckpt"
+  checkpoint_path: "/work/dlclarge2/sukthank-hw-gpt-data/HW-GPT-checkpoints/gpt_m_wide.ckpt"
 
   
 
