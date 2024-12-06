@@ -155,7 +155,7 @@ model:
 
   initializer_range: 0.02
   resume_path: "none"
-  checkpoint_path: "/work/dlclarge2/sukthank-hw-gpt-data/HW-GPT-checkpoints/gpt_s.ckpt"
+  checkpoint_path: "/work/dlclarge2/sukthank-hw-gpt-data/HW-GPT-checkpoints/gpt_s_wide.ckpt"
 lm_data:
   dataset_name: "tinystories" # openwebtext wikitext
   num_cpu_worker: 1
